@@ -32,9 +32,6 @@ class GameView(arcade.View):
         self.background_music = None
         self.background_music_player = None
 
-        # Set the DEPTHS background sprite array.
-        self.depths_background_array = []
-
     def setup(self):
         # 1. Create the SpriteList
         self.sprites = arcade.SpriteList()
@@ -54,9 +51,9 @@ class GameView(arcade.View):
         sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
 
         # 4. Animate the background of the GONERMAKER.
-        graphics_methods.initialize_depths_array(self.depths_background_array, 1.0, self.center, self.sprites)
+        graphics_methods.initialize_depths_array(self.center, self.sprites)
 
-        graphics_methods.animate_depths(self.depths_background_array, 0.05)
+        graphics_methods.animate_depths()
 
     def on_draw(self):
         # 3. Clear the screen
