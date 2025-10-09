@@ -118,5 +118,6 @@ def instantly_terminate_depths_animation(sprite_list: list[arcade.Sprite]):
     pyglet.clock.unschedule(animate_each_depths_frame)
     pyglet.clock.unschedule(add_sprite_to_depths_array_callback)
     for frame in depths_frame_array:
-        sprite_list.remove(frame.sprite)
-        depths_frame_array.remove(frame)
+        if frame.sprite in sprite_list:
+            sprite_list.remove(frame.sprite)
+    depths_frame_array.clear()
