@@ -51,9 +51,7 @@ class GameView(arcade.View):
         sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
 
         # 4. Animate the background of the GONERMAKER.
-        graphics_methods.initialize_depths_array(self.center, self.sprites)
-
-        graphics_methods.animate_depths()
+        graphics_methods.animate_depths(self.center, self.sprites)
 
     def on_draw(self):
         # 3. Clear the screen
