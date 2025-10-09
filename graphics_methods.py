@@ -2,7 +2,7 @@ import arcade
 import pyglet
 import math
 from graphics_objects import Frame
-
+import main
 
 DEPTHS_ANIMATION_INITIAL_SCALE = 10.0  # Initial scale of depths animation frames when initially rendered
 DEPTHS_ANIMATION_SCALE_INCREMENT = 0.05  # How much the scale of each animation frame is increased every frame
@@ -15,9 +15,12 @@ DEPTHS_ANIMATION_FRAMERATE = 0.05  # The time interval at which each frame will 
 
 depths_frame_array = []
 
+terminate_depths_animation = False
+
 
 def add_sprite_to_depths_array(dt, center, sprite_list):
-    if len(depths_frame_array) < DEPTHS_ANIMATION_NUMBER_OF_FRAMES:
+    global terminate_depths_animation
+    if len(depths_frame_array) < DEPTHS_ANIMATION_NUMBER_OF_FRAMES and not terminate_depths_animation:
         sprite = arcade.Sprite(path_or_texture="assets/textures/backgrounds/IMAGE_DEPTHS_lowres.png",
                                center_x=center[0],
                                center_y=center[1],
@@ -28,11 +31,28 @@ def add_sprite_to_depths_array(dt, center, sprite_list):
         frame = Frame(sprite)
         depths_frame_array.append(frame)
         sprite_list.append(sprite)
+    else:
+        terminate_depths_animation = True
+    if terminate_depths_animation:
+        for frame in depths_frame_array:
+            if frame.sprite.alpha <= 0:
+                sprite_list.remove(frame.sprite)
+                depths_frame_array.remove(frame)
+
+
+# Since add_sprite_to_depths_array_callback requires parameters, it's callback from initialize_depths_array will be
+# stored in a global variable.
+add_sprite_to_depths_array_callback = None
 
 
 def initialize_depths_array(center, sprite_list):
+    global add_sprite_to_depths_array_callback
+
+    def add_sprite_to_depths_array_callback(dt):
+        add_sprite_to_depths_array(dt, center, sprite_list)
+
     pyglet.clock.schedule_interval(
-        lambda dt: add_sprite_to_depths_array(dt, center, sprite_list),
+        add_sprite_to_depths_array_callback,
         DEPTHS_ANIMATION_PERIOD
     )
 
@@ -51,7 +71,8 @@ def animate_depths_frames(dt):
             frame.age += dt
             sprite.scale_x += DEPTHS_ANIMATION_SCALE_INCREMENT
             sprite.scale_y += DEPTHS_ANIMATION_SCALE_INCREMENT
-            alpha = -abs(math.ceil((DEPTHS_ANIMATION_COEFFICIENT * frame.age) - (DEPTHS_ANIMATION_MAX_ALPHA))) + DEPTHS_ANIMATION_MAX_ALPHA
+            alpha = -abs(math.ceil(
+                (DEPTHS_ANIMATION_COEFFICIENT * frame.age) - DEPTHS_ANIMATION_MAX_ALPHA)) + DEPTHS_ANIMATION_MAX_ALPHA
             if alpha < 0:
                 sprite.alpha = 0
             else:
@@ -60,6 +81,6 @@ def animate_depths_frames(dt):
 
 def animate_depths():
     pyglet.clock.schedule_interval(
-        lambda dt: animate_depths_frames(dt),
+        animate_depths_frames,
         DEPTHS_ANIMATION_FRAMERATE
     )
