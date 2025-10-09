@@ -28,3 +28,26 @@ class Player(arcade.Sprite):
             self.bottom = 0
         elif self.top > WINDOW_HEIGHT - 1:
             self.top = WINDOW_HEIGHT - 1
+
+
+class PlayerCharacter(arcade.Sprite):
+    def __init__(self, default_texture, scale: float, center_x: float, center_y: float, angle: float, name: str,
+                 max_hp: int, attack: int, defense: int, magic: int):
+        super().__init__(default_texture, scale)
+        self.center_x = center_x
+        self.center_y = center_y
+        self.angle = angle
+        self.name = name
+        self.max_hp = max_hp
+        self.hp = max_hp
+        self.attack = attack
+        self.defense = defense
+        self.magic = magic
+
+    def update(self, delta_time: float = 1 / 60, **kwargs):
+        """ Helps the player do things.
+        :param delta_time: the amount of time in seconds that the player updates
+        :param **kwargs:
+        """
+
+        pass
