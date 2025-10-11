@@ -12,10 +12,12 @@ class GameView(arcade.View):
         super().__init__()
 
         # Variables that will hold sprite lists
-        self.player_list = None
+        self.background_sprites = arcade.SpriteList()
+        self.player_sprites = arcade.SpriteList()
+        self.foreground_sprites = arcade.SpriteList()
 
         # Set up the player info
-        self.player_sprite = None
+        self.player_one = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -32,17 +34,35 @@ class GameView(arcade.View):
         self.background_music = None
         self.background_music_player = None
 
+        # Setup camera stuff
+        #self.camera = arcade.Camera(self.window.width, self.window.height)
+
+        self._holy_triangle = ((settings.WINDOW_WIDTH/5, settings.WINDOW_HEIGHT-(settings.WINDOW_HEIGHT/4)),
+                               (),
+                               ())
+
     def setup(self):
-        # 1. Create the SpriteList
-        self.sprites = arcade.SpriteList()
+        # Create the SpriteList
+        self.background_sprites = arcade.SpriteList()
+        self.player_sprites = arcade.SpriteList()
+        self.foreground_sprites = arcade.SpriteList()
 
-        # 2. Create and append your sprite instance to the SpriteList
-        self.player_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png",
-                                           scale=2.0)  # Sprite initialization
-        self.player_sprite.position = self.center  # Center sprite on the screen
-        self.sprites.append(self.player_sprite)  # Append the instance to the SpriteList
+        # Create and append your sprite instance to the SpriteList
+        self.player_one = player.PlayerCharacter(default_texture="assets/sprites/player_characters/kris/default.png",
+                                                 scale=4.0,
+                                                 center_x=self.center_x,
+                                                 center_y=self.center_y,
+                                                 angle=0,
+                                                 sprite_folder_name="kris",
+                                                 name="Kris",
+                                                 max_hp=90,
+                                                 attack=10,
+                                                 defense=2,
+                                                 magic=0)  # Sprite initialization
+        self.player_one.position = self._holy_triangle[0]  # Center sprite on the screen
+        self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
 
-        # 3. Start the background music.
+        # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", False)
         self.background_music_player = self.background_music.play()
         self.background_music_player.pitch = 0.0
@@ -50,39 +70,43 @@ class GameView(arcade.View):
 
         sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
 
-        # 4. Animate the background of the GONERMAKER.
-        graphics_methods.animate_depths(self.center, self.sprites)
+        # Animate the background of the GONERMAKER.
+        graphics_methods.animate_depths(self.center, self.background_sprites)
 
     def on_draw(self):
         # 3. Clear the screen
         self.clear()
 
-        # 4. Call draw() on the SpriteList inside an on_draw() method
-        self.sprites.draw(pixelated=True)
+        # Draw in layer order (background → player → foreground)
+        self.background_sprites.draw(pixelated=True)
+        self.player_sprites.draw(pixelated=True)
+        self.foreground_sprites.draw(pixelated=True)
 
     def update_player_speed(self):
-
         # Calculate speed based on the keys pressed
-        self.player_sprite.change_x = 0
-        self.player_sprite.change_y = 0
+        self.player_one.change_x = 0
+        self.player_one.change_y = 0
 
         if self.up_pressed and not self.down_pressed:
-            self.player_sprite.change_y = player.MOVEMENT_SPEED
+            self.player_one.change_y = player.MOVEMENT_SPEED
         elif self.down_pressed and not self.up_pressed:
-            self.player_sprite.change_y = -player.MOVEMENT_SPEED
+            self.player_one.change_y = -player.MOVEMENT_SPEED
         if self.left_pressed and not self.right_pressed:
-            self.player_sprite.change_x = -player.MOVEMENT_SPEED
+            self.player_one.change_x = -player.MOVEMENT_SPEED
         elif self.right_pressed and not self.left_pressed:
-            self.player_sprite.change_x = player.MOVEMENT_SPEED
+            self.player_one.change_x = player.MOVEMENT_SPEED
 
     def on_update(self, delta_time):
         """ Movement and game logic """
 
         # Move the player
-        self.sprites.update(delta_time)
+        self.player_one.update_animation(delta_time)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
+
+        if key == arcade.key.F11:
+            self.window.set_fullscreen(not self.window.fullscreen)
 
         if key == arcade.key.UP:
             self.up_pressed = True
