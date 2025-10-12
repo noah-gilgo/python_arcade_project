@@ -1,11 +1,15 @@
 import arcade
 import settings
+import os
+import texture_methods
 
 
 SPRITE_SCALING = 1.0
 MOVEMENT_SPEED = 5
 WINDOW_WIDTH = settings.WINDOW_WIDTH
 WINDOW_HEIGHT = settings.WINDOW_HEIGHT
+
+PLAYER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 
 
 class Player(arcade.Sprite):
@@ -28,3 +32,62 @@ class Player(arcade.Sprite):
             self.bottom = 0
         elif self.top > WINDOW_HEIGHT - 1:
             self.top = WINDOW_HEIGHT - 1
+
+
+class PlayerCharacter(arcade.Sprite):
+    def __init__(self, default_texture, scale: float, center_x: float, center_y: float, angle: float,
+                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int, magic: int):
+        super().__init__(default_texture, scale)
+        self.center_x = center_x
+        self.center_y = center_y
+        self.angle = angle
+        self.sprite_pack_path = PLAYER_SPRITES_FOLDER_PATH + sprite_folder_name
+        self.name = name
+        self.max_hp = max_hp
+        self.hp = max_hp
+        self.attack = attack
+        self.defense = defense
+        self.magic = magic
+
+        self._animation_state = "battle_idle"
+
+        self._textures_by_state = {
+            "battle_idle": []
+        }
+
+        self._state = "battle_idle"
+        self._current_texture_index = 0
+        self._animation_timer = 0.0
+        self._frame_duration = 0.15
+
+        self._textures_by_state["battle_idle"] = texture_methods.load_textures_at_filepath_into_texture_array(
+            self.sprite_pack_path + "/battle_idle"
+        )
+
+        if len(self._textures_by_state["battle_idle"]) > 0:
+            self.texture = self._textures_by_state["battle_idle"][0]
+        else:
+            raise FileNotFoundError(f"No .png files found in folder: {self.sprite_pack_path + '/battle_idle'}")
+
+    def update(self, delta_time: float = 1 / 60, **kwargs):
+        """ Helps the player do things.
+        :param delta_time: the amount of time in seconds that the player updates
+        :param **kwargs:
+        """
+
+        pass
+
+    def update_animation(self, delta_time=1/60):
+        """ Cycles through textures based on the player state.
+        :param delta_time: interval of time between each update cycle
+        """
+        current_textures = self._textures_by_state.get(self._state)
+        if not current_textures:
+            return
+
+        # Update frame timer
+        self._animation_timer += delta_time
+        if self._animation_timer > self._frame_duration:
+            self._animation_timer = 0
+            self._current_texture_index = (self._current_texture_index + 1) % len(current_textures)
+            self.texture = current_textures[self._current_texture_index]

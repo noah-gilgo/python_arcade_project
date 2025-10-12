@@ -90,7 +90,7 @@ def animate_depths_frames():
     )
 
 
-def animate_depths(center, sprite_list: list[arcade.Sprite]):
+def animate_depths(center, sprite_list):
     initialize_depths_array(center, sprite_list)
     animate_depths_frames()
 
