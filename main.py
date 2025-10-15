@@ -35,11 +35,11 @@ class GameView(arcade.View):
         self.background_music_player = None
 
         # Setup camera stuff
-        #self.camera = arcade.Camera(self.window.width, self.window.height)
+        # self.camera = arcade.Camera(self.window.width, self.window.height)
 
         self._holy_triangle = ((settings.WINDOW_WIDTH/5, settings.WINDOW_HEIGHT-(settings.WINDOW_HEIGHT/4)),
                                (),
-                               ())
+                               (settings.WINDOW_WIDTH/5, settings.WINDOW_HEIGHT/4))
 
     def setup(self):
         # Create the SpriteList
@@ -60,6 +60,7 @@ class GameView(arcade.View):
                                                  defense=2,
                                                  magic=0)  # Sprite initialization
         self.player_one.position = self._holy_triangle[0]  # Center sprite on the screen
+        self.player_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
 
         # Start the background music.
@@ -71,7 +72,7 @@ class GameView(arcade.View):
         sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
 
         # Animate the background of the GONERMAKER.
-        graphics_methods.animate_depths(self.center, self.background_sprites)
+        graphics_methods.animate_depths([self.center_x, self.center_y], self.background_sprites)
 
     def on_draw(self):
         # 3. Clear the screen

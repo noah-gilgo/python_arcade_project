@@ -60,11 +60,13 @@ def initialize_depths_array(center, sprite_list):
 
 
 # Step function for animate_depths function.
-def animate_each_depths_frame(dt):
+def animate_each_depths_frame(dt, center):
     # For every sprite in the frame:
     # 1. If alpha = 0, reset the alpha to 1 and the scale to 1.0.
     for frame in depths_frame_array:
         sprite = frame.sprite
+        sprite.center_x = center[0]
+        sprite.center_y = center[1]
         if frame.age >= DEPTHS_ANIMATION_LIFETIME:
             sprite.scale_x = DEPTHS_ANIMATION_INITIAL_SCALE
             sprite.scale_y = DEPTHS_ANIMATION_INITIAL_SCALE
@@ -82,17 +84,23 @@ def animate_each_depths_frame(dt):
                 sprite.alpha = alpha
 
 
+animate_each_depths_frame_callback = None
+
+
 # Animates all of the frames in depths_frame_array every DEPTHS_ANIMATION_FRAMERATE seconds.
-def animate_depths_frames():
+def animate_depths_frames(center):
+    global animate_each_depths_frame_callback
+    def animate_each_depths_frame_callback(dt):
+        animate_each_depths_frame(dt, center)
     pyglet.clock.schedule_interval(
-        animate_each_depths_frame,
+        animate_each_depths_frame_callback,
         DEPTHS_ANIMATION_FRAMERATE
     )
 
 
 def animate_depths(center, sprite_list):
     initialize_depths_array(center, sprite_list)
-    animate_depths_frames()
+    animate_depths_frames(center)
 
 
 # Step function for gradually_terminate_depths_animation function.
