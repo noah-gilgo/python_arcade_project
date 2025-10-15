@@ -122,19 +122,29 @@ class GameView(arcade.View):
             # Sets the global width/height/center variables to the appropriate values after fullscreen is set.
             settings.WINDOW_WIDTH = self.width
             settings.WINDOW_HEIGHT = self.height
-            settings.WINDOW_CENTER_X = int(self.width / 2)
-            settings.WINDOW_CENTER_Y = int(self.height / 2)
+            settings.WINDOW_CENTER_X = self.center_x
+            settings.WINDOW_CENTER_Y = self.center_y
             prior_scale = settings.WINDOW_SCALE
+            prior_scale_x = settings.WINDOW_SCALE_X
+            prior_scale_y = settings.WINDOW_SCALE_Y
             settings.WINDOW_SCALE = math.sqrt((self.width / self._initial_width) * (self.height / self._initial_height))
+            settings.WINDOW_SCALE_X = self.width / self._initial_width
+            settings.WINDOW_SCALE_Y = self.height / self._initial_height
             for sprite in self.background_sprites:
-                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale
-                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale
+                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale_x
+                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale_y
+                sprite.center_x = int(sprite.center_x * (settings.WINDOW_SCALE_X / prior_scale_x))
+                sprite.center_y = int(sprite.center_y * (settings.WINDOW_SCALE_Y / prior_scale_y))
             for sprite in self.player_sprites:
-                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale
-                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale
+                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale_x
+                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale_y
+                sprite.center_x = int(sprite.center_x * (settings.WINDOW_SCALE_X / prior_scale_x))
+                sprite.center_y = int(sprite.center_y * (settings.WINDOW_SCALE_Y / prior_scale_y))
             for sprite in self.foreground_sprites:
-                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale
-                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale
+                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale_x
+                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale_y
+                sprite.center_x = int(sprite.center_x * (settings.WINDOW_SCALE_X / prior_scale_x))
+                sprite.center_y = int(sprite.center_y * (settings.WINDOW_SCALE_Y / prior_scale_y))
 
         if key == arcade.key.UP:
             self.up_pressed = True
