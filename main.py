@@ -4,12 +4,18 @@ import player
 import pyglet
 import sound_methods
 import graphics_methods
+import math
 
 
 class GameView(arcade.View):
     def __init__(self):
         # Call the parent class initializer
         super().__init__()
+
+        # Captures the game window's width and height when the game is initialized. This is done to dynamically
+        # calculate a global "SCALE" variable to be used by all sprites during runtime.
+        self._initial_width = self.width
+        self._initial_height = self.height
 
         # Variables that will hold sprite lists
         self.background_sprites = arcade.SpriteList()
@@ -100,7 +106,12 @@ class GameView(arcade.View):
     def on_update(self, delta_time):
         """ Movement and game logic """
 
-        # Move the player
+        # Contains the default positions for all three players
+        self._holy_triangle = ((settings.WINDOW_WIDTH / 5, settings.WINDOW_HEIGHT - (settings.WINDOW_HEIGHT / 4)),
+                               (),
+                               (settings.WINDOW_WIDTH / 5, settings.WINDOW_HEIGHT / 4))
+
+        # Update the player's animation.
         self.player_one.update_animation(delta_time)
 
     def on_key_press(self, key, modifiers):
@@ -108,6 +119,22 @@ class GameView(arcade.View):
 
         if key == arcade.key.F11:
             self.window.set_fullscreen(not self.window.fullscreen)
+            # Sets the global width/height/center variables to the appropriate values after fullscreen is set.
+            settings.WINDOW_WIDTH = self.width
+            settings.WINDOW_HEIGHT = self.height
+            settings.WINDOW_CENTER_X = int(self.width / 2)
+            settings.WINDOW_CENTER_Y = int(self.height / 2)
+            prior_scale = settings.WINDOW_SCALE
+            settings.WINDOW_SCALE = math.sqrt((self.width / self._initial_width) * (self.height / self._initial_height))
+            for sprite in self.background_sprites:
+                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale
+                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale
+            for sprite in self.player_sprites:
+                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale
+                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale
+            for sprite in self.foreground_sprites:
+                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale
+                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale
 
         if key == arcade.key.UP:
             self.up_pressed = True
