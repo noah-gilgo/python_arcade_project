@@ -51,19 +51,23 @@ class PlayerCharacter(arcade.Sprite):
 
         self._animation_state = "battle_idle"
 
+        # This dictionary maps state names to texture arrays that represent the animations of said state.
         self._textures_by_state = {
-            "battle_idle": []
+            "default": texture_methods.load_textures_at_filepath_into_texture_array(
+                self.sprite_pack_path
+            ),
+
+            "battle_idle": texture_methods.load_textures_at_filepath_into_texture_array(
+                self.sprite_pack_path + "/battle_idle"
+            )
         }
 
-        self._state = "battle_idle"
+        self._state = "default"  # This is the default texture state upon game creation, as of right now.
         self._current_texture_index = 0
         self._animation_timer = 0.0
         self._frame_duration = 0.15
 
-        self._textures_by_state["battle_idle"] = texture_methods.load_textures_at_filepath_into_texture_array(
-            self.sprite_pack_path + "/battle_idle"
-        )
-
+        # This is temporary.
         if len(self._textures_by_state["battle_idle"]) > 0:
             self.texture = self._textures_by_state["battle_idle"][0]
         else:
@@ -91,3 +95,25 @@ class PlayerCharacter(arcade.Sprite):
             self._animation_timer = 0
             self._current_texture_index = (self._current_texture_index + 1) % len(current_textures)
             self.texture = current_textures[self._current_texture_index]
+
+    def set_animation_state(self, state: str = "default"):
+        """
+        Sets the animation state of the PlayerCharacter instance. Throws an error if no such state exists in
+        self._textures_by_state.
+        :param state: The name of the state, in the form of a string.
+        :return: None
+        """
+        if state in self._textures_by_state:
+            self._state = state
+        else:
+            raise ValueError("set_animation_state was given a state that is not present in self._textures_by_state.")
+
+    def set_position(self, center_x: int = settings.WINDOW_WIDTH/2, center_y: int = settings.WINDOW_HEIGHT/2):
+        """
+        Sets the position of the player character.
+        :param center_x: The x coordinate of the center of the player character.
+        :param center_y: The y coordinate of the center of the player character.
+        :return: None
+        """
+        self.center_x = center_x
+        self.center_y = center_y
