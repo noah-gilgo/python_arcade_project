@@ -1,4 +1,6 @@
 import arcade
+
+import math_methods
 import settings
 import player
 import pyglet
@@ -26,6 +28,7 @@ class GameView(arcade.View):
         self.player_one = None
         self.player_two = None
         self.player_three = None
+        self.player_four = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -42,9 +45,7 @@ class GameView(arcade.View):
         # Setup camera stuff
         self.camera = arcade.Camera2D()
 
-        self._holy_triangle = ((settings.WINDOW_WIDTH/5, settings.WINDOW_HEIGHT-(settings.WINDOW_HEIGHT/4)),
-                               (settings.WINDOW_WIDTH/7, settings.WINDOW_HEIGHT/2),
-                               (settings.WINDOW_WIDTH/5, settings.WINDOW_HEIGHT/4))
+        self._holy_arc = math_methods.initialize_holy_arc(4)
 
     def setup(self):
         # Create the SpriteList
@@ -55,8 +56,8 @@ class GameView(arcade.View):
         # Create and append the players to the SpriteList.
         self.player_one = player.PlayerCharacter(default_texture="assets/sprites/player_characters/kris/default.png",
                                                  scale=4.0,
-                                                 center_x=self.center_x,
-                                                 center_y=self.center_y,
+                                                 center_x=self._holy_arc[0][0],
+                                                 center_y=self._holy_arc[0][1],
                                                  angle=0,
                                                  sprite_folder_name="kris",
                                                  name="Kris",
@@ -64,14 +65,13 @@ class GameView(arcade.View):
                                                  attack=10,
                                                  defense=2,
                                                  magic=0)  # Sprite initialization
-        self.player_one.position = self._holy_triangle[0]  # Center sprite on the screen
         self.player_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
 
         self.player_two = player.PlayerCharacter(default_texture="assets/sprites/player_characters/susie/default.png",
                                                  scale=4.0,
-                                                 center_x=self.center_x,
-                                                 center_y=self.center_y,
+                                                 center_x=self._holy_arc[1][0],
+                                                 center_y=self._holy_arc[1][1],
                                                  angle=0,
                                                  sprite_folder_name="susie",
                                                  name="Susie",
@@ -79,14 +79,13 @@ class GameView(arcade.View):
                                                  attack=14,
                                                  defense=2,
                                                  magic=1)  # Sprite initialization
-        self.player_two.position = self._holy_triangle[1]  # Center sprite on the screen
         self.player_two.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
 
         self.player_three = player.PlayerCharacter(default_texture="assets/sprites/player_characters/ralsei/default.png",
                                                    scale=4.0,
-                                                   center_x=self.center_x,
-                                                   center_y=self.center_y,
+                                                   center_x=self._holy_arc[2][0],
+                                                   center_y=self._holy_arc[2][1],
                                                    angle=0,
                                                    sprite_folder_name="ralsei",
                                                    name="ralsei",
@@ -94,9 +93,22 @@ class GameView(arcade.View):
                                                    attack=8,
                                                    defense=2,
                                                    magic=7)  # Sprite initialization
-        self.player_three.position = self._holy_triangle[2]  # Center sprite on the screen
         self.player_three.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
+
+        self.player_four = player.PlayerCharacter(default_texture="assets/sprites/player_characters/noelle/default.png",
+                                                  scale=4.0,
+                                                  center_x=self._holy_arc[3][0],
+                                                  center_y=self._holy_arc[3][1],
+                                                  angle=0,
+                                                  sprite_folder_name="noelle",
+                                                  name="Noelle",
+                                                  max_hp=90,
+                                                  attack=10,
+                                                  defense=2,
+                                                  magic=0)  # Sprite initialization
+        self.player_four.set_animation_state("battle_idle")
+        self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
 
         # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", False)
@@ -144,6 +156,7 @@ class GameView(arcade.View):
         self.player_one.update_animation(delta_time)
         self.player_two.update_animation(delta_time)
         self.player_three.update_animation(delta_time)
+        self.player_four.update_animation(delta_time)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
