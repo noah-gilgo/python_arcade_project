@@ -78,7 +78,7 @@ class GameView(arcade.View):
         sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
 
         # Animate the background of the GONERMAKER.
-        graphics_methods.animate_depths([self.center_x, self.center_y], self.background_sprites)
+        graphics_methods.animate_depths(self.background_sprites)
 
     def on_draw(self):
         # 3. Clear the screen
@@ -130,21 +130,24 @@ class GameView(arcade.View):
             settings.WINDOW_SCALE = math.sqrt((self.width / self._initial_width) * (self.height / self._initial_height))
             settings.WINDOW_SCALE_X = self.width / self._initial_width
             settings.WINDOW_SCALE_Y = self.height / self._initial_height
+            scale_factor = settings.WINDOW_SCALE / prior_scale
+            x_scale_factor = settings.WINDOW_SCALE_X / prior_scale_x
+            y_scale_factor = settings.WINDOW_SCALE_Y / prior_scale_y
             for sprite in self.background_sprites:
-                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale_x
-                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale_y
-                sprite.center_x = int(sprite.center_x * (settings.WINDOW_SCALE_X / prior_scale_x))
-                sprite.center_y = int(sprite.center_y * (settings.WINDOW_SCALE_Y / prior_scale_y))
+                sprite.scale_x *= scale_factor
+                sprite.scale_y *= scale_factor
+                sprite.center_x = int(sprite.center_x * scale_factor)
+                sprite.center_y = int(sprite.center_y * scale_factor)
             for sprite in self.player_sprites:
-                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale_x
-                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale_y
-                sprite.center_x = int(sprite.center_x * (settings.WINDOW_SCALE_X / prior_scale_x))
-                sprite.center_y = int(sprite.center_y * (settings.WINDOW_SCALE_Y / prior_scale_y))
+                sprite.scale_x *= scale_factor
+                sprite.scale_y *= scale_factor
+                sprite.center_x = int(sprite.center_x * scale_factor)
+                sprite.center_y = int(sprite.center_y * scale_factor)
             for sprite in self.foreground_sprites:
-                sprite.scale_x *= settings.WINDOW_SCALE / prior_scale_x
-                sprite.scale_y *= settings.WINDOW_SCALE / prior_scale_y
-                sprite.center_x = int(sprite.center_x * (settings.WINDOW_SCALE_X / prior_scale_x))
-                sprite.center_y = int(sprite.center_y * (settings.WINDOW_SCALE_Y / prior_scale_y))
+                sprite.scale_x *= scale_factor
+                sprite.scale_y *= scale_factor
+                sprite.center_x = int(sprite.center_x * scale_factor)
+                sprite.center_y = int(sprite.center_y * scale_factor)
 
         if key == arcade.key.UP:
             self.up_pressed = True
