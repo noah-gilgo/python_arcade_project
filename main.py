@@ -13,7 +13,7 @@ class GameView(arcade.View):
         super().__init__()
 
         # Captures the game window's width and height when the game is initialized. This is done to dynamically
-        # calculate a global "SCALE" variable to be used by all sprites during runtime.
+        # calculate a global "SCALE" variable to set the camera zoom when changing to full screen.
         self._initial_width = self.width
         self._initial_height = self.height
 
@@ -31,9 +31,6 @@ class GameView(arcade.View):
         self.up_pressed = False
         self.down_pressed = False
 
-        # 1. Create the SpriteList
-        self.sprites = arcade.SpriteList()
-
         # Set the background color
         self.background_color = arcade.color.BLACK
 
@@ -41,10 +38,10 @@ class GameView(arcade.View):
         self.background_music_player = None
 
         # Setup camera stuff
-        # self.camera = arcade.Camera(self.window.width, self.window.height)
+        self.camera = arcade.Camera2D()
 
         self._holy_triangle = ((settings.WINDOW_WIDTH/5, settings.WINDOW_HEIGHT-(settings.WINDOW_HEIGHT/4)),
-                               (),
+                               (settings.WINDOW_WIDTH/4, settings.WINDOW_HEIGHT/2),
                                (settings.WINDOW_WIDTH/5, settings.WINDOW_HEIGHT/4))
 
     def setup(self):
@@ -53,7 +50,7 @@ class GameView(arcade.View):
         self.player_sprites = arcade.SpriteList()
         self.foreground_sprites = arcade.SpriteList()
 
-        # Create and append your sprite instance to the SpriteList
+        # Create and append the players to the SpriteList.
         self.player_one = player.PlayerCharacter(default_texture="assets/sprites/player_characters/kris/default.png",
                                                  scale=4.0,
                                                  center_x=self.center_x,
@@ -85,9 +82,14 @@ class GameView(arcade.View):
         self.clear()
 
         # Draw in layer order (background → player → foreground)
-        self.background_sprites.draw(pixelated=True)
-        self.player_sprites.draw(pixelated=True)
-        self.foreground_sprites.draw(pixelated=True)
+        with self.camera.activate():
+            self.background_sprites.draw(pixelated=True)
+            self.player_sprites.draw(pixelated=True)
+            self.foreground_sprites.draw(pixelated=True)
+
+    def on_resize(self, width, height):
+        super().on_resize(width, height)
+        self.camera.match_window()
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -119,35 +121,8 @@ class GameView(arcade.View):
 
         if key == arcade.key.F11:
             self.window.set_fullscreen(not self.window.fullscreen)
-            # Sets the global width/height/center variables to the appropriate values after fullscreen is set.
-            settings.WINDOW_WIDTH = self.width
-            settings.WINDOW_HEIGHT = self.height
-            settings.WINDOW_CENTER_X = self.center_x
-            settings.WINDOW_CENTER_Y = self.center_y
-            prior_scale = settings.WINDOW_SCALE
-            prior_scale_x = settings.WINDOW_SCALE_X
-            prior_scale_y = settings.WINDOW_SCALE_Y
             settings.WINDOW_SCALE = math.sqrt((self.width / self._initial_width) * (self.height / self._initial_height))
-            settings.WINDOW_SCALE_X = self.width / self._initial_width
-            settings.WINDOW_SCALE_Y = self.height / self._initial_height
-            scale_factor = settings.WINDOW_SCALE / prior_scale
-            x_scale_factor = settings.WINDOW_SCALE_X / prior_scale_x
-            y_scale_factor = settings.WINDOW_SCALE_Y / prior_scale_y
-            for sprite in self.background_sprites:
-                sprite.scale_x *= scale_factor
-                sprite.scale_y *= scale_factor
-                sprite.center_x = int(sprite.center_x * scale_factor)
-                sprite.center_y = int(sprite.center_y * scale_factor)
-            for sprite in self.player_sprites:
-                sprite.scale_x *= scale_factor
-                sprite.scale_y *= scale_factor
-                sprite.center_x = int(sprite.center_x * scale_factor)
-                sprite.center_y = int(sprite.center_y * scale_factor)
-            for sprite in self.foreground_sprites:
-                sprite.scale_x *= scale_factor
-                sprite.scale_y *= scale_factor
-                sprite.center_x = int(sprite.center_x * scale_factor)
-                sprite.center_y = int(sprite.center_y * scale_factor)
+            self.camera.zoom = settings.WINDOW_SCALE
 
         if key == arcade.key.UP:
             self.up_pressed = True

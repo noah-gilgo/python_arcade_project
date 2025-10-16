@@ -4,7 +4,6 @@ import math
 
 import settings
 from graphics_objects import Frame
-import main
 
 DEPTHS_ANIMATION_INITIAL_SCALE = 10.0  # Initial scale of depths animation frames when initially rendered
 DEPTHS_ANIMATION_SCALE_INCREMENT = 0.05  # How much the scale of each animation frame is increased every frame
@@ -33,8 +32,8 @@ def add_sprite_to_depths_array(dt, sprite_list: list[arcade.Sprite]):
                                center_y=settings.WINDOW_CENTER_Y,
                                )
         sprite.alpha = 1
-        sprite.scale_x = DEPTHS_ANIMATION_INITIAL_SCALE * settings.WINDOW_SCALE
-        sprite.scale_y = DEPTHS_ANIMATION_INITIAL_SCALE * settings.WINDOW_SCALE
+        sprite.scale_x = DEPTHS_ANIMATION_INITIAL_SCALE
+        sprite.scale_y = DEPTHS_ANIMATION_INITIAL_SCALE
         frame = Frame(sprite)
         depths_frame_array.append(frame)
         sprite_list.append(sprite)
@@ -70,14 +69,14 @@ def animate_each_depths_frame(dt):
         sprite.center_x = settings.WINDOW_CENTER_X
         sprite.center_y = settings.WINDOW_CENTER_Y
         if frame.age >= DEPTHS_ANIMATION_LIFETIME:
-            sprite.scale_x = DEPTHS_ANIMATION_INITIAL_SCALE * settings.WINDOW_SCALE
-            sprite.scale_y = DEPTHS_ANIMATION_INITIAL_SCALE * settings.WINDOW_SCALE
+            sprite.scale_x = DEPTHS_ANIMATION_INITIAL_SCALE
+            sprite.scale_y = DEPTHS_ANIMATION_INITIAL_SCALE
             sprite.alpha = 0
             frame.reset_age()
         else:
             frame.age += dt
-            sprite.scale_x += DEPTHS_ANIMATION_SCALE_INCREMENT * settings.WINDOW_SCALE
-            sprite.scale_y += DEPTHS_ANIMATION_SCALE_INCREMENT * settings.WINDOW_SCALE
+            sprite.scale_x += DEPTHS_ANIMATION_SCALE_INCREMENT
+            sprite.scale_y += DEPTHS_ANIMATION_SCALE_INCREMENT
             alpha = -abs(math.ceil(
                 (DEPTHS_ANIMATION_COEFFICIENT * frame.age) - DEPTHS_ANIMATION_MAX_ALPHA)) + DEPTHS_ANIMATION_MAX_ALPHA
             if alpha < 0:
