@@ -35,114 +35,39 @@ class Player(arcade.Sprite):
             self.top = WINDOW_HEIGHT - 1
 
 
-class PlayerCharacter(arcade.Sprite):
+class Character(arcade.Sprite):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
-                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int, magic: int):
-        super().__init__(scale=scale)
-        self.center_x = center_x
-        self.center_y = center_y
-        self.angle = angle
-        self.sprite_pack_path = PLAYER_SPRITES_FOLDER_PATH + sprite_folder_name
-        self.name = name
-        self.max_hp = max_hp
-        self.hp = max_hp
-        self.attack = attack
-        self.defense = defense
-        self.magic = magic
+                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int):
+        super().__init__(scale=scale, center_x=center_x, center_y=center_y)
+        self._angle = angle
+        self._sprite_pack_path = PLAYER_SPRITES_FOLDER_PATH + sprite_folder_name
+        self._name = name
+        self._max_hp = max_hp
+        self._hp = max_hp
+        self._attack = attack
+        self._defense = defense
 
         self._current_animation_state = "default"
 
         # This dictionary maps state names to texture arrays that represent the animations of said state.
         self._animations_by_state = {
             "default": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_idle",
+                sprite_pack_path=self._sprite_pack_path + "/default",
                 frame_duration=0.15,
                 loop_animation=True
-            ),
-
-            "battle_act": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_act",
-                frame_duration=0.10,
-                loop_animation=False
-            ),
-
-            "battle_attack": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_attack",
-                frame_duration=0.10,
-                loop_animation=False
-            ),
-
-            "battle_attack_ready": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_attack_ready",
-                frame_duration=0.15,
-                loop_animation=True
-            ),
-
-            "battle_defend": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_defend",
-                frame_duration=0.10,
-                loop_animation=False
-            ),
-
-            "battle_downed": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_downed",
-                frame_duration=0.15,
-                loop_animation=False
-            ),
-
-            "battle_hurt": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_hurt",
-                frame_duration=0.6,
-                loop_animation=False
-            ),
-
-            "battle_idle": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_idle",
-                frame_duration=0.15,
-                loop_animation=True
-            ),
-
-            "battle_intro": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_intro",
-                frame_duration=0.10,
-                loop_animation=False
-            ),
-
-            "battle_item": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_item",
-                frame_duration=0.10,
-                loop_animation=False
-            ),
-
-            "battle_item_ready": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_item_ready",
-                frame_duration=0.4,
-                loop_animation=True
-            ),
-
-            "battle_spare": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_spare",
-                frame_duration=0.10,
-                loop_animation=False
-            ),
-
-            "battle_victory": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_victory",
-                frame_duration=0.10,
-                loop_animation=False
             ),
         }
 
         self._state = "default"  # This is the default texture state upon game creation, as of right now.
-        self._current_animation = self._animations_by_state["battle_idle"]
+        self._current_animation = self._animations_by_state["default"]
         self._current_animation_timer = 0.0
         self._current_texture_index = 0
 
-        # This is temporary.
-        if len(self._animations_by_state["battle_idle"]) > 0:
-            self.texture = self._animations_by_state["battle_idle"][0]
+        # Initialize the character with its first default texture
+        if len(self._animations_by_state["default"]) > 0:
+            self.texture = self._animations_by_state["default"][0]
         else:
-            raise FileNotFoundError(f"No .png files found in folder: {self.sprite_pack_path + '/battle_idle'}")
+            raise FileNotFoundError(f"No .png files found in folder: {self._sprite_pack_path + '/battle_idle'}")
 
     def update(self, delta_time: float = 1 / 60, **kwargs):
         """ Helps the player do things.
@@ -205,5 +130,4 @@ class PlayerCharacter(arcade.Sprite):
         keys_list = []
         for key in self._animations_by_state.keys():
             keys_list.append(key)
-        print(str(keys_list))
         return keys_list

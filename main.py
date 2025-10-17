@@ -1,8 +1,9 @@
 import arcade
 
 import math_methods
+import player_character
 import settings
-import player
+import character
 import pyglet
 import sound_methods
 import graphics_methods
@@ -60,16 +61,16 @@ class GameView(arcade.View):
         self.foreground_sprites = arcade.SpriteList()
 
         # Create and append the players to the SpriteList.
-        self.player_one = player.PlayerCharacter(scale=4.0,
-                                                 center_x=self._holy_arc[0][0],
-                                                 center_y=self._holy_arc[0][1],
-                                                 angle=0,
-                                                 sprite_folder_name="kris",
-                                                 name="Kris",
-                                                 max_hp=90,
-                                                 attack=10,
-                                                 defense=2,
-                                                 magic=0)  # Sprite initialization
+        self.player_one = player_character.PlayerCharacter(scale=4.0,
+                                                           center_x=self._holy_arc[0][0],
+                                                           center_y=self._holy_arc[0][1],
+                                                           angle=0,
+                                                           sprite_folder_name="kris",
+                                                           name="Kris",
+                                                           max_hp=90,
+                                                           attack=10,
+                                                           defense=2,
+                                                           magic=0)  # Sprite initialization
         self.player_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
 
@@ -146,13 +147,13 @@ class GameView(arcade.View):
         self.player_one.change_y = 0
 
         if self.up_pressed and not self.down_pressed:
-            self.player_one.change_y = player.MOVEMENT_SPEED
+            self.player_one.change_y = character.MOVEMENT_SPEED
         elif self.down_pressed and not self.up_pressed:
-            self.player_one.change_y = -player.MOVEMENT_SPEED
+            self.player_one.change_y = -character.MOVEMENT_SPEED
         if self.left_pressed and not self.right_pressed:
-            self.player_one.change_x = -player.MOVEMENT_SPEED
+            self.player_one.change_x = -character.MOVEMENT_SPEED
         elif self.right_pressed and not self.left_pressed:
-            self.player_one.change_x = player.MOVEMENT_SPEED
+            self.player_one.change_x = character.MOVEMENT_SPEED
 
     def on_update(self, delta_time):
         """ Movement and game logic """
