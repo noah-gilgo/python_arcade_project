@@ -1,5 +1,7 @@
 import arcade
 
+import texture_methods
+
 
 class Frame:
     def __init__(self, sprite: arcade.Sprite):
@@ -22,6 +24,16 @@ class SimpleLoopAnimation:
         self._sprite_pack_path = sprite_pack_path
         self._frame_duration = frame_duration
         self._loop_animation = loop_animation
+
+        self._texture_array = texture_methods.load_textures_at_filepath_into_texture_array(
+            self._sprite_pack_path
+        )
+
+    def __len__(self):
+        return len(self._texture_array)
+
+    def __getitem__(self, item):
+        return self._texture_array[item]
 
     def get_sprite_pack_path(self):
         """
@@ -67,3 +79,10 @@ class SimpleLoopAnimation:
         :return: None
         """
         self._loop_animation = loop_animation
+
+    def get_texture_array(self):
+        """
+        Gets an array of textures containing all of the textures loaded into the texture array.
+        :return: A List[Texture] containing Textures representing every image located at the file path.
+        """
+        return self._texture_array

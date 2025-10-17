@@ -45,7 +45,13 @@ class GameView(arcade.View):
         # Setup camera stuff
         self.camera = arcade.Camera2D()
 
-        self._holy_arc = math_methods.initialize_holy_arc(4)
+        # Initializes the starting positions of the player characters.
+        self._holy_arc = math_methods.initialize_holy_arc(1)
+
+        # Temporary, for testing player animations.
+        self._global_timer = 0.0
+        self._animation_states = []
+        self._animation_state_index = 0
 
     def setup(self):
         # Create the SpriteList
@@ -54,8 +60,7 @@ class GameView(arcade.View):
         self.foreground_sprites = arcade.SpriteList()
 
         # Create and append the players to the SpriteList.
-        self.player_one = player.PlayerCharacter(default_texture="assets/sprites/player_characters/kris/default.png",
-                                                 scale=4.0,
+        self.player_one = player.PlayerCharacter(scale=4.0,
                                                  center_x=self._holy_arc[0][0],
                                                  center_y=self._holy_arc[0][1],
                                                  angle=0,
@@ -68,8 +73,10 @@ class GameView(arcade.View):
         self.player_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
 
-        self.player_two = player.PlayerCharacter(default_texture="assets/sprites/player_characters/susie/default.png",
-                                                 scale=4.0,
+        self._animation_states = self.player_one.get_valid_animation_states()
+
+        """
+        self.player_two = player.PlayerCharacter(scale=4.0,
                                                  center_x=self._holy_arc[1][0],
                                                  center_y=self._holy_arc[1][1],
                                                  angle=0,
@@ -82,8 +89,7 @@ class GameView(arcade.View):
         self.player_two.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
 
-        self.player_three = player.PlayerCharacter(default_texture="assets/sprites/player_characters/ralsei/default.png",
-                                                   scale=4.0,
+        self.player_three = player.PlayerCharacter(scale=4.0,
                                                    center_x=self._holy_arc[2][0],
                                                    center_y=self._holy_arc[2][1],
                                                    angle=0,
@@ -96,8 +102,7 @@ class GameView(arcade.View):
         self.player_three.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
 
-        self.player_four = player.PlayerCharacter(default_texture="assets/sprites/player_characters/noelle/default.png",
-                                                  scale=4.0,
+        self.player_four = player.PlayerCharacter(scale=4.0,
                                                   center_x=self._holy_arc[3][0],
                                                   center_y=self._holy_arc[3][1],
                                                   angle=0,
@@ -109,7 +114,7 @@ class GameView(arcade.View):
                                                   magic=0)  # Sprite initialization
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
-
+        """
         # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", False)
         self.background_music_player = self.background_music.play()
@@ -154,9 +159,21 @@ class GameView(arcade.View):
 
         # Update the player's animation.
         self.player_one.update_animation(delta_time)
+        """
         self.player_two.update_animation(delta_time)
         self.player_three.update_animation(delta_time)
         self.player_four.update_animation(delta_time)
+        """
+
+        # Used for testing the animation system
+        if self._global_timer > 2.0:
+            if self._animation_state_index < len(self._animation_states):
+                print(self._animation_states[self._animation_state_index])
+                self.player_one.set_animation_state(self._animation_states[self._animation_state_index])
+                self._animation_state_index += 1
+            self._global_timer = 0.0
+
+        self._global_timer += delta_time
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
