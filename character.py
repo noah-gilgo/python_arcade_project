@@ -10,8 +10,6 @@ MOVEMENT_SPEED = 5
 WINDOW_WIDTH = settings.WINDOW_WIDTH
 WINDOW_HEIGHT = settings.WINDOW_HEIGHT
 
-PLAYER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
-
 
 class Player(arcade.Sprite):
     """ Player Class """
@@ -39,7 +37,6 @@ class Character(arcade.Sprite):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int):
         super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle)
-        self._sprite_pack_path = PLAYER_SPRITES_FOLDER_PATH + sprite_folder_name
         self._name = name
         self._max_hp = max_hp
         self._hp = max_hp
@@ -51,13 +48,7 @@ class Character(arcade.Sprite):
         # This dictionary maps state names to texture arrays that represent the animations of said state.
         self._animations_by_state = {
             "default": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self._sprite_pack_path + "/default",
-                frame_duration=0.15,
-                loop_animation=True
-            ),
-
-            "battle_idle": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_idle",
+                sprite_pack_path="assets/sprites/soul",
                 frame_duration=0.15,
                 loop_animation=True
             )
@@ -69,10 +60,10 @@ class Character(arcade.Sprite):
         self._current_texture_index = 0
 
         # Initialize the character with its first default texture
-        if len(self._animations_by_state["default"]) > 0:
-            self.texture = self._animations_by_state["default"][0]
-        else:
-            raise FileNotFoundError(f"No .png files found in folder: {self._sprite_pack_path + '/battle_idle'}")
+        # if len(self._animations_by_state["default"]) > 0:
+        #    self.texture = self._animations_by_state["default"][0]
+        # else:
+        #    raise FileNotFoundError(f"No .png files found in folder: {self._sprite_pack_path + '/default'}")
 
     def update(self, delta_time: float = 1 / 60, **kwargs):
         """ Helps the player do things.
