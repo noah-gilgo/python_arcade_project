@@ -1,8 +1,10 @@
 import arcade
 
 import math_methods
+import non_player_character
+import player_character
 import settings
-import player
+import character
 import pyglet
 import sound_methods
 import graphics_methods
@@ -29,6 +31,8 @@ class GameView(arcade.View):
         self.player_two = None
         self.player_three = None
         self.player_four = None
+
+        self.enemy_one = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -60,20 +64,20 @@ class GameView(arcade.View):
         self.foreground_sprites = arcade.SpriteList()
 
         # Create and append the players to the SpriteList.
-        self.player_one = player.PlayerCharacter(scale=4.0,
-                                                 center_x=self._holy_arc[0][0],
-                                                 center_y=self._holy_arc[0][1],
-                                                 angle=0,
-                                                 sprite_folder_name="kris",
-                                                 name="Kris",
-                                                 max_hp=90,
-                                                 attack=10,
-                                                 defense=2,
-                                                 magic=0)  # Sprite initialization
+        self.player_one = player_character.PlayerCharacter(scale=4.0,
+                                                           center_x=self._holy_arc[0][0],
+                                                           center_y=self._holy_arc[0][1],
+                                                           angle=0,
+                                                           sprite_folder_name="kris",
+                                                           name="Kris",
+                                                           max_hp=90,
+                                                           attack=10,
+                                                           defense=2,
+                                                           magic=0)  # Sprite initialization
         self.player_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
 
-        self._animation_states = self.player_one.get_valid_animation_states()
+        # self._animation_states = self.player_one.get_valid_animation_states()
 
         """
         self.player_two = player.PlayerCharacter(scale=4.0,
@@ -115,6 +119,23 @@ class GameView(arcade.View):
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
         """
+
+        # Create and append the players to the SpriteList.
+        self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
+                                                                 center_x=settings.WINDOW_CENTER_X,
+                                                                 center_y=settings.WINDOW_CENTER_Y,
+                                                                 angle=0,
+                                                                 sprite_folder_name="rudinn",
+                                                                 name="Rudinn",
+                                                                 max_hp=90,
+                                                                 attack=10,
+                                                                 defense=2
+                                                                 )
+        self.enemy_one.set_animation_state("battle_idle")
+        self.player_sprites.append(self.enemy_one)  # Append the instance to the SpriteList
+
+        self._animation_states = self.enemy_one.get_valid_animation_states()
+
         # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", False)
         self.background_music_player = self.background_music.play()
@@ -146,13 +167,13 @@ class GameView(arcade.View):
         self.player_one.change_y = 0
 
         if self.up_pressed and not self.down_pressed:
-            self.player_one.change_y = player.MOVEMENT_SPEED
+            self.player_one.change_y = character.MOVEMENT_SPEED
         elif self.down_pressed and not self.up_pressed:
-            self.player_one.change_y = -player.MOVEMENT_SPEED
+            self.player_one.change_y = -character.MOVEMENT_SPEED
         if self.left_pressed and not self.right_pressed:
-            self.player_one.change_x = -player.MOVEMENT_SPEED
+            self.player_one.change_x = -character.MOVEMENT_SPEED
         elif self.right_pressed and not self.left_pressed:
-            self.player_one.change_x = player.MOVEMENT_SPEED
+            self.player_one.change_x = character.MOVEMENT_SPEED
 
     def on_update(self, delta_time):
         """ Movement and game logic """
@@ -164,12 +185,13 @@ class GameView(arcade.View):
         self.player_three.update_animation(delta_time)
         self.player_four.update_animation(delta_time)
         """
+        self.enemy_one.update_animation(delta_time)
 
         # Used for testing the animation system
         if self._global_timer > 2.0:
             if self._animation_state_index < len(self._animation_states):
                 print(self._animation_states[self._animation_state_index])
-                self.player_one.set_animation_state(self._animation_states[self._animation_state_index])
+                self.enemy_one.set_animation_state(self._animation_states[self._animation_state_index])
                 self._animation_state_index += 1
             self._global_timer = 0.0
 

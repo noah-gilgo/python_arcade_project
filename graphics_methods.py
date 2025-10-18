@@ -66,8 +66,8 @@ def animate_each_depths_frame(dt):
     # 1. If alpha = 0, reset the alpha to 1 and the scale to 1.0.
     for frame in depths_frame_array:
         sprite = frame.sprite
-        sprite.center_x = settings.WINDOW_CENTER_X
-        sprite.center_y = settings.WINDOW_CENTER_Y
+        sprite._center_x = settings.WINDOW_CENTER_X
+        sprite._center_y = settings.WINDOW_CENTER_Y
         if frame.age >= DEPTHS_ANIMATION_LIFETIME:
             sprite.scale_x = DEPTHS_ANIMATION_INITIAL_SCALE
             sprite.scale_y = DEPTHS_ANIMATION_INITIAL_SCALE
