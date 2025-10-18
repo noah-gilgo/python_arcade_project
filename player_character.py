@@ -53,12 +53,6 @@ class PlayerCharacter(character.Character):
                 loop_animation=False
             ),
 
-            "battle_idle": graphics_objects.SimpleLoopAnimation(
-                sprite_pack_path=self.sprite_pack_path + "/battle_idle",
-                frame_duration=0.15,
-                loop_animation=True
-            ),
-
             "battle_intro": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self.sprite_pack_path + "/battle_intro",
                 frame_duration=0.10,

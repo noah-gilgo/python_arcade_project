@@ -38,8 +38,7 @@ class Player(arcade.Sprite):
 class Character(arcade.Sprite):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int):
-        super().__init__(scale=scale, center_x=center_x, center_y=center_y)
-        self._angle = angle
+        super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle)
         self._sprite_pack_path = PLAYER_SPRITES_FOLDER_PATH + sprite_folder_name
         self._name = name
         self._max_hp = max_hp
@@ -56,6 +55,12 @@ class Character(arcade.Sprite):
                 frame_duration=0.15,
                 loop_animation=True
             ),
+
+            "battle_idle": graphics_objects.SimpleLoopAnimation(
+                sprite_pack_path=self.sprite_pack_path + "/battle_idle",
+                frame_duration=0.15,
+                loop_animation=True
+            )
         }
 
         self._state = "default"  # This is the default texture state upon game creation, as of right now.
