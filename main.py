@@ -49,8 +49,9 @@ class GameView(arcade.View):
         # Setup camera stuff
         self.camera = arcade.Camera2D()
 
-        # Initializes the starting positions of the player characters.
+        # Initializes the starting positions of the player characters and enemy characters.
         self._holy_arc = math_methods.initialize_holy_arc(1)
+        self._unholy_arc = math_methods.initialize_unholy_arc(1)
 
         # Temporary, for testing player animations.
         self._global_timer = 0.0
@@ -122,8 +123,8 @@ class GameView(arcade.View):
 
         # Create and append the players to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
-                                                                 center_x=settings.WINDOW_CENTER_X,
-                                                                 center_y=settings.WINDOW_CENTER_Y,
+                                                                 center_x=self._unholy_arc[0][0],
+                                                                 center_y=self._unholy_arc[0][1],
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
                                                                  name="Rudinn",
