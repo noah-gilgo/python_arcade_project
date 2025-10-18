@@ -37,3 +37,21 @@ def initialize_holy_arc(number_of_players: int = 3):
         holy_arc.append(position)
 
     return holy_arc
+
+
+def initialize_unholy_arc(number_of_opponents: int = 1):
+    """
+    Generates a list of tuples representing the starting positions of each of the enemies in battle.
+    Calls initialize_holy_arc and flips it across the y-axis of the screen.
+    :param number_of_opponents: The number of positions to be generated.
+    :return: A list of tuples representing the positions of the enemies in battle.
+    """
+
+    arc = initialize_holy_arc(number_of_opponents)
+
+    unholy_arc = []
+
+    for position in arc:
+        unholy_arc.append((settings.WINDOW_WIDTH - position[0], position[1]))
+
+    return unholy_arc
