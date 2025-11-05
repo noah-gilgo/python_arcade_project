@@ -61,7 +61,7 @@ class PlayerCharacter(character.Character):
 
             "battle_intro": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_intro",
-                frame_duration=0.10,
+                frame_duration=0.08,
                 loop_animation=False
             ),
 
@@ -81,6 +81,12 @@ class PlayerCharacter(character.Character):
                 sprite_pack_path=self._sprite_pack_path + "/battle_spare",
                 frame_duration=0.10,
                 loop_animation=False
+            ),
+
+            "battle_spare_ready": graphics_objects.SimpleLoopAnimation(
+                sprite_pack_path=self._sprite_pack_path + "/battle_spare_ready",
+                frame_duration=0.2,
+                loop_animation=True
             ),
 
             "battle_victory": graphics_objects.SimpleLoopAnimation(
