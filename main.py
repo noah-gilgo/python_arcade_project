@@ -1,4 +1,6 @@
 import arcade
+from arcade.gui import UIManager
+from arcade.resources import resolve_resource_path
 
 import math_methods
 import non_player_character
@@ -9,6 +11,7 @@ import pyglet
 import sound_methods
 import graphics_methods
 import math
+import dialogue_box
 
 
 class GameView(arcade.View):
@@ -57,6 +60,12 @@ class GameView(arcade.View):
         self._global_timer = 0.0
         self._animation_states = []
         self._animation_state_index = 0
+
+        # Load the fonts used by the game.
+        arcade.load_font("assets/fonts/8bitoperator/8bitoperator_jve.ttf")
+
+        # Initialize the UIManager.
+        self.manager = UIManager()
 
     def setup(self):
         # Create the SpriteList
@@ -146,6 +155,9 @@ class GameView(arcade.View):
         # Animate the background of the GONERMAKER.
         graphics_methods.animate_depths(self.background_sprites)
 
+        # Initialize the GUI.
+        self.manager.add(dialogue_box.TextBox())
+
     def on_draw(self):
         # 3. Clear the screen
         self.clear()
@@ -155,6 +167,7 @@ class GameView(arcade.View):
             self.background_sprites.draw(pixelated=True)
             self.player_sprites.draw(pixelated=True)
             self.foreground_sprites.draw(pixelated=True)
+            self.manager.draw(pixelated=True)
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -247,6 +260,8 @@ def main():
 
     # Show GameView on screen
     window.show_view(game)
+
+    print(arcade.resources.resolve_resource_path(":system:fonts/ttf/8bitoperator/8bitoperator_jve.ttf"))
 
     # Start the arcade game loop
     arcade.run()

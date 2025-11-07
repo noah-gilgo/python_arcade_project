@@ -61,7 +61,7 @@ class PlayerCharacter(character.Character):
 
             "battle_intro": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_intro",
-                frame_duration=0.08,
+                frame_duration=0.07,
                 loop_animation=False
             ),
 
