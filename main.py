@@ -145,7 +145,7 @@ class GameView(arcade.View):
         # self._animation_states = self.enemy_one.get_valid_animation_states()
 
         # Start the background music.
-        self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", False)
+        self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", True)
         self.background_music_player = self.background_music.play()
         self.background_music_player.pitch = 0.0
         self.background_music_player.loop = True

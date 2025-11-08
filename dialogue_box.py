@@ -17,7 +17,7 @@ class TextBoxPortrait(UIImage):
 
 
 class TextBoxText(UILabel):
-    def __init__(self, text: str,
+    def __init__(self,
                  **kwargs):
         super().__init__(
             width=(settings.WINDOW_WIDTH - 144)-192-32,
@@ -29,7 +29,6 @@ class TextBoxText(UILabel):
             font_size=48,
             multiline=True
         )
-        self.text = text
         """
         self._text = text
         self._talk_sprite_path = talk_sprite_path
@@ -41,19 +40,57 @@ class TextBoxText(UILabel):
         """
 
 
-"""
-class TextBoxLayout(UIBoxLayout):
-    def __init__(self):
-        super().__init__(
-            x=0,
-            y=0,
-            vertical=False,
-            size_hint=(1, 0.25),
-            align="left"
-        )
+class TextBoxDialog:
+    """
+    Stores the data representing a particular dialogue within the text box at the bottom of the screen during battle.
+    If the portrait_texture_path is anything besides null or an empty string, it will be assumed that the dialogue will
+    render with a character's talksprite.
+    """
+    def __init__(self, text: str, rate_of_text: float, portrait_texture_path: str, text_sound_path: str):
+        self._text = text
+        self._rate_of_text = rate_of_text
 
-        self.add(TextBox())
-"""
+        self._portrait_texture = None
+        if portrait_texture_path not in (None, ""):
+            self._portrait_texture = arcade.Texture(arcade.load_image(portrait_texture_path).resize((192, 192), Resampling.NEAREST))
+        self._text_sound = arcade.load_sound("assets/audio/dialog/snd_text.wav", False)
+        if text_sound_path not in (None, ""):
+            self._text_sound = arcade.load_sound(text_sound_path, False)
+
+    def has_portrait(self):
+        """
+        Returns a bool representing whether or not the dialog has a talk sprite texture.
+        :return: a bool representing whether or not the dialog has a talk sprite texture.
+        """
+        return self._portrait_texture is not None
+
+    def get_text(self):
+        """
+        Returns the dialogue string stored within the object.
+        :return: the dialogue string stored within the object.
+        """
+        return self._text
+
+    def get_rate_of_text(self):
+        """
+        Returns the rate, in seconds, that each character of the text will be displayed by the TextBoxText object.
+        :return: the rate that each character of the text will be displayed by the TextBoxText object (in seconds)
+        """
+        return self._rate_of_text
+
+    def get_portrait_texture(self):
+        """
+        Returns an arcade.Texture object containing the texture of the portrait referenced by the object.
+        :return: an arcade.Texture object containing the texture of the portrait referenced by the object.
+        """
+        return self._portrait_texture
+
+    def get_text_sound(self):
+        """
+        Returns an arcade.Sound object storing the text sound located at the path passed into the object on creation.
+        :return: an arcade.Sound object storing the text sound located at the path passed into the object on creation.
+        """
+        return self._text_sound
 
 
 class TextBox(UIWidget):
@@ -64,7 +101,7 @@ class TextBox(UIWidget):
             width=settings.WINDOW_WIDTH,
             height=int(settings.WINDOW_HEIGHT / 4),
             children=[TextBoxPortrait("assets/sprites/player_characters/susie/dialog_portraits/susie_small_grin.png"),
-                      TextBoxText("* Heck yeah check it out Kris I've got a dialog box.")]
+                      TextBoxText()]
         )
         self.with_background(color=arcade.uicolor.BLACK)
 
