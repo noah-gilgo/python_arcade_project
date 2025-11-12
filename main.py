@@ -243,7 +243,6 @@ class GameView(arcade.View):
                 text_sound_path="assets/audio/dialog/snd_txtsus.wav"
             )
             self._text_box.load_dialog(dialog)
-            print("C pressed")
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """

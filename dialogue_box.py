@@ -34,7 +34,7 @@ class TextBoxPortrait(UIImage):
 class TextBoxText(UILabel):
     def __init__(self,
                  text: str = "* Hell yeah Kris I'm in fortnite",
-                 x=264,
+                 x=72,
                  y=54,
                  width=settings.WINDOW_WIDTH - 144,
                  height=settings.WINDOW_HEIGHT/4 - 64,
@@ -137,7 +137,7 @@ class TextBox(UIWidget):
         if self._dialog_box.has_portrait():
             self._text_box_text.x = 264
         else:
-            self._text_box_text.x = 168
+            self._text_box_text.x = 72
 
         super().__init__(
             x=0,
@@ -167,14 +167,13 @@ class TextBox(UIWidget):
         :param text_box_dialog: the TextBoxDialog object to overwrite the current data of the TextBox
         :return: None
         """
-        self._dialog_box = text_box_dialog
-
         self._dialog_string = text_box_dialog.get_text()
         self._text_box_text.set_text("")
         self._current_character_in_text_box_index = 0
 
-        if self._dialog_box.has_portrait():
-            self._text_box_text.x = 264
+        if text_box_dialog.has_portrait():
+            if not self._dialog_box.has_portrait():
+                self._text_box_text.move(dx=192)
             self._text_box_portrait_path = text_box_dialog.get_portrait_texture_path()
             self._text_box_portrait_texture = arcade.Texture(
                 arcade.load_image(self._text_box_portrait_path).resize((192, 192), Resampling.NEAREST)
@@ -186,12 +185,15 @@ class TextBox(UIWidget):
                 self.add(self._text_box_portrait)
 
         else:
-            self._text_box_text.x = 168
+            if self._dialog_box.has_portrait():
+                self._text_box_text.move(dx=-192)
             self._text_box_portrait_path = ""
             self.remove(self._text_box_portrait)
             self._text_box_portrait = None
 
         self._text_sound = arcade.load_sound(text_box_dialog.get_text_sound_path(), False)
+
+        self._dialog_box = text_box_dialog
 
         self.animate_character_dialog()
 
@@ -203,10 +205,6 @@ class TextBox(UIWidget):
         :return: None
         """
 
-        # print("animate_character_dialog is running.")
-        # print("Current index: " + str(self._current_character_in_text_box_index))
-        # print("Current text box text: " + self._text_box_text.text)
-        # print("Current dialogue string: " + self._dialog_string)
         if self._current_character_in_text_box_index < len(self._dialog_string):
             self._text_box_text.text += self._dialog_string[self._current_character_in_text_box_index]
             self._text_sound.play()
@@ -214,7 +212,6 @@ class TextBox(UIWidget):
         else:
             self._current_character_in_text_box_index = 0
             pyglet.clock.unschedule(self.add_character_to_text_box_text)
-            print("Clock unscheduled")
 
     def animate_character_dialog(self):
         pyglet.clock.schedule_interval(
