@@ -66,6 +66,7 @@ class GameView(arcade.View):
 
         # Initialize the UIManager.
         self.manager = UIManager()
+        self._text_box = None
 
     def setup(self):
         # Create the SpriteList
@@ -156,13 +157,14 @@ class GameView(arcade.View):
         graphics_methods.animate_depths(self.background_sprites)
 
         # Initialize the GUI.
-        self.manager.add(dialogue_box.TextBox())
+        self._text_box = dialogue_box.TextBox()
+        self.manager.add(self._text_box)
 
     def on_draw(self):
         # 3. Clear the screen
         self.clear()
 
-        # Draw in layer order (background → player → foreground)
+        # Draw in layer order (background -> player -> foreground)
         with self.camera.activate():
             self.background_sprites.draw(pixelated=True)
             self.player_sprites.draw(pixelated=True)
@@ -232,6 +234,16 @@ class GameView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.right_pressed = True
             self.update_player_speed()
+
+        if key == arcade.key.C:
+            dialog = dialogue_box.TextBoxDialog(
+                portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_happy_blush_grin.png",
+                text="* Heck yeah",
+                rate_of_text=0.03,
+                text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+            )
+            self._text_box.load_dialog(dialog)
+            print("C pressed")
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """

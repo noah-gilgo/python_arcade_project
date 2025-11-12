@@ -34,7 +34,7 @@ class TextBoxPortrait(UIImage):
 class TextBoxText(UILabel):
     def __init__(self,
                  text: str = "* Hell yeah Kris I'm in fortnite",
-                 x=72,
+                 x=264,
                  y=54,
                  width=settings.WINDOW_WIDTH - 144,
                  height=settings.WINDOW_HEIGHT/4 - 64,
@@ -126,12 +126,18 @@ class TextBoxDialog:
 class TextBox(UIWidget):
     def __init__(self, dialog_box: TextBoxDialog = None):
         self._dialog_box = TextBoxDialog()
-
         if dialog_box:
             self._dialog_box = dialog_box
+
         self._text_box_text = TextBoxText()
+        self._dialog_string = self._dialog_box.get_text()
+        self._current_character_in_text_box_index = 0
+        self._text_box_text.set_text("")
+
         if self._dialog_box.has_portrait():
-            self._text_box_text.center_x += 192
+            self._text_box_text.x = 264
+        else:
+            self._text_box_text.x = 168
 
         super().__init__(
             x=0,
@@ -155,30 +161,7 @@ class TextBox(UIWidget):
 
         self._text_sound = arcade.load_sound(self._dialog_box.get_text_sound_path(), False)
 
-        self._dialog_string = self._dialog_box.get_text()
-        self._current_character_in_text_box_index = 0
-
-    def add_character_to_text_box_text(self, dt):
-        """
-        Scheduled event that adds a character to the textbox text.
-        If the textbox text length already matches the index of the character to be added, the scheduled event is
-        unscheduled.
-        :return: None
-        """
-        if self._current_character_in_text_box_index == len(self._text_box_text.text):
-            pyglet.clock.unschedule(self.animate_character_dialog)
-            self._current_character_in_text_box_index = 0
-        else:
-            self._text_box_text.text.append(self._dialog_string)
-            self._current_character_in_text_box_index += 1
-
-    def animate_character_dialog(self):
-        pyglet.clock.schedule_interval(
-            self.add_character_to_text_box_text,
-            self._dialog_box.get_rate_of_text()
-        )
-
-    def load_dialogue(self, text_box_dialog: TextBoxDialog):
+    def load_dialog(self, text_box_dialog: TextBoxDialog):
         """
         Loads the data from a text box dialog into the parent TextBox widget.
         :param text_box_dialog: the TextBoxDialog object to overwrite the current data of the TextBox
@@ -186,9 +169,12 @@ class TextBox(UIWidget):
         """
         self._dialog_box = text_box_dialog
 
+        self._dialog_string = text_box_dialog.get_text()
         self._text_box_text.set_text("")
+        self._current_character_in_text_box_index = 0
+
         if self._dialog_box.has_portrait():
-            self._text_box_text.center_x = 264
+            self._text_box_text.x = 264
             self._text_box_portrait_path = text_box_dialog.get_portrait_texture_path()
             self._text_box_portrait_texture = arcade.Texture(
                 arcade.load_image(self._text_box_portrait_path).resize((192, 192), Resampling.NEAREST)
@@ -200,14 +186,38 @@ class TextBox(UIWidget):
                 self.add(self._text_box_portrait)
 
         else:
-            self._text_box_text.center_x = 168
+            self._text_box_text.x = 168
             self._text_box_portrait_path = ""
             self.remove(self._text_box_portrait)
             self._text_box_portrait = None
 
         self._text_sound = arcade.load_sound(text_box_dialog.get_text_sound_path(), False)
 
-        self._dialog_string = text_box_dialog.get_text()
-        self._current_character_in_text_box_index = 0
-
         self.animate_character_dialog()
+
+    def add_character_to_text_box_text(self, dt):
+        """
+        Scheduled event that adds a character to the textbox text.
+        If the textbox text length already matches the index of the character to be added, the scheduled event is
+        unscheduled.
+        :return: None
+        """
+
+        # print("animate_character_dialog is running.")
+        # print("Current index: " + str(self._current_character_in_text_box_index))
+        # print("Current text box text: " + self._text_box_text.text)
+        # print("Current dialogue string: " + self._dialog_string)
+        if self._current_character_in_text_box_index < len(self._dialog_string):
+            self._text_box_text.text += self._dialog_string[self._current_character_in_text_box_index]
+            self._text_sound.play()
+            self._current_character_in_text_box_index += 1
+        else:
+            self._current_character_in_text_box_index = 0
+            pyglet.clock.unschedule(self.add_character_to_text_box_text)
+            print("Clock unscheduled")
+
+    def animate_character_dialog(self):
+        pyglet.clock.schedule_interval(
+            self.add_character_to_text_box_text,
+            self._dialog_box.get_rate_of_text()
+        )
