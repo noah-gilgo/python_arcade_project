@@ -1,3 +1,4 @@
+import pyglet.clock
 from PIL.Image import Image, Resampling
 from arcade import Texture
 from arcade.gui import UIWidget, UILabel, UILayout, UIBoxLayout, UIImage
@@ -20,6 +21,14 @@ class TextBoxPortrait(UIImage):
             width=width,
             height=height
         )
+
+    def set_texture(self, texture: arcade.Texture):
+        """
+        Loads a texture into the widget.
+        :param texture: The Texture object to replace the old texture.
+        :return:
+        """
+        self.texture = texture
 
 
 class TextBoxText(UILabel):
@@ -48,7 +57,7 @@ class TextBoxText(UILabel):
         :param text:
         :return:
         """
-        pass
+        self.text = text
 
 
 class TextBoxDialog:
@@ -115,10 +124,13 @@ class TextBoxDialog:
 
 
 class TextBox(UIWidget):
-    def __init__(self):
-        self._dialogue_box = TextBoxDialog()
-        self._text_box_text = TextBoxText(text=self._dialogue_box.get_text())
-        if self._dialogue_box.has_portrait():
+    def __init__(self, dialog_box: TextBoxDialog = None):
+        self._dialog_box = TextBoxDialog()
+
+        if dialog_box:
+            self._dialog_box = dialog_box
+        self._text_box_text = TextBoxText()
+        if self._dialog_box.has_portrait():
             self._text_box_text.center_x += 192
 
         super().__init__(
@@ -137,11 +149,34 @@ class TextBox(UIWidget):
             self._text_box_portrait_texture = arcade.Texture(
                 arcade.load_image(self._text_box_portrait_path).resize((192, 192), Resampling.NEAREST))
             self._text_box_portrait = TextBoxPortrait(self._text_box_portrait_texture)
-            self.children.append(self._text_box_portrait)
+            self.add(self._text_box_portrait)
 
         self.with_background(color=arcade.uicolor.BLACK)
 
-        self._text_sound = arcade.load_sound(self._dialogue_box.get_text_sound_path(), False)
+        self._text_sound = arcade.load_sound(self._dialog_box.get_text_sound_path(), False)
+
+        self._dialog_string = self._dialog_box.get_text()
+        self._current_character_in_text_box_index = 0
+
+    def add_character_to_text_box_text(self, dt):
+        """
+        Scheduled event that adds a character to the textbox text.
+        If the textbox text length already matches the index of the character to be added, the scheduled event is
+        unscheduled.
+        :return: None
+        """
+        if self._current_character_in_text_box_index == len(self._text_box_text.text):
+            pyglet.clock.unschedule(self.animate_character_dialog)
+            self._current_character_in_text_box_index = 0
+        else:
+            self._text_box_text.text.append(self._dialog_string)
+            self._current_character_in_text_box_index += 1
+
+    def animate_character_dialog(self):
+        pyglet.clock.schedule_interval(
+            self.add_character_to_text_box_text,
+            self._dialog_box.get_rate_of_text()
+        )
 
     def load_dialogue(self, text_box_dialog: TextBoxDialog):
         """
@@ -149,7 +184,30 @@ class TextBox(UIWidget):
         :param text_box_dialog: the TextBoxDialog object to overwrite the current data of the TextBox
         :return: None
         """
+        self._dialog_box = text_box_dialog
 
-        # if text_box_dialog.has_portrait():
-        pass
+        self._text_box_text.set_text("")
+        if self._dialog_box.has_portrait():
+            self._text_box_text.center_x = 264
+            self._text_box_portrait_path = text_box_dialog.get_portrait_texture_path()
+            self._text_box_portrait_texture = arcade.Texture(
+                arcade.load_image(self._text_box_portrait_path).resize((192, 192), Resampling.NEAREST)
+            )
+            if self._text_box_portrait:
+                self._text_box_portrait.set_texture(self._text_box_portrait_texture)
+            else:
+                self._text_box_portrait = TextBoxPortrait(self._text_box_portrait_texture)
+                self.add(self._text_box_portrait)
 
+        else:
+            self._text_box_text.center_x = 168
+            self._text_box_portrait_path = ""
+            self.remove(self._text_box_portrait)
+            self._text_box_portrait = None
+
+        self._text_sound = arcade.load_sound(text_box_dialog.get_text_sound_path(), False)
+
+        self._dialog_string = text_box_dialog.get_text()
+        self._current_character_in_text_box_index = 0
+
+        self.animate_character_dialog()
