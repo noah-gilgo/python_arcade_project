@@ -68,6 +68,51 @@ class GameView(arcade.View):
         self.manager = UIManager()
         self._text_box = None
 
+        self._dialog = [
+            dialogue_box.TextBoxDialog(
+                portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_happy_blush_grin.png",
+                text="* Heck yeah Kris, we're in Fortnite",
+                rate_of_text=0.03,
+                text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+            ),
+            dialogue_box.TextBoxDialog(
+                portrait_texture_path="assets/sprites/player_characters/ralsei/dialog_portraits/ralsei_hat_shocked.png",
+                text="* Wait a minute, how did I get my Chapter 1 clothes?",
+                rate_of_text=0.03,
+                text_sound_path="assets/audio/dialog/snd_txtral.wav"
+            ),
+            dialogue_box.TextBoxDialog(
+                portrait_texture_path="assets/sprites/player_characters/noelle/dialog_portraits/noelle_pissed.png",
+                text="* ...antlers...",
+                rate_of_text=0.06,
+                text_sound_path="assets/audio/dialog/snd_txtnoe.wav"
+            ),
+            dialogue_box.TextBoxDialog(
+                portrait_texture_path="assets/sprites/player_characters/noelle/dialog_portraits/noelle_very_pissed.png",
+                text="* ...behind the dialog portrait...",
+                rate_of_text=0.06,
+                text_sound_path="assets/audio/dialog/snd_txtnoe.wav"
+            ),
+            dialogue_box.TextBoxDialog(
+                portrait_texture_path="assets/sprites/player_characters/ralsei/dialog_portraits/ralsei_normal.png",
+                text="* Do you have anything to say about all of this, play- I mean Kris..?",
+                rate_of_text=0.03,
+                text_sound_path="assets/audio/dialog/snd_txtral.wav"
+            ),
+            dialogue_box.TextBoxDialog(
+                portrait_texture_path="assets/sprites/player_characters/kris/default/kris-standing.png",
+                text=" ",
+            ),
+            dialogue_box.TextBoxDialog(
+                portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_trying_not_to_laugh.png",
+                text="* Alright, fine, keep your secrets.",
+                rate_of_text=0.03,
+                text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+            )
+        ]
+
+        self._dialog_box_index = 0
+
     def setup(self):
         # Create the SpriteList
         self.background_sprites = arcade.SpriteList()
@@ -235,14 +280,12 @@ class GameView(arcade.View):
             self.right_pressed = True
             self.update_player_speed()
 
-        if key == arcade.key.C:
-            dialog = dialogue_box.TextBoxDialog(
-                portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_happy_blush_grin.png",
-                text="* Heck yeah",
-                rate_of_text=0.03,
-                text_sound_path="assets/audio/dialog/snd_txtsus.wav"
-            )
-            self._text_box.load_dialog(dialog)
+        if key == arcade.key.Z:
+            self._text_box.load_dialog(self._dialog[self._dialog_box_index])
+            if self._dialog_box_index < len(self._dialog) - 1:
+                self._dialog_box_index += 1
+            else:
+                self._dialog_box_index = 0
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """

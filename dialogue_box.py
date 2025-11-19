@@ -135,7 +135,7 @@ class TextBox(UIWidget):
         self._text_box_text.set_text("")
 
         if self._dialog_box.has_portrait():
-            self._text_box_text.x = 264
+            self._text_box_text.x = 256
         else:
             self._text_box_text.x = 72
 
@@ -174,6 +174,7 @@ class TextBox(UIWidget):
         if text_box_dialog.has_portrait():
             if not self._dialog_box.has_portrait():
                 self._text_box_text.move(dx=192)
+                self._text_box_text.resize(width=settings.WINDOW_WIDTH - 64)
             self._text_box_portrait_path = text_box_dialog.get_portrait_texture_path()
             self._text_box_portrait_texture = arcade.Texture(
                 arcade.load_image(self._text_box_portrait_path).resize((192, 192), Resampling.NEAREST)
@@ -187,6 +188,7 @@ class TextBox(UIWidget):
         else:
             if self._dialog_box.has_portrait():
                 self._text_box_text.move(dx=-192)
+                self._text_box_text.resize(width=settings.WINDOW_WIDTH - 192)
             self._text_box_portrait_path = ""
             self.remove(self._text_box_portrait)
             self._text_box_portrait = None
