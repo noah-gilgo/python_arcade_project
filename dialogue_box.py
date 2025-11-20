@@ -135,9 +135,9 @@ class TextBox(UIWidget):
         self._text_box_text.set_text("")
 
         if self._dialog_box.has_portrait():
-            self._text_box_text.x = 256
+            self._text_box_text.x = 192
         else:
-            self._text_box_text.x = 72
+            self._text_box_text.x = 0
 
         super().__init__(
             x=0,
@@ -161,6 +161,8 @@ class TextBox(UIWidget):
 
         self._text_sound = arcade.load_sound(self._dialog_box.get_text_sound_path(), False)
 
+        self._rate_of_text = self._dialog_box.get_rate_of_text()
+
     def load_dialog(self, text_box_dialog: TextBoxDialog):
         """
         Loads the data from a text box dialog into the parent TextBox widget.
@@ -173,8 +175,8 @@ class TextBox(UIWidget):
 
         if text_box_dialog.has_portrait():
             if not self._dialog_box.has_portrait():
-                self._text_box_text.move(dx=192)
-                self._text_box_text.resize(width=settings.WINDOW_WIDTH - 64)
+                self._text_box_text.move(dx=96)
+                self._text_box_text.resize(width=settings.WINDOW_WIDTH - 280)
             self._text_box_portrait_path = text_box_dialog.get_portrait_texture_path()
             self._text_box_portrait_texture = arcade.Texture(
                 arcade.load_image(self._text_box_portrait_path).resize((192, 192), Resampling.NEAREST)
@@ -187,8 +189,8 @@ class TextBox(UIWidget):
 
         else:
             if self._dialog_box.has_portrait():
-                self._text_box_text.move(dx=-192)
-                self._text_box_text.resize(width=settings.WINDOW_WIDTH - 192)
+                self._text_box_text.move(dx=-96)
+                self._text_box_text.resize(width=settings.WINDOW_WIDTH - 88)
             self._text_box_portrait_path = ""
             self.remove(self._text_box_portrait)
             self._text_box_portrait = None
@@ -197,6 +199,9 @@ class TextBox(UIWidget):
 
         self._dialog_box = text_box_dialog
 
+        self._rate_of_text = text_box_dialog.get_rate_of_text()
+
+        pyglet.clock.unschedule(self.add_character_to_text_box_text)
         self.animate_character_dialog()
 
     def add_character_to_text_box_text(self, dt):
@@ -218,5 +223,5 @@ class TextBox(UIWidget):
     def animate_character_dialog(self):
         pyglet.clock.schedule_interval(
             self.add_character_to_text_box_text,
-            self._dialog_box.get_rate_of_text()
+            self._rate_of_text
         )

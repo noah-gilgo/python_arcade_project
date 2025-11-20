@@ -95,13 +95,13 @@ class GameView(arcade.View):
             ),
             dialogue_box.TextBoxDialog(
                 portrait_texture_path="assets/sprites/player_characters/ralsei/dialog_portraits/ralsei_normal.png",
-                text="* Do you have anything to say about all of this, play- I mean Kris..?",
+                text="* Do you have anything to say about all of this, Kris..?",
                 rate_of_text=0.03,
                 text_sound_path="assets/audio/dialog/snd_txtral.wav"
             ),
             dialogue_box.TextBoxDialog(
                 portrait_texture_path="assets/sprites/player_characters/kris/default/kris-standing.png",
-                text=" ",
+                text="  "
             ),
             dialogue_box.TextBoxDialog(
                 portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_trying_not_to_laugh.png",
