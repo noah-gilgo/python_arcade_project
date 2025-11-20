@@ -1,7 +1,6 @@
 import pyglet.clock
-from PIL.Image import Image, Resampling
-from arcade import Texture
-from arcade.gui import UIWidget, UILabel, UILayout, UIBoxLayout, UIImage
+from PIL.Image import Resampling
+from arcade.gui import UIWidget, UILabel, UIImage
 
 import settings
 import arcade
