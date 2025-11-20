@@ -1,5 +1,5 @@
 import pyglet.clock
-from PIL.Image import Resampling
+from PIL import Image
 from arcade.gui import UIWidget, UILabel, UIImage
 
 import settings
@@ -7,12 +7,16 @@ import arcade
 
 
 class TextBoxPortrait(UIImage):
-    def __init__(self, texture: arcade.Texture, x=36, y=24, width=192, height=192):
+    def __init__(self, texture_path: str, x=36, y=24, width=192, height=192):
         """
         The widget for the textbox portrait that displays character portraits when they talk.
         :param texture_path: The path to the image file of the character portrait.
         :param dimensions: A tuple/list containing the x, y, width, and height dimensions of the portrait, respectively
         """
+
+        image = Image.open(texture_path)
+        texture = arcade.Texture(arcade.load_image(texture_path).resize(image.size, Image.Resampling.NEAREST))
+
         super().__init__(
             texture=texture,
             x=x,
@@ -21,12 +25,14 @@ class TextBoxPortrait(UIImage):
             height=height
         )
 
-    def set_texture(self, texture: arcade.Texture):
+    def set_texture(self, texture_path: str):
         """
         Loads a texture into the widget.
-        :param texture: The Texture object to replace the old texture.
+        :param texture_path: The file path of the texture to replace the old texture.
         :return:
         """
+        image = Image.open(texture_path)
+        texture = arcade.Texture(arcade.load_image(texture_path).resize(image.size, Image.Resampling.NEAREST))
         self.texture = texture
 
 
@@ -151,9 +157,7 @@ class TextBox(UIWidget):
         self._text_box_portrait_path = ""
         self._text_box_portrait_texture = None
         if self._text_box_portrait_path not in (None, ""):
-            self._text_box_portrait_texture = arcade.Texture(
-                arcade.load_image(self._text_box_portrait_path).resize((192, 192), Resampling.NEAREST))
-            self._text_box_portrait = TextBoxPortrait(self._text_box_portrait_texture)
+            self._text_box_portrait = TextBoxPortrait(self._text_box_portrait_path)
             self.add(self._text_box_portrait)
 
         self.with_background(color=arcade.uicolor.BLACK)
@@ -177,13 +181,10 @@ class TextBox(UIWidget):
                 self._text_box_text.move(dx=96)
                 self._text_box_text.resize(width=settings.WINDOW_WIDTH - 280)
             self._text_box_portrait_path = text_box_dialog.get_portrait_texture_path()
-            self._text_box_portrait_texture = arcade.Texture(
-                arcade.load_image(self._text_box_portrait_path).resize((192, 192), Resampling.NEAREST)
-            )
             if self._text_box_portrait:
-                self._text_box_portrait.set_texture(self._text_box_portrait_texture)
+                self._text_box_portrait.set_texture(self._text_box_portrait_path)
             else:
-                self._text_box_portrait = TextBoxPortrait(self._text_box_portrait_texture)
+                self._text_box_portrait = TextBoxPortrait(self._text_box_portrait_path)
                 self.add(self._text_box_portrait)
 
         else:

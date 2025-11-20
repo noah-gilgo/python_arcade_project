@@ -66,6 +66,7 @@ class GameView(arcade.View):
 
         # Initialize the UIManager.
         self.manager = UIManager()
+        self.manager._pixelated = True
         self._text_box = None
 
         self._dialog = [
