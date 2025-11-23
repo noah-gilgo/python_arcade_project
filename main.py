@@ -12,6 +12,7 @@ import sound_methods
 import graphics_methods
 import math
 import dialogue_box
+import character_options_widget
 
 
 class GameView(arcade.View):
@@ -62,12 +63,16 @@ class GameView(arcade.View):
         self._animation_state_index = 0
 
         # Load the fonts used by the game.
-        arcade.load_font("assets/fonts/8bitoperator/8bitoperator_jve.ttf")
+        arcade.load_font("assets/fonts/8bitoperator_jve.ttf")
+        arcade.load_font("assets/fonts/3x5-font.ttf")
+        arcade.load_font("assets/fonts/roarin.ttf")
 
         # Initialize the UIManager.
         self.manager = UIManager()
         self.manager._pixelated = True
         self._text_box = None
+        self._battle_button_container = None
+        self._battle_hud_container = None
 
         self._dialog = [
             dialogue_box.TextBoxDialog(
@@ -206,6 +211,12 @@ class GameView(arcade.View):
         self._text_box = dialogue_box.TextBox()
         self.manager.add(self._text_box)
 
+        #self._battle_button_container = character_options_widget.BattleHUDButtonLayout()
+        #self.manager.add(self._battle_button_container)
+
+        self._battle_hud_container = character_options_widget.BattleHUDCharacterData()
+        self.manager.add(self._battle_hud_container)
+
     def on_draw(self):
         # 3. Clear the screen
         self.clear()
@@ -315,8 +326,6 @@ def main():
 
     # Show GameView on screen
     window.show_view(game)
-
-    print(arcade.resources.resolve_resource_path(":system:fonts/ttf/8bitoperator/8bitoperator_jve.ttf"))
 
     # Start the arcade game loop
     arcade.run()
