@@ -71,7 +71,6 @@ class GameView(arcade.View):
         self.manager = UIManager()
         self.manager._pixelated = True
         self._text_box = None
-        self._battle_button_container = None
         self._battle_hud_container = None
 
         self._dialog = [
@@ -211,10 +210,7 @@ class GameView(arcade.View):
         self._text_box = dialogue_box.TextBox()
         self.manager.add(self._text_box)
 
-        #self._battle_button_container = character_options_widget.BattleHUDButtonLayout()
-        #self.manager.add(self._battle_button_container)
-
-        self._battle_hud_container = character_options_widget.BattleHUDCharacterData()
+        self._battle_hud_container = character_options_widget.BattleHUDCharacterClamshell()
         self.manager.add(self._battle_hud_container)
 
     def on_draw(self):

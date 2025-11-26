@@ -28,10 +28,10 @@ class BattleHUDButton(UITextureButton):
 class BattleHUDButtonLayout(UIBoxLayout):
     def __init__(self, border_color: Color = Color(0, 255, 0, 255)):
         super().__init__(
-            width=380,
+            width=440,
             height=40,
             vertical=False,
-            align="center",
+            #align="center",
             space_between=2,
             children=[
                 BattleHUDButton("assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_13.png",
@@ -48,7 +48,7 @@ class BattleHUDButtonLayout(UIBoxLayout):
         )
 
         self.with_background(color=Color(0, 0, 0, 255))
-        self.with_border(width=3, color=border_color)
+        #self.with_border(width=3, color=border_color)
 
 
 class BattleHUDCharacterHPText(UILabel):
@@ -240,7 +240,8 @@ class BattleHUDCharacterIconAndName(UIBoxLayout):
                 BattleHUDCharacterName()
             ],
             vertical=False,
-            space_between=18
+            space_between=18,
+            align="right"
         )
 
 
@@ -258,8 +259,27 @@ class BattleHUDCharacterData(UIBoxLayout):
                 BattleHUDHPData()
             ],
             vertical=False,
-            space_between=24,
-            align="center"
+            space_between=24
+        )
+
+        #self.with_background(color=Color(0, 0, 0, 255))
+        #self.with_border(width=3, color=border_color)
+
+
+class BattleHUDCharacterClamshell(UIBoxLayout):
+    """
+    Card containing the player battle HUD data and buttons.
+    Built to automatically display the
+    """
+    def __init__(self, border_color: Color = Color(0, 255, 0, 255)):
+        super().__init__(
+            children=[
+                BattleHUDCharacterData(),
+                BattleHUDButtonLayout()
+            ],
+            width=360,
+            height=144,
+            vertical=True
         )
 
         self.with_background(color=Color(0, 0, 0, 255))
