@@ -36,7 +36,11 @@ class GameView(arcade.View):
         self.player_three = None
         self.player_four = None
 
+        self.players = []
+
         self.enemy_one = None
+
+        self.enemies = []
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -137,6 +141,7 @@ class GameView(arcade.View):
                                                            magic=0)  # Sprite initialization
         self.player_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
+        self.players.append(self.player_one)
 
         self._animation_states = self.player_one.get_valid_animation_states()
 
@@ -152,6 +157,7 @@ class GameView(arcade.View):
                                                            magic=1)  # Sprite initialization
         self.player_two.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
+        self.players.append(self.player_two)
 
         self.player_three = player_character.PlayerCharacter(scale=4.0,
                                                              center_x=self._holy_arc[2][0],
@@ -165,6 +171,7 @@ class GameView(arcade.View):
                                                              magic=7)  # Sprite initialization
         self.player_three.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
+        self.players.append(self.player_three)
 
         self.player_four = player_character.PlayerCharacter(scale=4.0,
                                                             center_x=self._holy_arc[3][0],
@@ -178,6 +185,7 @@ class GameView(arcade.View):
                                                             magic=0)  # Sprite initialization
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
+        self.players.append(self.player_four)
 
         # Create and append the players to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
@@ -192,6 +200,7 @@ class GameView(arcade.View):
                                                                  )
         self.enemy_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.enemy_one)  # Append the instance to the SpriteList
+        self.enemies.append(self.enemy_one)
 
         # self._animation_states = self.enemy_one.get_valid_animation_states()
 
@@ -210,7 +219,7 @@ class GameView(arcade.View):
         self._text_box = dialogue_box.TextBox()
         self.manager.add(self._text_box)
 
-        self._battle_hud_container = character_options_widget.BattleHUDCharacterClamshell()
+        self._battle_hud_container = character_options_widget.BattleHUDCharacterClamshellDisplay(self.players)
         self.manager.add(self._battle_hud_container)
 
     def on_draw(self):

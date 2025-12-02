@@ -3,6 +3,9 @@ from PIL import Image
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property
 from arcade.types.color import Color
 
+import player_character
+import settings
+
 
 class BattleHUDButton(UITextureButton):
     def __init__(self,
@@ -28,11 +31,11 @@ class BattleHUDButton(UITextureButton):
 class BattleHUDButtonLayout(UIBoxLayout):
     def __init__(self, border_color: Color = Color(0, 255, 0, 255)):
         super().__init__(
-            width=440,
-            height=40,
+            width=380,
+            height=60,
             vertical=False,
-            #align="center",
             space_between=2,
+            align="bottom",
             children=[
                 BattleHUDButton("assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_13.png",
                              "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_1.png"),
@@ -48,7 +51,7 @@ class BattleHUDButtonLayout(UIBoxLayout):
         )
 
         self.with_background(color=Color(0, 0, 0, 255))
-        #self.with_border(width=3, color=border_color)
+        # self.with_border(width=3, color=border_color)
 
 
 class BattleHUDCharacterHPText(UILabel):
@@ -102,7 +105,7 @@ class BattleHUDCharacterHP(UIBoxLayout):
                 BattleHUDCharacterMaxHPText()
             ],
             vertical=False,
-            align="top",
+            align="center",
             space_between=4
         )
 
@@ -117,7 +120,7 @@ class BattleHUDHPLabel(UIImage):
         super().__init__(
             texture=texture,
             width=28,
-            height=16
+            height=18
         )
 
 
@@ -165,13 +168,15 @@ class BattleHUDHPMeterLayout(UIBoxLayout):
     """
     def __init__(self):
         super().__init__(
-            width=200,
+            width=180,
+            height=80,
             children=[
                 BattleHUDHPLabel(),
                 BattleHUDHPMeter()
             ],
             vertical=False,
-            space_between=8
+            space_between=8,
+            align="center"
         )
 
 
@@ -182,6 +187,7 @@ class BattleHUDHPData(UIBoxLayout):
     def __init__(self):
         super().__init__(
             width=200,
+            height=80,
             children=[
                 BattleHUDCharacterHP(),
                 BattleHUDHPMeterLayout()
@@ -220,10 +226,11 @@ class BattleHUDCharacterName(UILabel):
     def __init__(self, name: str = "Kris"):
         super().__init__(
             width=150,
-            height=48,
+            height=80,
             text=name.upper(),
             font_name="""Roarin'""",
-            font_size=48
+            font_size=48,
+            align="center"
         )
 
 
@@ -235,13 +242,14 @@ class BattleHUDCharacterIconAndName(UIBoxLayout):
     def __init__(self):
         super().__init__(
             width=220,
+            height=80,
             children=[
                 BattleHUDCharacterIcon(),
                 BattleHUDCharacterName()
             ],
             vertical=False,
             space_between=18,
-            align="right"
+            align="center"
         )
 
 
@@ -252,14 +260,15 @@ class BattleHUDCharacterData(UIBoxLayout):
 
     def __init__(self, border_color: Color = Color(0, 255, 0, 255)):
         super().__init__(
-            width=380,
-            height=72,
+            width=400,
+            height=96,
             children=[
                 BattleHUDCharacterIconAndName(),
                 BattleHUDHPData()
             ],
             vertical=False,
-            space_between=24
+            space_between=24,
+            align="center"
         )
 
         #self.with_background(color=Color(0, 0, 0, 255))
@@ -269,18 +278,47 @@ class BattleHUDCharacterData(UIBoxLayout):
 class BattleHUDCharacterClamshell(UIBoxLayout):
     """
     Card containing the player battle HUD data and buttons.
-    Built to automatically display the
+    Built to automatically display the character data.
     """
     def __init__(self, border_color: Color = Color(0, 255, 0, 255)):
+        # This is the default data for a newly created clamshell. All of the child components of the clamshell
+        # will read from this data and render themselves in accordance with it.
+        self._color = Color(0, 255, 0, 255)
+        self._character_icon_path = "assets/sprites/player_characters/kris/battle_hud/kris_hud_default_face_icon.png"
+        self._character_name = "Kris"
+        self._hp = 70
+        self._max_hp = 110
+
         super().__init__(
             children=[
                 BattleHUDCharacterData(),
                 BattleHUDButtonLayout()
             ],
-            width=360,
-            height=144,
-            vertical=True
+            width=400,
+            height=200,
+            vertical=True,
+            align="bottom"
         )
 
         self.with_background(color=Color(0, 0, 0, 255))
         self.with_border(width=3, color=border_color)
+
+
+class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
+    """
+    The part of the screen that renders the character data clamshells.
+    """
+    def __init__(self, player_characters: list[player_character]):
+        children = []
+        for character in player_characters:
+            children.append(BattleHUDCharacterClamshell())
+
+        super().__init__(
+            children=children,
+            x=0,
+            y=int(settings.WINDOW_HEIGHT / 4),
+            width=settings.WINDOW_WIDTH,
+            align="center",
+            space_between=2,
+            vertical=False
+        )
