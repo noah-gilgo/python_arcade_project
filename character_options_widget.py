@@ -1,6 +1,6 @@
 import arcade
 from PIL import Image
-from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property
+from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout
 from arcade.types.color import Color
 
 import player_character
@@ -105,7 +105,7 @@ class BattleHUDCharacterHP(UIBoxLayout):
                 BattleHUDCharacterMaxHPText()
             ],
             vertical=False,
-            align="center",
+            align="top",
             space_between=4
         )
 
@@ -296,29 +296,41 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
             ],
             width=400,
             height=200,
-            vertical=True,
-            align="bottom"
+            vertical=True
         )
 
         self.with_background(color=Color(0, 0, 0, 255))
         self.with_border(width=3, color=border_color)
 
 
-class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
+class BattleHUDCharacterClamshellDisplay(UIGridLayout):
     """
     The part of the screen that renders the character data clamshells.
     """
     def __init__(self, player_characters: list[player_character]):
-        children = []
-        for character in player_characters:
-            children.append(BattleHUDCharacterClamshell())
+
+        self._horizontal_spacing = 10
+        self._clamshell_width = 400
+        width = (self._clamshell_width * len(player_characters)) + (self._horizontal_spacing * (len(player_characters) - 1))
+        x_offset = int((settings.WINDOW_WIDTH - width) / 2)
 
         super().__init__(
-            children=children,
-            x=0,
+            children=[],
+            x=x_offset,
             y=int(settings.WINDOW_HEIGHT / 4),
-            width=settings.WINDOW_WIDTH,
-            align="center",
-            space_between=2,
-            vertical=False
+            width=width,
+            align_vertical="center",
+            align_horizontal="center",
+            horizontal_spacing=self._horizontal_spacing,
+            row_count=1,
+            column_count=len(player_characters)
         )
+
+        col_index = 0
+        for character in player_characters:
+            self.add(
+                BattleHUDCharacterClamshell(),
+                column=col_index,
+                row=0
+            )
+            col_index += 1

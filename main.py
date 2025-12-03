@@ -58,7 +58,7 @@ class GameView(arcade.View):
         self.camera = arcade.Camera2D()
 
         # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(4)
+        self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(1)
 
         # Temporary, for testing player animations.
@@ -173,6 +173,7 @@ class GameView(arcade.View):
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.players.append(self.player_three)
 
+        """
         self.player_four = player_character.PlayerCharacter(scale=4.0,
                                                             center_x=self._holy_arc[3][0],
                                                             center_y=self._holy_arc[3][1],
@@ -186,6 +187,7 @@ class GameView(arcade.View):
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
         self.players.append(self.player_four)
+        """
 
         # Create and append the players to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
@@ -255,22 +257,18 @@ class GameView(arcade.View):
         """ Movement and game logic """
 
         # Update the player's animation.
-        self.player_one.update_animation(delta_time)
-        self.player_two.update_animation(delta_time)
-        self.player_three.update_animation(delta_time)
-        self.player_four.update_animation(delta_time)
+        for player in self.players:
+            player.update_animation(delta_time)
 
-        self.enemy_one.update_animation(delta_time)
+        for enemy in self.enemies:
+            enemy.update_animation(delta_time)
 
         # Used for testing the animation system
 
         if self._global_timer > 2.0:
             if self._animation_state_index < len(self._animation_states):
-                print(self._animation_states[self._animation_state_index])
-                self.player_one.set_animation_state(self._animation_states[self._animation_state_index])
-                self.player_two.set_animation_state(self._animation_states[self._animation_state_index])
-                self.player_three.set_animation_state(self._animation_states[self._animation_state_index])
-                self.player_four.set_animation_state(self._animation_states[self._animation_state_index])
+                for player in self.players:
+                    player.set_animation_state(self._animation_states[self._animation_state_index])
                 self._animation_state_index += 1
             self._global_timer = 0.0
 
