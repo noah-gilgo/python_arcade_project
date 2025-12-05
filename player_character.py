@@ -1,3 +1,5 @@
+from arcade.types import Color
+
 import character
 import graphics_objects
 
@@ -6,7 +8,8 @@ PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 
 class PlayerCharacter(character.Character):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
-                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int, magic: int):
+                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int, magic: int,
+                 battle_ui_color: Color):
 
         self._sprite_pack_path = PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -14,7 +17,8 @@ class PlayerCharacter(character.Character):
                          sprite_folder_name=sprite_folder_name, name=name, max_hp=max_hp, attack=attack,
                          defense=defense)
 
-        self._magic = magic
+        self.magic = magic
+        self.battle_ui_color = battle_ui_color
 
         self._animations_by_state.update({
             "battle_idle": graphics_objects.SimpleLoopAnimation(

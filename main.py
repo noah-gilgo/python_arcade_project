@@ -1,6 +1,7 @@
 import arcade
 from arcade.gui import UIManager
 from arcade.resources import resolve_resource_path
+from arcade.types import Color
 
 import math_methods
 import non_player_character
@@ -138,7 +139,8 @@ class GameView(arcade.View):
                                                            max_hp=90,
                                                            attack=10,
                                                            defense=2,
-                                                           magic=0)  # Sprite initialization
+                                                           magic=0,
+                                                           battle_ui_color=Color(0, 255, 255, 255))  # Sprite initialization
         self.player_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
         self.players.append(self.player_one)
@@ -154,7 +156,8 @@ class GameView(arcade.View):
                                                            max_hp=110,
                                                            attack=14,
                                                            defense=2,
-                                                           magic=1)  # Sprite initialization
+                                                           magic=1,
+                                                           battle_ui_color=Color(255, 0, 255, 255))  # Sprite initialization
         self.player_two.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.players.append(self.player_two)
@@ -168,7 +171,8 @@ class GameView(arcade.View):
                                                              max_hp=70,
                                                              attack=8,
                                                              defense=2,
-                                                             magic=7)  # Sprite initialization
+                                                             magic=7,
+                                                             battle_ui_color=Color(0, 255, 0, 255))  # Sprite initialization
         self.player_three.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.players.append(self.player_three)
@@ -183,7 +187,8 @@ class GameView(arcade.View):
                                                             max_hp=90,
                                                             attack=10,
                                                             defense=2,
-                                                            magic=0)  # Sprite initialization
+                                                            magic=0,
+                                                            battle_ui_color=Color(255, 255, 0, 255))  # Sprite initialization
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
         self.players.append(self.player_four)

@@ -106,7 +106,8 @@ class BattleHUDCharacterHP(UIBoxLayout):
             ],
             vertical=False,
             align="top",
-            space_between=4
+            space_between=4,
+            width=200
         )
 
 
@@ -134,7 +135,7 @@ class BattleHUDHPMeter(UIWidget):
 
     def __init__(self, hp: int = 40, max_hp: int = 100):
         super().__init__(
-            width=144,
+            width=140,
             height=18,
             size_hint=None
         )
@@ -168,7 +169,7 @@ class BattleHUDHPMeterLayout(UIBoxLayout):
     """
     def __init__(self):
         super().__init__(
-            width=180,
+            width=187,
             height=80,
             children=[
                 BattleHUDHPLabel(),
@@ -186,7 +187,7 @@ class BattleHUDHPData(UIBoxLayout):
     """
     def __init__(self):
         super().__init__(
-            width=200,
+            width=220,
             height=80,
             children=[
                 BattleHUDCharacterHP(),
@@ -202,12 +203,14 @@ class BattleHUDCharacterIcon(UIImage):
     Contains the character icon in the character's battle HUD card.
     """
 
-    def __init__(self, texture_path: str = "assets/sprites/player_characters/kris/battle_hud/kris_hud_default_face_icon.png"):
+    def __init__(self, character: player_character.PlayerCharacter):
         """
         The widget for the textbox portrait that displays character portraits when they talk.
         :param texture_path: The path to the image file of the character portrait.
         :param dimensions: A tuple/list containing the x, y, width, and height dimensions of the portrait, respectively
         """
+
+        texture_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
 
         image = Image.open(texture_path)
         texture = arcade.Texture(arcade.load_image(texture_path).resize(image.size, Image.Resampling.NEAREST))
@@ -223,11 +226,11 @@ class BattleHUDCharacterName(UILabel):
     """
     Contains the name of the character in the character's battle HUD card.
     """
-    def __init__(self, name: str = "Kris"):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=150,
+            width=100,
             height=80,
-            text=name.upper(),
+            text=character.name.upper(),
             font_name="""Roarin'""",
             font_size=48,
             align="center"
@@ -239,13 +242,13 @@ class BattleHUDCharacterIconAndName(UIBoxLayout):
     Layout for both the character icon and name.
     """
 
-    def __init__(self):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=220,
+            width=160,
             height=80,
             children=[
-                BattleHUDCharacterIcon(),
-                BattleHUDCharacterName()
+                BattleHUDCharacterIcon(character),
+                BattleHUDCharacterName(character)
             ],
             vertical=False,
             space_between=18,
@@ -258,12 +261,12 @@ class BattleHUDCharacterData(UIBoxLayout):
     Card containing the character icon, name, and HP data.
     """
 
-    def __init__(self, border_color: Color = Color(0, 255, 0, 255)):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=400,
+            width=360,
             height=96,
             children=[
-                BattleHUDCharacterIconAndName(),
+                BattleHUDCharacterIconAndName(character),
                 BattleHUDHPData()
             ],
             vertical=False,
@@ -280,27 +283,28 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
     Card containing the player battle HUD data and buttons.
     Built to automatically display the character data.
     """
-    def __init__(self, border_color: Color = Color(0, 255, 0, 255)):
+    def __init__(self, character: player_character.PlayerCharacter):
         # This is the default data for a newly created clamshell. All of the child components of the clamshell
         # will read from this data and render themselves in accordance with it.
-        self._color = Color(0, 255, 0, 255)
-        self._character_icon_path = "assets/sprites/player_characters/kris/battle_hud/kris_hud_default_face_icon.png"
-        self._character_name = "Kris"
-        self._hp = 70
-        self._max_hp = 110
+        self._color = character.battle_ui_color
+        self._character_icon_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
+        self._character_name = character.name
+        self._hp = character.hp
+        self._max_hp = character.max_hp
 
         super().__init__(
             children=[
-                BattleHUDCharacterData(),
+                BattleHUDCharacterData(character),
                 BattleHUDButtonLayout()
             ],
-            width=400,
+            width=398,
             height=200,
             vertical=True
         )
 
         self.with_background(color=Color(0, 0, 0, 255))
-        self.with_border(width=3, color=border_color)
+        self.with_border(width=3, color=character.battle_ui_color)
+        self.with_padding(top=2, right=8, bottom=0, left=8)
 
 
 class BattleHUDCharacterClamshellDisplay(UIGridLayout):
@@ -310,7 +314,7 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
     def __init__(self, player_characters: list[player_character]):
 
         self._horizontal_spacing = 10
-        self._clamshell_width = 400
+        self._clamshell_width = BattleHUDCharacterClamshell(player_characters[0]).width
         width = (self._clamshell_width * len(player_characters)) + (self._horizontal_spacing * (len(player_characters) - 1))
         x_offset = int((settings.WINDOW_WIDTH - width) / 2)
 
@@ -326,11 +330,15 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
             column_count=len(player_characters)
         )
 
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
+
         col_index = 0
         for character in player_characters:
             self.add(
-                BattleHUDCharacterClamshell(),
+                BattleHUDCharacterClamshell(character),
                 column=col_index,
                 row=0
             )
             col_index += 1
+
+        self.with_border()
