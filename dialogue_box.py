@@ -7,7 +7,7 @@ import arcade
 
 
 class TextBoxPortrait(UIImage):
-    def __init__(self, texture_path: str, x=36, y=24, width=192, height=192):
+    def __init__(self, texture_path: str, x=36, y=12, width=192, height=192):
         """
         The widget for the textbox portrait that displays character portraits when they talk.
         :param texture_path: The path to the image file of the character portrait.
@@ -40,7 +40,7 @@ class TextBoxText(UILabel):
     def __init__(self,
                  text: str = "* Hell yeah Kris I'm in fortnite",
                  x=72,
-                 y=54,
+                 y=42,
                  width=settings.WINDOW_WIDTH - 144,
                  height=settings.WINDOW_HEIGHT/4 - 64,
                  font_name: str = "8bitoperator JVE",

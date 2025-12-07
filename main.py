@@ -59,7 +59,7 @@ class GameView(arcade.View):
         self.camera = arcade.Camera2D()
 
         # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(3)
+        self._holy_arc = math_methods.initialize_holy_arc(4)
         self._unholy_arc = math_methods.initialize_unholy_arc(1)
 
         # Temporary, for testing player animations.
@@ -93,13 +93,13 @@ class GameView(arcade.View):
             ),
             dialogue_box.TextBoxDialog(
                 portrait_texture_path="assets/sprites/player_characters/noelle/dialog_portraits/noelle_pissed.png",
-                text="* ...antlers...",
+                text="* ...my health meter...",
                 rate_of_text=0.06,
                 text_sound_path="assets/audio/dialog/snd_txtnoe.wav"
             ),
             dialogue_box.TextBoxDialog(
                 portrait_texture_path="assets/sprites/player_characters/noelle/dialog_portraits/noelle_very_pissed.png",
-                text="* ...behind the dialog portrait...",
+                text="* ...isn't on the screen...",
                 rate_of_text=0.06,
                 text_sound_path="assets/audio/dialog/snd_txtnoe.wav"
             ),
@@ -177,7 +177,6 @@ class GameView(arcade.View):
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.players.append(self.player_three)
 
-        """
         self.player_four = player_character.PlayerCharacter(scale=4.0,
                                                             center_x=self._holy_arc[3][0],
                                                             center_y=self._holy_arc[3][1],
@@ -192,7 +191,7 @@ class GameView(arcade.View):
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
         self.players.append(self.player_four)
-        """
+
 
         # Create and append the players to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,

@@ -29,7 +29,7 @@ class BattleHUDButton(UITextureButton):
 
 
 class BattleHUDButtonLayout(UIBoxLayout):
-    def __init__(self, border_color: Color = Color(0, 255, 0, 255)):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=380,
             height=60,
@@ -51,15 +51,16 @@ class BattleHUDButtonLayout(UIBoxLayout):
         )
 
         self.with_background(color=Color(0, 0, 0, 255))
-        # self.with_border(width=3, color=border_color)
+        self.with_border(width=3, color=character.battle_ui_color)
+        self.with_padding(left=33, right=33)
 
 
 class BattleHUDCharacterHPText(UILabel):
-    def __init__(self, hp: int = 70):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=180,
             height=22,
-            text=str(hp),
+            text=str(character.hp),
             font_name="3x5 font",
             font_size=20,
             multiline=False
@@ -82,11 +83,11 @@ class BattleHUDCharacterSlashText(UIImage):
 
 
 class BattleHUDCharacterMaxHPText(UILabel):
-    def __init__(self, max_hp: int = 110):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=180,
             height=22,
-            text=str(max_hp),
+            text=str(character.max_hp),
             font_name="3x5 font",
             font_size=20,
             multiline=False
@@ -97,12 +98,12 @@ class BattleHUDCharacterMaxHPText(UILabel):
 
 
 class BattleHUDCharacterHP(UIBoxLayout):
-    def __init__(self):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             children=[
-                BattleHUDCharacterHPText(),
+                BattleHUDCharacterHPText(character),
                 BattleHUDCharacterSlashText(),
-                BattleHUDCharacterMaxHPText()
+                BattleHUDCharacterMaxHPText(character)
             ],
             vertical=False,
             align="top",
@@ -133,7 +134,7 @@ class BattleHUDHPMeter(UIWidget):
 
     value = Property(0.0)
 
-    def __init__(self, hp: int = 40, max_hp: int = 100):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=140,
             height=18,
@@ -142,11 +143,11 @@ class BattleHUDHPMeter(UIWidget):
 
         self.with_background(color=arcade.color.DARK_RED)
 
-        self.hp = hp
-        self.max_hp = max_hp
+        self.hp = character.hp
+        self.max_hp = character.max_hp
 
         self.value = self.hp / self.max_hp
-        self.color = arcade.color.NEON_GREEN
+        self.color = character.battle_ui_color
 
         # trigger a render when the value changes
         bind(self, "value", self.trigger_render)
@@ -167,13 +168,13 @@ class BattleHUDHPMeterLayout(UIBoxLayout):
     """
     Contains the HP meter and its associated HP label.
     """
-    def __init__(self):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=187,
             height=80,
             children=[
                 BattleHUDHPLabel(),
-                BattleHUDHPMeter()
+                BattleHUDHPMeter(character)
             ],
             vertical=False,
             space_between=8,
@@ -185,13 +186,13 @@ class BattleHUDHPData(UIBoxLayout):
     """
     Contains all of the HP data on the character's battle HUD card.
     """
-    def __init__(self):
+    def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=220,
             height=80,
             children=[
-                BattleHUDCharacterHP(),
-                BattleHUDHPMeterLayout()
+                BattleHUDCharacterHP(character),
+                BattleHUDHPMeterLayout(character)
             ],
             vertical=True,
             align="right"
@@ -244,7 +245,7 @@ class BattleHUDCharacterIconAndName(UIBoxLayout):
 
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=160,
+            width=164,
             height=80,
             children=[
                 BattleHUDCharacterIcon(character),
@@ -263,11 +264,11 @@ class BattleHUDCharacterData(UIBoxLayout):
 
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=360,
+            width=408,
             height=96,
             children=[
                 BattleHUDCharacterIconAndName(character),
-                BattleHUDHPData()
+                BattleHUDHPData(character)
             ],
             vertical=False,
             space_between=24,
@@ -275,7 +276,8 @@ class BattleHUDCharacterData(UIBoxLayout):
         )
 
         #self.with_background(color=Color(0, 0, 0, 255))
-        #self.with_border(width=3, color=border_color)
+        self.with_border(width=3, color=character.battle_ui_color)
+        self.with_padding(top=8, left=12, bottom=8, right=12)
 
 
 class BattleHUDCharacterClamshell(UIBoxLayout):
@@ -295,16 +297,16 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
         super().__init__(
             children=[
                 BattleHUDCharacterData(character),
-                BattleHUDButtonLayout()
+                BattleHUDButtonLayout(character)
             ],
-            width=398,
-            height=200,
+            width=408,
+            height=240,
             vertical=True
         )
 
         self.with_background(color=Color(0, 0, 0, 255))
-        self.with_border(width=3, color=character.battle_ui_color)
-        self.with_padding(top=2, right=8, bottom=0, left=8)
+        #self.with_border(width=3, color=character.battle_ui_color)
+        #self.with_padding(top=2, right=8, bottom=0, left=8)
 
 
 class BattleHUDCharacterClamshellDisplay(UIGridLayout):
@@ -321,7 +323,7 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
         super().__init__(
             children=[],
             x=x_offset,
-            y=int(settings.WINDOW_HEIGHT / 4),
+            y=int(settings.WINDOW_HEIGHT / 4.5),
             width=width,
             align_vertical="center",
             align_horizontal="center",
@@ -341,4 +343,4 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
             )
             col_index += 1
 
-        self.with_border()
+        #self.with_border()
