@@ -20,7 +20,7 @@ def initialize_holy_arc(number_of_players: int = 3):
 
     # This corner case avoids a divide by 0 error when calculating the increment variable.
     if number_of_players == 1:
-        y
+        y = starting_y - (delta_y / 2)
         return [(
             int((((y - settings.WINDOW_HEIGHT * .65) ** 2) / 768) + (settings.WINDOW_WIDTH / 7)),
             y

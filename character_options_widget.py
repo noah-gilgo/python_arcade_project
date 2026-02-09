@@ -1,6 +1,9 @@
 import arcade
 from PIL import Image
-from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout
+from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
+    UIKeyPressEvent, UIKeyEvent
+from arcade.gui.widgets import FocusMode
+from arcade.shape_list import create_line
 from arcade.types.color import Color
 
 import player_character
@@ -9,62 +12,129 @@ import settings
 
 class BattleHUDButton(UITextureButton):
     def __init__(self,
+                 name="default",
                  button_unselected_texture_path: str = "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_13.png",
                  button_selected_texture_path: str = "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_1.png"):
 
-        button_unselected_image = Image.open(button_unselected_texture_path)
-        texture = arcade.Texture(button_unselected_image.resize(button_unselected_image.size,
-                                                                Image.Resampling.NEAREST))
+        self.button_unselected_image = Image.open(button_unselected_texture_path).convert('RGBA')
+        self.texture_unfocused = arcade.Texture(self.button_unselected_image.resize(self.button_unselected_image.size,
+                                                                                    Image.Resampling.NEAREST))
 
-        button_selected_image = Image.open(button_selected_texture_path)
-        texture_hovered = arcade.Texture(button_selected_image.resize(button_selected_image.size,
-                                                                      Image.Resampling.NEAREST))
+        self.button_selected_image = Image.open(button_selected_texture_path).convert('RGBA')
+        self.texture_focused = arcade.Texture(self.button_selected_image.resize(self.button_selected_image.size,
+                                                                                Image.Resampling.NEAREST))
 
         super().__init__(
-            width=button_unselected_image.size[0] * 2,
-            height=button_unselected_image.size[1] * 2,
-            texture=texture,
-            texture_hovered=texture_hovered
+            width=self.button_unselected_image.size[0] * 2,
+            height=self.button_unselected_image.size[1] * 2,
+            texture=self.texture_unfocused,
+            texture_hovered=self.texture_focused
         )
+
+        self.name = name
+        self.focus_mode = FocusMode(0)
+
+    def focus(self):
+        """ Highlights the selected button. """
+        self.texture = self.texture_focused
+
+    def unfocus(self):
+        """ De-highlights the selected button. """
+        self.texture = self.texture_unfocused
 
 
 class BattleHUDButtonLayout(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
+        if character.knows_magic:
+            buttons = [
+                BattleHUDButton("FIGHT",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_13.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_1.png"),
+                BattleHUDButton("MAGIC",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_18.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_6.png"),
+                BattleHUDButton("ITEM",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_15.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_3.png"),
+                BattleHUDButton("SPARE",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_16.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_4.png"),
+                BattleHUDButton("DEFEND",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_17.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_5.png")
+            ]
+        else:
+            buttons = [
+                BattleHUDButton("FIGHT",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_13.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_1.png"),
+                BattleHUDButton("ACT",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_14.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_2.png"),
+                BattleHUDButton("ITEM",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_15.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_3.png"),
+                BattleHUDButton("SPARE",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_16.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_4.png"),
+                BattleHUDButton("DEFEND",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_17.png",
+                                "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_5.png")
+            ]
+
         super().__init__(
             width=380,
             height=60,
             vertical=False,
             space_between=2,
             align="bottom",
-            children=[
-                BattleHUDButton("assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_13.png",
-                             "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_1.png"),
-                BattleHUDButton("assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_14.png",
-                             "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_2.png"),
-                BattleHUDButton("assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_15.png",
-                             "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_3.png"),
-                BattleHUDButton("assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_16.png",
-                             "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_4.png"),
-                BattleHUDButton("assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_17.png",
-                             "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_5.png")
-            ]
+            children=buttons
         )
 
+        self.focus_mode = FocusMode(0)
+
         self.with_background(color=Color(0, 0, 0, 255))
-        self.with_border(width=3, color=character.battle_ui_color)
+        # self.with_border(width=3, color=character.battle_ui_color)
         self.with_padding(left=33, right=33)
+
+        self._selected_button_index = 0
+
+        # self.children[0].focused = True
+        # for i in range(1, len(self.children)):
+        #     self.children[i].focused = False
+
+    """
+    def on_event(self, event):
+        if isinstance(event, UIKeyPressEvent):
+            print("key press event detected")
+            if event.symbol == arcade.key.RIGHT:
+                print("event fired")
+                for i in range(len(self.children)):
+                    if self.children[i].focused:
+                        self.children[i].focused = False
+                        self.children[int((i + 1) % len(self.children))].focused = True
+                        return
+
+            if event.symbol == arcade.key.LEFT:
+                for i in range(len(self.children)):
+                    if self.children[i].focused:
+                        self.children[i].focused = False
+                        self.children[int((i - 1) % len(self.children))].focused = True
+                        return
+    """
 
 
 class BattleHUDCharacterHPText(UILabel):
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=180,
-            height=22,
+            height=21,
             text=str(character.hp),
             font_name="3x5 font",
-            font_size=20,
+            font_size=21,
             multiline=False
         )
+        self.focus_mode = FocusMode(0)
 
     def set_hp_on_character_card(self, hp: int):
         self.text = str(hp)
@@ -80,18 +150,20 @@ class BattleHUDCharacterSlashText(UIImage):
             width=24,
             height=20
         )
+        self.focus_mode = FocusMode(0)
 
 
 class BattleHUDCharacterMaxHPText(UILabel):
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=180,
-            height=22,
+            height=21,
             text=str(character.max_hp),
             font_name="3x5 font",
-            font_size=20,
+            font_size=21,
             multiline=False
         )
+        self.focus_mode = FocusMode(0)
 
     def set_max_hp_on_character_card(self, hp: int):
         self.text = str(hp)
@@ -110,6 +182,7 @@ class BattleHUDCharacterHP(UIBoxLayout):
             space_between=4,
             width=200
         )
+        self.focus_mode = FocusMode(0)
 
 
 class BattleHUDHPLabel(UIImage):
@@ -124,6 +197,7 @@ class BattleHUDHPLabel(UIImage):
             width=28,
             height=18
         )
+        self.focus_mode = FocusMode(0)
 
 
 class BattleHUDHPMeter(UIWidget):
@@ -140,6 +214,7 @@ class BattleHUDHPMeter(UIWidget):
             height=18,
             size_hint=None
         )
+        self.focus_mode = FocusMode(0)
 
         self.with_background(color=arcade.color.DARK_RED)
 
@@ -180,6 +255,7 @@ class BattleHUDHPMeterLayout(UIBoxLayout):
             space_between=8,
             align="center"
         )
+        self.focus_mode = FocusMode(0)
 
 
 class BattleHUDHPData(UIBoxLayout):
@@ -197,6 +273,7 @@ class BattleHUDHPData(UIBoxLayout):
             vertical=True,
             align="right"
         )
+        self.focus_mode = FocusMode(0)
 
 
 class BattleHUDCharacterIcon(UIImage):
@@ -221,6 +298,7 @@ class BattleHUDCharacterIcon(UIImage):
             width=64,
             height=48
         )
+        self.focus_mode = FocusMode(0)
 
 
 class BattleHUDCharacterName(UILabel):
@@ -229,13 +307,14 @@ class BattleHUDCharacterName(UILabel):
     """
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=100,
+            width=200,
             height=80,
             text=character.name.upper(),
             font_name="""Roarin'""",
             font_size=48,
             align="center"
         )
+        self.focus_mode = FocusMode(0)
 
 
 class BattleHUDCharacterIconAndName(UIBoxLayout):
@@ -255,6 +334,7 @@ class BattleHUDCharacterIconAndName(UIBoxLayout):
             space_between=18,
             align="center"
         )
+        self.focus_mode = FocusMode(0)
 
 
 class BattleHUDCharacterData(UIBoxLayout):
@@ -274,6 +354,7 @@ class BattleHUDCharacterData(UIBoxLayout):
             space_between=24,
             align="center"
         )
+        self.focus_mode = FocusMode(0)
 
         #self.with_background(color=Color(0, 0, 0, 255))
         self.with_border(width=3, color=character.battle_ui_color)
@@ -303,6 +384,7 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
             height=240,
             vertical=True
         )
+        self.focus_mode = FocusMode(0)
 
         self.with_background(color=Color(0, 0, 0, 255))
         #self.with_border(width=3, color=character.battle_ui_color)
@@ -331,8 +413,12 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
             row_count=1,
             column_count=len(player_characters)
         )
+        self.focus_mode = FocusMode(0)
 
         self.center_x = int(settings.WINDOW_WIDTH / 2)
+
+        self.x = int(self.center_x - (self.width / 2))
+        self.y = int(self.center_y - (self.height / 2))
 
         col_index = 0
         for character in player_characters:
@@ -343,4 +429,18 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
             )
             col_index += 1
 
-        #self.with_border()
+            """
+            line = create_line(
+                start_x=self.x,
+                start_y=self.y,
+                end_x=self.x,
+                end_y=self.y + self.height,
+                color=[character.battle_ui_color.r,
+                       character.battle_ui_color.g,
+                       character.battle_ui_color.b,
+                       character.battle_ui_color.a],
+                line_width=3
+            )
+
+            line.draw()
+            """

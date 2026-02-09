@@ -14,6 +14,7 @@ import graphics_methods
 import math
 import dialogue_box
 import character_options_widget
+from battle_state_machine import BattleController
 
 
 class GameView(arcade.View):
@@ -43,12 +44,6 @@ class GameView(arcade.View):
 
         self.enemies = []
 
-        # Track the current state of what key is pressed
-        self.left_pressed = False
-        self.right_pressed = False
-        self.up_pressed = False
-        self.down_pressed = False
-
         # Set the background color
         self.background_color = arcade.color.BLACK
 
@@ -59,7 +54,7 @@ class GameView(arcade.View):
         self.camera = arcade.Camera2D()
 
         # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(4)
+        self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(1)
 
         # Temporary, for testing player animations.
@@ -75,8 +70,9 @@ class GameView(arcade.View):
         # Initialize the UIManager.
         self.manager = UIManager()
         self.manager._pixelated = True
-        self._text_box = None
-        self._battle_hud_container = None
+        self.manager.enable()
+        self.text_box = None
+        self.battle_hud_container = None
 
         self._dialog = [
             dialogue_box.TextBoxDialog(
@@ -123,6 +119,8 @@ class GameView(arcade.View):
 
         self._dialog_box_index = 0
 
+        self.battle_controller = None
+
     def setup(self):
         # Create the SpriteList
         self.background_sprites = arcade.SpriteList()
@@ -140,7 +138,8 @@ class GameView(arcade.View):
                                                            attack=10,
                                                            defense=2,
                                                            magic=0,
-                                                           battle_ui_color=Color(0, 255, 255, 255))  # Sprite initialization
+                                                           battle_ui_color=Color(0, 255, 255, 255),
+                                                           knows_magic=False)
         self.player_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
         self.players.append(self.player_one)
@@ -177,6 +176,7 @@ class GameView(arcade.View):
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.players.append(self.player_three)
 
+        """
         self.player_four = player_character.PlayerCharacter(scale=4.0,
                                                             center_x=self._holy_arc[3][0],
                                                             center_y=self._holy_arc[3][1],
@@ -191,7 +191,7 @@ class GameView(arcade.View):
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
         self.players.append(self.player_four)
-
+        """
 
         # Create and append the players to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
@@ -222,11 +222,13 @@ class GameView(arcade.View):
         graphics_methods.animate_depths(self.background_sprites)
 
         # Initialize the GUI.
-        self._text_box = dialogue_box.TextBox()
-        self.manager.add(self._text_box)
+        self.text_box = dialogue_box.TextBox()
+        self.manager.add(self.text_box)
 
-        self._battle_hud_container = character_options_widget.BattleHUDCharacterClamshellDisplay(self.players)
-        self.manager.add(self._battle_hud_container)
+        self.battle_hud_container = character_options_widget.BattleHUDCharacterClamshellDisplay(self.players)
+        self.manager.add(self.battle_hud_container)
+
+        self.battle_controller = BattleController(self.text_box, self.battle_hud_container)
 
     def on_draw(self):
         # 3. Clear the screen
@@ -242,20 +244,6 @@ class GameView(arcade.View):
     def on_resize(self, width, height):
         super().on_resize(width, height)
         self.camera.match_window()
-
-    def update_player_speed(self):
-        # Calculate speed based on the keys pressed
-        self.player_one.change_x = 0
-        self.player_one.change_y = 0
-
-        if self.up_pressed and not self.down_pressed:
-            self.player_one.change_y = character.MOVEMENT_SPEED
-        elif self.down_pressed and not self.up_pressed:
-            self.player_one.change_y = -character.MOVEMENT_SPEED
-        if self.left_pressed and not self.right_pressed:
-            self.player_one.change_x = -character.MOVEMENT_SPEED
-        elif self.right_pressed and not self.left_pressed:
-            self.player_one.change_x = character.MOVEMENT_SPEED
 
     def on_update(self, delta_time):
         """ Movement and game logic """
@@ -286,6 +274,9 @@ class GameView(arcade.View):
             settings.WINDOW_SCALE = math.sqrt((self.width / self._initial_width) * (self.height / self._initial_height))
             self.camera.zoom = settings.WINDOW_SCALE
 
+        self.battle_controller.handle_key(key)
+
+        """
         if key == arcade.key.UP:
             self.up_pressed = True
             self.update_player_speed()
@@ -298,16 +289,22 @@ class GameView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.right_pressed = True
             self.update_player_speed()
+        """
 
+        # if key == arcade.key.RIGHT:
+
+        """
         if key == arcade.key.Z:
             self._text_box.load_dialog(self._dialog[self._dialog_box_index])
             if self._dialog_box_index < len(self._dialog) - 1:
                 self._dialog_box_index += 1
             else:
                 self._dialog_box_index = 0
+        """
 
+    """
     def on_key_release(self, key, modifiers):
-        """Called when the user releases a key. """
+        # Called when the user releases a key.
 
         if key == arcade.key.UP:
             self.up_pressed = False
@@ -321,6 +318,7 @@ class GameView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.right_pressed = False
             self.update_player_speed()
+    """
 
 
 def main():
