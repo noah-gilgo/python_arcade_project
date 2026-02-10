@@ -88,21 +88,14 @@ def generate_elemental_pairs():
 
 class Spell:
     """ Parent class for spells """
-    def __init__(self, tp_cost: int, element: ElementalPair):
+    def __init__(self, tp_cost: int, element: ElementalPair, is_friendly_spell: bool = False,
+                 is_healing_spell: bool = False, is_aoe_spell: bool = False):
         self.tp_cost = tp_cost
         self.element = element
+        self.is_friendly_spell = is_friendly_spell  # True if the intended target is player characters
+        self.is_healing_spell = is_healing_spell  # True if the spell is healing
+        self.is_aoe_spell = is_aoe_spell  # True if the spell affects all targets on the targeted side
 
     def cast(self):
         """ Template for the function for casting spells. """
-
-
-"""
-class PartySpell(Spell):
-    def __init__(self, tp_cost: int, targets):
-        super().__init__(tp_cost, targets)
-
-
-class EnemySpell(Spell):
-    def __init__(self, tp_cost: int, targets):
-        super().__init__(tp_cost, targets)
-"""
+        pass
