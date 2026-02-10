@@ -35,7 +35,8 @@ class Player(arcade.Sprite):
 
 class Character(arcade.Sprite):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
-                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int):
+                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int,
+                 element_id: int = 0):
         super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle)
         self.sprite_folder_name = sprite_folder_name
         self.name = name
@@ -43,6 +44,7 @@ class Character(arcade.Sprite):
         self.hp = max_hp
         self.attack = attack
         self.defense = defense
+        self.element_id = element_id
 
         self.current_animation_state = "default"
 
