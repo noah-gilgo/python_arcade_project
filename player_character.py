@@ -28,8 +28,26 @@ class PlayerCharacter(character.Character):
                 loop_animation=True
             ),
 
+            "battle_act_ready": graphics_objects.SimpleLoopAnimation(
+                sprite_pack_path=self._sprite_pack_path + "/battle_act_ready",
+                frame_duration=0.10,
+                loop_animation=True
+            ),
+
             "battle_act": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_act",
+                frame_duration=0.10,
+                loop_animation=False
+            ),
+
+            "battle_magic_ready": graphics_objects.SimpleLoopAnimation(
+                sprite_pack_path=self._sprite_pack_path + "/battle_magic_ready",
+                frame_duration=0.10,
+                loop_animation=True
+            ),
+
+            "battle_magic": graphics_objects.SimpleLoopAnimation(
+                sprite_pack_path=self._sprite_pack_path + "/battle_magic",
                 frame_duration=0.10,
                 loop_animation=False
             ),
