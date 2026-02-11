@@ -3,7 +3,7 @@ import pyglet
 import math
 
 import settings
-from graphics_objects import Frame
+from graphics_objects import AnimatedSprite
 
 DEPTHS_ANIMATION_INITIAL_SCALE = 10.0  # Initial scale of depths animation frames when initially rendered
 DEPTHS_ANIMATION_SCALE_INCREMENT = 0.05  # How much the scale of each animation frame is increased every frame
@@ -34,7 +34,7 @@ def add_sprite_to_depths_array(dt, sprite_list: list[arcade.Sprite]):
         sprite.alpha = 1
         sprite.scale_x = DEPTHS_ANIMATION_INITIAL_SCALE
         sprite.scale_y = DEPTHS_ANIMATION_INITIAL_SCALE
-        frame = Frame(sprite)
+        frame = AnimatedSprite(sprite, 1)
         depths_frame_array.append(frame)
         sprite_list.append(sprite)
     if terminate_depths_animation_flag:
