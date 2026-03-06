@@ -15,6 +15,7 @@ import math
 import dialogue_box
 import character_options_widget
 from battle_state_machine import BattleController
+from spell_animations import IceShockAnimation
 
 
 class GameView(arcade.View):
@@ -31,6 +32,7 @@ class GameView(arcade.View):
         self.background_sprites = arcade.SpriteList()
         self.player_sprites = arcade.SpriteList()
         self.foreground_sprites = arcade.SpriteList()
+        self.spell_sprites = arcade.SpriteList()
 
         # Set up the player info
         self.player_one = None
@@ -121,12 +123,9 @@ class GameView(arcade.View):
 
         self.battle_controller = None
 
-    def setup(self):
-        # Create the SpriteList
-        self.background_sprites = arcade.SpriteList()
-        self.player_sprites = arcade.SpriteList()
-        self.foreground_sprites = arcade.SpriteList()
+        self.iceshock_animation = None
 
+    def setup(self):
         # Create and append the players to the SpriteList.
         self.player_one = player_character.PlayerCharacter(scale=4.0,
                                                            center_x=self._holy_arc[0][0],
@@ -230,6 +229,10 @@ class GameView(arcade.View):
 
         self.battle_controller = BattleController(self.text_box, self.battle_hud_container)
 
+        self.iceshock_animation = IceShockAnimation(self.enemy_one.center_x, self.enemy_one.center_y)
+        for sprite in self.iceshock_animation.sprites:
+            self.spell_sprites.append(sprite.sprite)
+
     def on_draw(self):
         # 3. Clear the screen
         self.clear()
@@ -239,6 +242,7 @@ class GameView(arcade.View):
             self.background_sprites.draw(pixelated=True)
             self.player_sprites.draw(pixelated=True)
             self.foreground_sprites.draw(pixelated=True)
+            self.spell_sprites.draw(pixelated=True)
             self.manager.draw(pixelated=True)
 
     def on_resize(self, width, height):
@@ -265,6 +269,8 @@ class GameView(arcade.View):
             self._global_timer = 0.0
 
         self._global_timer += delta_time
+
+        self.iceshock_animation.update()
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
