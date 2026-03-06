@@ -160,6 +160,7 @@ class GameView(arcade.View):
         self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.players.append(self.player_two)
 
+        """
         self.player_three = player_character.PlayerCharacter(scale=4.0,
                                                              center_x=self._holy_arc[2][0],
                                                              center_y=self._holy_arc[2][1],
@@ -174,11 +175,11 @@ class GameView(arcade.View):
         self.player_three.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.players.append(self.player_three)
-
         """
+
         self.player_four = player_character.PlayerCharacter(scale=4.0,
-                                                            center_x=self._holy_arc[3][0],
-                                                            center_y=self._holy_arc[3][1],
+                                                            center_x=self._holy_arc[2][0],
+                                                            center_y=self._holy_arc[2][1],
                                                             angle=0,
                                                             sprite_folder_name="noelle",
                                                             name="Noelle",
@@ -190,7 +191,7 @@ class GameView(arcade.View):
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
         self.players.append(self.player_four)
-        """
+
 
         # Create and append the players to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
@@ -244,6 +245,7 @@ class GameView(arcade.View):
             self.foreground_sprites.draw(pixelated=True)
             self.spell_sprites.draw(pixelated=True)
             self.manager.draw(pixelated=True)
+            self.iceshock_animation.draw()
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
