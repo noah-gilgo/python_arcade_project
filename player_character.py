@@ -2,6 +2,7 @@ from arcade.types import Color
 
 import character
 import graphics_objects
+from spells import Spell
 
 PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 
@@ -9,7 +10,7 @@ PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 class PlayerCharacter(character.Character):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int, magic: int,
-                 battle_ui_color: Color, element_id: int = 0, knows_magic: bool = True):
+                 battle_ui_color: Color, element_id: int = 0, knows_magic: bool = True, spells=list[Spell]):
 
         self._sprite_pack_path = PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -123,3 +124,5 @@ class PlayerCharacter(character.Character):
                     )
                 }
             )
+
+            self.spells = spells

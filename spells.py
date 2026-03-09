@@ -3,7 +3,6 @@ import pyglet.clock
 import default_data
 from character import Character
 from elemental_pairs import ElementalPair
-from player_character import PlayerCharacter
 
 
 class Spell:
@@ -52,14 +51,14 @@ class Spell:
         pyglet.clock.schedule_once(self.affect_targets_with_spell, 0.5)
         pass
 
+    """
     def cast(self, caster: PlayerCharacter, targets: list[Character]):
-        """ Casts a spell originating from the caster at the supplied targets. """
+        # Casts a spell originating from the caster at the supplied targets.
         self._caster = caster
         self._targets = targets
         caster.set_animation_state("battle_magic")
         pyglet.clock.schedule_once(self.animate_spell, 0.5)
-
-
+    """
 
 def generate_basic_spells():
     """ Generates some basic spells from Deltarune. """

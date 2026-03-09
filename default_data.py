@@ -27,12 +27,6 @@ ELEMENTAL_PAIRS = [
     ElementalPair(
         element_id=5,
         name="Dark/Star",
-        resistant_to=[3, 5],
-        weak_to=[1]
-    ),
-    ElementalPair(
-        element_id=5,
-        name="Dark/Star",
         resistant_to=[5],
         weak_to=[1, 9]
     ),

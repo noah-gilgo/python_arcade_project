@@ -369,6 +369,7 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
         # This is the default data for a newly created clamshell. All of the child components of the clamshell
         # will read from this data and render themselves in accordance with it.
+        self.player_character = character
         self._color = character.battle_ui_color
         self._character_icon_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
         self._character_name = character.name
@@ -420,6 +421,8 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
         self.x = int(self.center_x - (self.width / 2))
         self.y = int(self.center_y - (self.height / 2))
 
+        self.player_characters = player_characters
+
         col_index = 0
         for character in player_characters:
             self.add(
@@ -429,18 +432,52 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
             )
             col_index += 1
 
-            """
+    """
+    def draw(self):
+        for character in self.player_characters:
             line = create_line(
                 start_x=self.x,
                 start_y=self.y,
                 end_x=self.x,
                 end_y=self.y + self.height,
-                color=[character.battle_ui_color.r,
+                color=(character.battle_ui_color.r,
                        character.battle_ui_color.g,
                        character.battle_ui_color.b,
-                       character.battle_ui_color.a],
+                       character.battle_ui_color.a),
                 line_width=3
             )
 
             line.draw()
-            """
+    """
+
+
+class SpellListLayout(UIGridLayout):
+    def __init__(self, character: player_character.PlayerCharacter):
+        super().__init__(
+            x=48,
+            y=-32,
+            width=(2 * settings.WINDOW_WIDTH) / 3,
+            height=int(settings.WINDOW_HEIGHT / 4),
+            row_count=3,
+            column_count=2,
+            align_horizontal="left",
+            horizontal_spacing=100
+        )
+
+        if character.spells:
+            spell_index = 0
+            for spell in character.spells:
+                row_index = spell_index // 2
+                col_index = spell_index % 2
+                self.add(
+                    UILabel(
+                        text=spell.name,
+                        height=64,
+                        font_name="8bitoperator JVE",
+                        font_size=48
+                    ),
+                    column=col_index,
+                    row=row_index
+                )
+                spell_index += 1
+

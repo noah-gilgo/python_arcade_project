@@ -2,9 +2,11 @@ from enum import Enum, auto
 import command
 
 import arcade.key
-from arcade.gui import UILayout, UIWidget
+from arcade.gui import UILayout, UIWidget, UIManager
 
 import character
+from battle_widgets import SpellListLayout
+from player_character import PlayerCharacter
 
 """
 This architecture is my attempt at replicating the state architecture recommended by Robert Nystrom in his book
@@ -155,8 +157,9 @@ def move(array, current_member, index, dx):
 
 
 class BattleController:
-    def __init__(self, battle_textbox: UIWidget, battle_player_character_cards: UILayout):
+    def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget, battle_player_character_cards: UILayout):
         self.battle_textbox = battle_textbox
+        self.ui_manager = ui_manager
 
         # References to all of the battle buttons and their indexes
         self.battle_player_character_cards = battle_player_character_cards.children
@@ -249,7 +252,8 @@ class SelectCommand(Command):
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            # TODO: include code to open the MAGIC menu
+                            self.controller.ui_manager.add(SpellListLayout(self.controller.current_player_character_card.player_character))
+                            print("spell list layout added")
                             return
                     case 2:  # user selects the ITEM button
                         self.controller.state = BattleState.PLAYER_ITEM_SELECT
