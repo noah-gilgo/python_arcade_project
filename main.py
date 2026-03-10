@@ -228,6 +228,17 @@ class GameView(arcade.View):
                                                                     is_pacifying_spell=False,
                                                                     is_aoe_spell=False
                                                                 ),
+                                                                Spell(
+                                                                    name="SnowGrave",
+                                                                    description="Fatal",
+                                                                    tp_cost=200,
+                                                                    element_id=8,
+                                                                    base_health_change=1000,
+                                                                    is_friendly_spell=False,
+                                                                    is_healing_spell=False,
+                                                                    is_pacifying_spell=False,
+                                                                    is_aoe_spell=True
+                                                                )
                                                             ])
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList

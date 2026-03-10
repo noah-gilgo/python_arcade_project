@@ -326,11 +326,6 @@ class RightCommand(Command):
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 )
-        """
-        match self.controller.state:
-            case BattleState.PLAYER_COMMAND:
-                self.controller.move_between_player_action_buttons(1)
-        """
 
 
 class LeftCommand(Command):
@@ -344,12 +339,6 @@ class LeftCommand(Command):
                     self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 )
 
-        """
-        match self.controller.state:
-            case BattleState.PLAYER_COMMAND:
-                self.controller.move_between_player_action_buttons(-1)
-        """
-
 
 class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """
@@ -361,11 +350,6 @@ class UpCommand(Command):
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 )
-        """
-        match self.controller.state:
-            case BattleState.PLAYER_COMMAND:
-                self.controller.move_between_player_action_buttons(1)
-        """
 
 
 class DownCommand(Command):
@@ -380,8 +364,3 @@ class DownCommand(Command):
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 )
-        """
-        match self.controller.state:
-            case BattleState.PLAYER_COMMAND:
-                self.controller.move_between_player_action_buttons(1)
-        """
