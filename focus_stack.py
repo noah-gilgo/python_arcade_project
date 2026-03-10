@@ -28,13 +28,13 @@ class FocusStackMember:
         match direction:
             case Direction.RIGHT:
                 new_index = self.focused_widget_index + 1
-                if 0 <= new_index < len(self.widgets):
+                if 0 <= new_index < len(self.widgets) and new_index % self.row_length != 0:
                     self.focused_widget_index = new_index % len(self.widgets)
                 else:
                     return False
             case Direction.LEFT:
                 new_index = self.focused_widget_index - 1
-                if 0 <= new_index < len(self.widgets):
+                if 0 <= new_index < len(self.widgets) and self.focused_widget_index % self.row_length != 0:
                     self.focused_widget_index = new_index % len(self.widgets)
                 else:
                     return False
