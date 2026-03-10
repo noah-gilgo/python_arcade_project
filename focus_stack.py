@@ -12,9 +12,10 @@ class Direction(Enum):
 
 
 class FocusStackMember:
-    def __init__(self, ui_layout: UILayout, state, row_count: int = 1):
-        self.ui_layout = ui_layout
-        self.widgets = self.ui_layout.children
+    def __init__(self, full_ui_layout: UILayout, interactive_ui_layout, state, row_count: int = 1):
+        self.interactive_ui_layout = interactive_ui_layout
+        self.full_ui_layout = full_ui_layout
+        self.widgets = self.interactive_ui_layout.children
         self.focused_widget = self.widgets[0]
         self.focused_widget.focused = True
         self.focused_widget_index = 0
@@ -22,6 +23,9 @@ class FocusStackMember:
         self.row_length = math.ceil(len(self.widgets) / self.row_count)
 
         self.state = state
+
+    def get_focused_widget(self):
+        return self.focused_widget
 
     def move(self, direction: Direction):
         old_focused_widget = self.focused_widget
@@ -82,13 +86,13 @@ class FocusStack:
         return self.focus_stack[-1]
 
     # Adds a member to the top of the focus stack. Adds the ui_layout in said member to the ui
-    def push(self, ui_layout: UILayout, state, row_count: int = 1):
-        self.focus_stack.append(FocusStackMember(ui_layout, state, row_count))
-        self.ui_manager.add(self.focus_stack[-1].ui_layout)
+    def push(self, full_ui_layout: UILayout, interactive_ui_layout, state, row_count: int = 1):
+        self.focus_stack.append(FocusStackMember(full_ui_layout, interactive_ui_layout, state, row_count))
+        self.ui_manager.add(self.focus_stack[-1].full_ui_layout)
 
     # Removes the higest member from the focus stack.
     def pop(self):
         if len(self.focus_stack) > 1:
-            self.ui_manager.remove(self.focus_stack[-1].ui_layout)
+            self.ui_manager.remove(self.focus_stack[-1].full_ui_layout)
             return self.focus_stack.pop(-1)
         return None

@@ -5,7 +5,7 @@ import arcade.key
 from arcade.gui import UILayout, UIWidget, UIManager
 
 import character
-from battle_widgets import SpellList
+from battle_widgets import SpellList, SpellSelect
 from focus_stack import FocusStackMember, FocusStack
 from player_character import PlayerCharacter
 
@@ -178,7 +178,7 @@ class BattleController:
 
         # The focus stack for the battle GUI.
         self.focus_stack = FocusStack(self.ui_manager)
-        self.focus_stack.push(self.current_player_character_card.children[1], self.state)
+        self.focus_stack.push(self.current_player_character_card.children[1], self.current_player_character_card.children[1], self.state)
 
         # Loads menu sounds
         self.menu_move_sound = arcade.load_sound("assets/audio/gui/snd_menumove.wav", False)
@@ -260,8 +260,9 @@ class SelectCommand(Command):
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            spell_list_layout = SpellList(self.controller.current_player_character_card.player_character)
-                            self.controller.focus_stack.push(spell_list_layout, self.controller.state, 2)
+                            spell_list_full_layout = SpellSelect(self.controller.current_player_character_card.player_character)
+                            spell_list_interactive_layout = spell_list_full_layout.children[0]
+                            self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout, self.controller.state, 2)
                             print("spell list layout added")
                             return
                     case 2:  # user selects the ITEM button
@@ -321,6 +322,10 @@ class RightCommand(Command):
     def execute(self):
         if self.controller.focus_stack.get_highest_member().move_right():
             self.controller.menu_move_sound.play()
+            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
         """
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
@@ -334,6 +339,10 @@ class LeftCommand(Command):
     def execute(self):
         if self.controller.focus_stack.get_highest_member().move_left():
             self.controller.menu_move_sound.play()
+            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
 
         """
         match self.controller.state:
@@ -348,6 +357,10 @@ class UpCommand(Command):
     def execute(self):
         if self.controller.focus_stack.get_highest_member().move_up():
             self.controller.menu_move_sound.play()
+            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
         """
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
@@ -363,6 +376,10 @@ class DownCommand(Command):
     def execute(self):
         if self.controller.focus_stack.get_highest_member().move_down():
             self.controller.menu_move_sound.play()
+            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
         """
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:

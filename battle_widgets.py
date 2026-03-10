@@ -462,12 +462,14 @@ class SpellListOption(UILabel):
     def __init__(self, spell: Spell, color: Color = arcade.color.WHITE):
         super().__init__(
             text="     " + spell.name,
+            width=400,
             height=64,
             font_name="8bitoperator JVE",
             font_size=48,
             text_color=color
         )
 
+        self.spell = spell
         self.focus_mode = FocusMode(2)
         self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
 
@@ -542,51 +544,63 @@ class SpellList(UIGridLayout):
 class SpellDescriptionLabel(UILabel):
     def __init__(self, spell_description: str = ""):
         super().__init__(
-            width=200,
+            size_hint=(None, None),
+            width=400,
             height=140,
             font_name="8bitoperator JVE",
             font_size=48,
             text_color=arcade.color.GRAY,
-            text=spell_description
+            text=spell_description,
+            multiline=True
         )
 
 
 class SpellTPCostLabel(UILabel):
     def __init__(self, tp_cost: int = 0):
         super().__init__(
-            width=200,
+            width=400,
             height=60,
             font_name="8bitoperator JVE",
             font_size=48,
-            text_color=arcade.color.ORANGE_PEEL,
-            text=str(tp_cost) if tp_cost else ""
+            text_color=arcade.color.NEON_CARROT,
+            text="" if not tp_cost else str(tp_cost) + "% TP"
         )
 
 
 class SpellDescriptionAndTPCost(UIBoxLayout):
     def __init__(self, spell: Spell = None):
-
         super().__init__(
-            width=200,
-            height=200,
+            width=400,
+            height=300,
             children=[
-                SpellDescriptionLabel("" if not spell else spell.description),
-                SpellTPCostLabel(0 if not spell else spell.tp_cost)
-            ]
+                SpellDescriptionLabel("" if not spell or not spell.description else spell.description),
+                SpellTPCostLabel(0 if not spell or not spell.tp_cost else spell.tp_cost)
+            ],
+            align="left"
         )
+
+    def update_spell_data(self, spell: Spell = None):
+        """ Updates the spell data shown in the layout. """
+        self.children[0].text = "" if not spell or not spell.description else spell.description
+        self.children[1].text = "" if not spell or not spell.tp_cost else str(spell.tp_cost) + "% TP"
 
 
 class SpellSelect(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             x=36,
-            y=-32,
+            y=0,
             width=settings.WINDOW_WIDTH,
-            height=int(settings.WINDOW_HEIGHT / 4),
+            height=int(settings.WINDOW_HEIGHT / 4) - 20,
             vertical=False,
             space_between=100,
             children=[
                 SpellList(character),
                 SpellDescriptionAndTPCost()
-            ]
+            ],
+            align="top"
         )
+
+    def update_spell_data(self, spell: Spell = None):
+        """ Updates the spell data shown in the layout. """
+        self.children[1].update_spell_data(spell)
