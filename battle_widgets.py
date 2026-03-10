@@ -1,13 +1,14 @@
 import arcade
 from PIL import Image
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
-    UIKeyPressEvent, UIKeyEvent
+    UIKeyPressEvent, UIKeyEvent, Surface
 from arcade.gui.widgets import FocusMode
 from arcade.shape_list import create_line
 from arcade.types.color import Color
 
 import player_character
 import settings
+from spells import Spell
 
 
 class BattleHUDButton(UITextureButton):
@@ -451,10 +452,40 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
     """
 
 
+class SpellListOption(UILabel):
+    def __init__(self, spell: Spell, color: Color = arcade.color.WHITE):
+        super().__init__(
+            text=spell.name,
+            height=64,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=color
+        )
+
+        self.focus_mode = FocusMode(2)
+        self.soul_texture = arcade.load_texture("assets/sprites/soul/soul.png")
+
+    def do_render_focus(self, surface: arcade.gui.Surface):
+        # surface is provided by Arcade
+        x = self.left - 20
+        y = self.center_y
+
+        # draw the texture on the widget’s surface
+        arcade.draw_texture_rect(
+            self.soul_texture,
+            arcade.LBWH(
+                x,
+                y - 8,
+                16,
+                16
+            )
+        )
+
+
 class SpellListLayout(UIGridLayout):
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            x=48,
+            x=72,
             y=-32,
             width=(2 * settings.WINDOW_WIDTH) / 3,
             height=int(settings.WINDOW_HEIGHT / 4),
@@ -464,18 +495,31 @@ class SpellListLayout(UIGridLayout):
             horizontal_spacing=100
         )
 
+        action_color = Color.from_iterable([
+            int((character.battle_ui_color.r + 255) / 2),
+            int((character.battle_ui_color.g + 255) / 2),
+            int((character.battle_ui_color.b + 255) / 2),
+            int(character.battle_ui_color.a)
+        ])
+
         if character.spells:
-            spell_index = 0
+            self.add(
+                SpellListOption(
+                    Spell(
+                        name=character.name[0].upper() + "-Action"
+                    ),
+                    color=action_color
+                ),
+                column=0,
+                row=0
+            )
+
+            spell_index = 1
             for spell in character.spells:
                 row_index = spell_index // 2
                 col_index = spell_index % 2
                 self.add(
-                    UILabel(
-                        text=spell.name,
-                        height=64,
-                        font_name="8bitoperator JVE",
-                        font_size=48
-                    ),
+                    SpellListOption(spell),
                     column=col_index,
                     row=row_index
                 )

@@ -6,6 +6,7 @@ from arcade.gui import UILayout, UIWidget, UIManager
 
 import character
 from battle_widgets import SpellListLayout
+from focus_stack import FocusStackMember
 from player_character import PlayerCharacter
 
 """
@@ -161,6 +162,9 @@ class BattleController:
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
 
+        # The focus stack for the battle GUI.
+        self.focus_stack = [FocusStackMember(battle_player_character_cards)]
+
         # References to all of the battle buttons and their indexes
         self.battle_player_character_cards = battle_player_character_cards.children
         self.current_player_character_card = self.battle_player_character_cards[0]
@@ -177,7 +181,8 @@ class BattleController:
         self.selected_target = None
 
         # Loads menu sounds
-        self.menu_move_sound = arcade.load_sound("assets/audio/gui/battle/snd_menumove.wav", False)
+        self.menu_move_sound = arcade.load_sound("assets/audio/gui/snd_menumove.wav", False)
+        self.menu_select_sound = arcade.load_sound("assets/audio/gui/snd_select.wav", False)
 
     def move_to_next_player_card(self):
         """ Moves self.current_player_character_card to the next card. """
@@ -240,6 +245,7 @@ class SelectCommand(Command):
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
                 # TODO: add functions to open UIs, set character animations
+                self.controller.menu_select_sound.play()
                 match self.controller.current_player_character_card_focused_button_index:
                     case 0:  # user selects ATTACK button
                         self.controller.state = BattleState.PLAYER_ATTACK_SELECT
@@ -252,7 +258,9 @@ class SelectCommand(Command):
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            self.controller.ui_manager.add(SpellListLayout(self.controller.current_player_character_card.player_character))
+                            spell_list_layout = SpellListLayout(self.controller.current_player_character_card.player_character)
+                            self.controller.ui_manager.add(spell_list_layout)
+                            spell_list_layout.children[0].focused = True
                             print("spell list layout added")
                             return
                     case 2:  # user selects the ITEM button

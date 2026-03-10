@@ -57,7 +57,7 @@ class GameView(arcade.View):
         self.camera = arcade.Camera2D()
 
         # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(1)
+        self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(1)
 
         # Temporary, for testing player animations.
@@ -128,7 +128,7 @@ class GameView(arcade.View):
 
     def setup(self):
         # Create and append the players to the SpriteList.
-        """
+
         self.player_one = player_character.PlayerCharacter(scale=4.0,
                                                            center_x=self._holy_arc[0][0],
                                                            center_y=self._holy_arc[0][1],
@@ -146,9 +146,9 @@ class GameView(arcade.View):
         self.players.append(self.player_one)
 
         self._animation_states = self.player_one.get_valid_animation_states()
-        """
 
-        """
+
+
         self.player_two = player_character.PlayerCharacter(scale=4.0,
                                                            center_x=self._holy_arc[1][0],
                                                            center_y=self._holy_arc[1][1],
@@ -163,7 +163,7 @@ class GameView(arcade.View):
         self.player_two.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.players.append(self.player_two)
-        """
+
 
         """
         self.player_three = player_character.PlayerCharacter(scale=4.0,
@@ -183,8 +183,8 @@ class GameView(arcade.View):
         """
 
         self.player_four = player_character.PlayerCharacter(scale=4.0,
-                                                            center_x=self._holy_arc[0][0],
-                                                            center_y=self._holy_arc[0][1],
+                                                            center_x=self._holy_arc[2][0],
+                                                            center_y=self._holy_arc[2][1],
                                                             angle=0,
                                                             sprite_folder_name="noelle",
                                                             name="Noelle",
@@ -194,12 +194,6 @@ class GameView(arcade.View):
                                                             magic=0,
                                                             battle_ui_color=Color(255, 255, 0, 255),
                                                             spells=[
-                                                                Spell(
-                                                                    name="N-Action",
-                                                                    tp_cost=0,
-                                                                    element_id=0,
-                                                                    base_health_change=0
-                                                                ),
                                                                 Spell(
                                                                     name="Heal Prayer",
                                                                     tp_cost=32,
