@@ -493,10 +493,9 @@ class SpellListOption(UILabel):
             ),
             pixelated=True
         )
-        print(self.soul_sprite.center_y)
 
 
-class SpellListLayout(UIGridLayout):
+class SpellList(UIGridLayout):
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             x=36,
@@ -539,3 +538,55 @@ class SpellListLayout(UIGridLayout):
                 )
                 spell_index += 1
 
+
+class SpellDescriptionLabel(UILabel):
+    def __init__(self, spell_description: str = ""):
+        super().__init__(
+            width=200,
+            height=140,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.GRAY,
+            text=spell_description
+        )
+
+
+class SpellTPCostLabel(UILabel):
+    def __init__(self, tp_cost: int = 0):
+        super().__init__(
+            width=200,
+            height=60,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.ORANGE_PEEL,
+            text=str(tp_cost) if tp_cost else ""
+        )
+
+
+class SpellDescriptionAndTPCost(UIBoxLayout):
+    def __init__(self, spell: Spell = None):
+
+        super().__init__(
+            width=200,
+            height=200,
+            children=[
+                SpellDescriptionLabel("" if not spell else spell.description),
+                SpellTPCostLabel(0 if not spell else spell.tp_cost)
+            ]
+        )
+
+
+class SpellSelect(UIBoxLayout):
+    def __init__(self, character: player_character.PlayerCharacter):
+        super().__init__(
+            x=36,
+            y=-32,
+            width=settings.WINDOW_WIDTH,
+            height=int(settings.WINDOW_HEIGHT / 4),
+            vertical=False,
+            space_between=100,
+            children=[
+                SpellList(character),
+                SpellDescriptionAndTPCost()
+            ]
+        )

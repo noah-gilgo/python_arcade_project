@@ -5,7 +5,7 @@ import arcade.key
 from arcade.gui import UILayout, UIWidget, UIManager
 
 import character
-from battle_widgets import SpellListLayout
+from battle_widgets import SpellList
 from focus_stack import FocusStackMember, FocusStack
 from player_character import PlayerCharacter
 
@@ -260,7 +260,7 @@ class SelectCommand(Command):
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            spell_list_layout = SpellListLayout(self.controller.current_player_character_card.player_character)
+                            spell_list_layout = SpellList(self.controller.current_player_character_card.player_character)
                             self.controller.focus_stack.push(spell_list_layout, self.controller.state, 2)
                             print("spell list layout added")
                             return

@@ -197,6 +197,7 @@ class GameView(arcade.View):
                                                             spells=[
                                                                 Spell(
                                                                     name="Heal Prayer",
+                                                                    description="Heal Ally",
                                                                     tp_cost=32,
                                                                     element_id=2,
                                                                     base_health_change=30,
@@ -207,6 +208,7 @@ class GameView(arcade.View):
                                                                 ),
                                                                 Spell(
                                                                     name="Sleep Mist",
+                                                                    description="Spare TIRED foes",
                                                                     tp_cost=32,
                                                                     element_id=8,
                                                                     base_health_change=0,
@@ -217,6 +219,7 @@ class GameView(arcade.View):
                                                                 ),
                                                                 Spell(
                                                                     name="IceShock",
+                                                                    description="Damage w/ ICE",
                                                                     tp_cost=16,
                                                                     element_id=8,
                                                                     base_health_change=100,

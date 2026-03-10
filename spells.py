@@ -7,10 +7,11 @@ from elemental_pairs import ElementalPair
 
 class Spell:
     """ Parent class for spells """
-    def __init__(self, name: str = "Default Spell", tp_cost: int = 0, element_id: int = 0,
+    def __init__(self, name: str = "Default Spell", description: str = "", tp_cost: int = 0, element_id: int = 0,
                  base_health_change: int = 0, is_friendly_spell: bool = False, is_healing_spell: bool = False,
                  is_pacifying_spell: bool = False, is_aoe_spell: bool = False):
         self.name = name  # Name of the spell
+        self.description = description
         self.tp_cost = tp_cost  # TP cost of the spell
         self.element_id = element_id  # elemental pair associated with the spell, if any
         self.base_health_change = base_health_change  # amount health changed by spell
