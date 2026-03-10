@@ -33,15 +33,20 @@ class BattleHUDButton(UITextureButton):
         )
 
         self.name = name
-        self.focus_mode = FocusMode(0)
+        self.focus_mode = FocusMode(2)
 
+    """
     def focus(self):
-        """ Highlights the selected button. """
+        # Highlights the selected button.
         self.texture = self.texture_focused
 
     def unfocus(self):
-        """ De-highlights the selected button. """
+        # De-highlights the selected button.
         self.texture = self.texture_unfocused
+    """
+
+    def do_render_focus(self, surface: Surface):
+        pass
 
 
 class BattleHUDButtonLayout(UIBoxLayout):
@@ -465,6 +470,7 @@ class SpellListOption(UILabel):
         self.focus_mode = FocusMode(2)
         self.soul_texture = arcade.load_texture("assets/sprites/soul/soul.png")
 
+    """
     def do_render_focus(self, surface: arcade.gui.Surface):
         # surface is provided by Arcade
         x = self.left - 20
@@ -480,6 +486,7 @@ class SpellListOption(UILabel):
                 16
             )
         )
+    """
 
 
 class SpellListLayout(UIGridLayout):

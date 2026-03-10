@@ -12,40 +12,63 @@ class Direction(Enum):
 
 
 class FocusStackMember:
-    def __init__(self, ui_layout: UILayout = None, row_count: int = 1):
+    def __init__(self, ui_layout: UILayout, state, row_count: int = 1):
         self.ui_layout = ui_layout
         self.widgets = self.ui_layout.children
         self.focused_widget = self.widgets[0]
+        self.focused_widget.focused = True
         self.focused_widget_index = 0
         self.row_count = row_count
         self.row_length = math.ceil(len(self.widgets) / self.row_count)
 
+        self.state = state
+
     def move(self, direction: Direction):
-        self.focused_widget.focused = False
+        old_focused_widget = self.focused_widget
         match direction:
             case Direction.RIGHT:
-                self.focused_widget_index = (self.focused_widget_index + 1) % len(self.widgets)
+                new_index = self.focused_widget_index + 1
+                if 0 <= new_index < len(self.widgets):
+                    self.focused_widget_index = new_index % len(self.widgets)
+                else:
+                    return False
             case Direction.LEFT:
-                self.focused_widget_index = (self.focused_widget_index - 1) % len(self.widgets)
+                new_index = self.focused_widget_index - 1
+                if 0 <= new_index < len(self.widgets):
+                    self.focused_widget_index = new_index % len(self.widgets)
+                else:
+                    return False
             case Direction.UP:
-                self.focused_widget_index = (self.focused_widget_index + self.row_length) % len(self.widgets)
+                if self.row_count > 1:
+                    new_index = self.focused_widget_index - self.row_length
+                    if new_index >= 0:
+                        self.focused_widget_index = new_index
+                    else:
+                        return False
             case Direction.DOWN:
-                self.focused_widget_index = (self.focused_widget_index + self.row_length) % len(self.widgets)
+                if self.row_count > 1:
+                    new_index = self.focused_widget_index + self.row_length
+                    if new_index < len(self.widgets):
+                        self.focused_widget_index = new_index
+                    else:
+                        return False
+        old_focused_widget.focused = False
         self.focused_widget = self.widgets[self.focused_widget_index]
         self.focused_widget.focused = True
+        return True
 
     # Focus the next widget in the layout.
     def move_right(self):
-        self.move(Direction.RIGHT)
+        return self.move(Direction.RIGHT)
 
     def move_left(self):
-        self.move(Direction.LEFT)
+        return self.move(Direction.LEFT)
 
     def move_up(self):
-        self.move(Direction.UP)
+        return self.move(Direction.UP)
 
     def move_down(self):
-        self.move(Direction.DOWN)
+        return self.move(Direction.DOWN)
 
 
 class FocusStack:
@@ -59,11 +82,13 @@ class FocusStack:
         return self.focus_stack[-1]
 
     # Adds a member to the top of the focus stack. Adds the ui_layout in said member to the ui
-    def push(self, ui_layout: UILayout, row_count: int = 1):
-        self.focus_stack.append(FocusStackMember(ui_layout, row_count))
+    def push(self, ui_layout: UILayout, state, row_count: int = 1):
+        self.focus_stack.append(FocusStackMember(ui_layout, state, row_count))
         self.ui_manager.add(self.focus_stack[-1].ui_layout)
 
     # Removes the higest member from the focus stack.
     def pop(self):
-        self.ui_manager.remove(self.focus_stack[-1].ui_layout)
-        self.focus_stack.pop(-1)
+        if len(self.focus_stack) > 1:
+            self.ui_manager.remove(self.focus_stack[-1].ui_layout)
+            return self.focus_stack.pop(-1)
+        return None
