@@ -1,5 +1,6 @@
 import arcade
 from PIL import Image
+from arcade import LBWH
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
     UIKeyPressEvent, UIKeyEvent, Surface
 from arcade.gui.widgets import FocusMode
@@ -460,7 +461,7 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
 class SpellListOption(UILabel):
     def __init__(self, spell: Spell, color: Color = arcade.color.WHITE):
         super().__init__(
-            text=spell.name,
+            text="     " + spell.name,
             height=64,
             font_name="8bitoperator JVE",
             font_size=48,
@@ -468,31 +469,37 @@ class SpellListOption(UILabel):
         )
 
         self.focus_mode = FocusMode(2)
-        self.soul_texture = arcade.load_texture("assets/sprites/soul/soul.png")
+        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
 
-    """
     def do_render_focus(self, surface: arcade.gui.Surface):
-        # surface is provided by Arcade
         x = self.left - 20
         y = self.center_y
 
-        # draw the texture on the widget’s surface
-        arcade.draw_texture_rect(
-            self.soul_texture,
-            arcade.LBWH(
-                x,
-                y - 8,
-                16,
-                16
-            )
+        self.prepare_render(surface)
+        """
+        arcade.draw_rect_outline(
+            rect=LBWH(0, 0, self.content_width, self.content_height),
+            color=arcade.color.WHITE,
+            border_width=40,
         )
-    """
+        """
+        arcade.draw_sprite_rect(
+            self.soul_sprite,
+            arcade.XYWH(
+                16,
+                32,
+                32,
+                32
+            ),
+            pixelated=True
+        )
+        print(self.soul_sprite.center_y)
 
 
 class SpellListLayout(UIGridLayout):
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            x=72,
+            x=36,
             y=-32,
             width=(2 * settings.WINDOW_WIDTH) / 3,
             height=int(settings.WINDOW_HEIGHT / 4),
