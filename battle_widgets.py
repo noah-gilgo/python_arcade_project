@@ -1,13 +1,15 @@
 import arcade
 from PIL import Image
+from arcade import LBWH
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
-    UIKeyPressEvent, UIKeyEvent
+    UIKeyPressEvent, UIKeyEvent, Surface
 from arcade.gui.widgets import FocusMode
 from arcade.shape_list import create_line
 from arcade.types.color import Color
 
 import player_character
 import settings
+from spells import Spell
 
 
 class BattleHUDButton(UITextureButton):
@@ -32,15 +34,20 @@ class BattleHUDButton(UITextureButton):
         )
 
         self.name = name
-        self.focus_mode = FocusMode(0)
+        self.focus_mode = FocusMode(2)
 
+    """
     def focus(self):
-        """ Highlights the selected button. """
+        # Highlights the selected button.
         self.texture = self.texture_focused
 
     def unfocus(self):
-        """ De-highlights the selected button. """
+        # De-highlights the selected button.
         self.texture = self.texture_unfocused
+    """
+
+    def do_render_focus(self, surface: Surface):
+        pass
 
 
 class BattleHUDButtonLayout(UIBoxLayout):
@@ -369,6 +376,7 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
         # This is the default data for a newly created clamshell. All of the child components of the clamshell
         # will read from this data and render themselves in accordance with it.
+        self.player_character = character
         self._color = character.battle_ui_color
         self._character_icon_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
         self._character_name = character.name
@@ -420,6 +428,8 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
         self.x = int(self.center_x - (self.width / 2))
         self.y = int(self.center_y - (self.height / 2))
 
+        self.player_characters = player_characters
+
         col_index = 0
         for character in player_characters:
             self.add(
@@ -429,18 +439,168 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
             )
             col_index += 1
 
-            """
+    """
+    def draw(self):
+        for character in self.player_characters:
             line = create_line(
                 start_x=self.x,
                 start_y=self.y,
                 end_x=self.x,
                 end_y=self.y + self.height,
-                color=[character.battle_ui_color.r,
+                color=(character.battle_ui_color.r,
                        character.battle_ui_color.g,
                        character.battle_ui_color.b,
-                       character.battle_ui_color.a],
+                       character.battle_ui_color.a),
                 line_width=3
             )
 
             line.draw()
-            """
+    """
+
+
+class SpellListOption(UILabel):
+    def __init__(self, spell: Spell, color: Color = arcade.color.WHITE):
+        super().__init__(
+            text="     " + spell.name,
+            width=400,
+            height=64,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=color
+        )
+
+        self.spell = spell
+        self.focus_mode = FocusMode(2)
+        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
+
+    def do_render_focus(self, surface: arcade.gui.Surface):
+        x = self.left - 20
+        y = self.center_y
+
+        self.prepare_render(surface)
+        """
+        arcade.draw_rect_outline(
+            rect=LBWH(0, 0, self.content_width, self.content_height),
+            color=arcade.color.WHITE,
+            border_width=40,
+        )
+        """
+        arcade.draw_sprite_rect(
+            self.soul_sprite,
+            arcade.XYWH(
+                16,
+                32,
+                32,
+                32
+            ),
+            pixelated=True
+        )
+
+
+class SpellList(UIGridLayout):
+    def __init__(self, character: player_character.PlayerCharacter):
+        super().__init__(
+            x=36,
+            y=-32,
+            width=(2 * settings.WINDOW_WIDTH) / 3,
+            height=int(settings.WINDOW_HEIGHT / 4),
+            row_count=3,
+            column_count=2,
+            align_horizontal="left",
+            horizontal_spacing=100
+        )
+
+        action_color = Color.from_iterable([
+            int((character.battle_ui_color.r + 255) / 2),
+            int((character.battle_ui_color.g + 255) / 2),
+            int((character.battle_ui_color.b + 255) / 2),
+            int(character.battle_ui_color.a)
+        ])
+
+        if character.spells:
+            self.add(
+                SpellListOption(
+                    Spell(
+                        name=character.name[0].upper() + "-Action"
+                    ),
+                    color=action_color
+                ),
+                column=0,
+                row=0
+            )
+
+            spell_index = 1
+            for spell in character.spells:
+                row_index = spell_index // 2
+                col_index = spell_index % 2
+                self.add(
+                    SpellListOption(spell),
+                    column=col_index,
+                    row=row_index
+                )
+                spell_index += 1
+
+
+class SpellDescriptionLabel(UILabel):
+    def __init__(self, spell_description: str = ""):
+        super().__init__(
+            size_hint=(None, None),
+            width=400,
+            height=140,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.GRAY,
+            text=spell_description,
+            multiline=True
+        )
+
+
+class SpellTPCostLabel(UILabel):
+    def __init__(self, tp_cost: int = 0):
+        super().__init__(
+            width=400,
+            height=60,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.NEON_CARROT,
+            text="" if not tp_cost else str(tp_cost) + "% TP"
+        )
+
+
+class SpellDescriptionAndTPCost(UIBoxLayout):
+    def __init__(self, spell: Spell = None):
+        super().__init__(
+            width=400,
+            height=300,
+            children=[
+                SpellDescriptionLabel("" if not spell or not spell.description else spell.description),
+                SpellTPCostLabel(0 if not spell or not spell.tp_cost else spell.tp_cost)
+            ],
+            align="left"
+        )
+
+    def update_spell_data(self, spell: Spell = None):
+        """ Updates the spell data shown in the layout. """
+        self.children[0].text = "" if not spell or not spell.description else spell.description
+        self.children[1].text = "" if not spell or not spell.tp_cost else str(spell.tp_cost) + "% TP"
+
+
+class SpellSelect(UIBoxLayout):
+    def __init__(self, character: player_character.PlayerCharacter):
+        super().__init__(
+            x=36,
+            y=0,
+            width=settings.WINDOW_WIDTH,
+            height=int(settings.WINDOW_HEIGHT / 4) - 20,
+            vertical=False,
+            space_between=100,
+            children=[
+                SpellList(character),
+                SpellDescriptionAndTPCost()
+            ],
+            align="top"
+        )
+
+    def update_spell_data(self, spell: Spell = None):
+        """ Updates the spell data shown in the layout. """
+        self.children[1].update_spell_data(spell)

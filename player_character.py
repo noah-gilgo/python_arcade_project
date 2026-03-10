@@ -2,6 +2,7 @@ from arcade.types import Color
 
 import character
 import graphics_objects
+from spells import Spell
 
 PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 
@@ -9,13 +10,13 @@ PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 class PlayerCharacter(character.Character):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int, magic: int,
-                 battle_ui_color: Color, knows_magic: bool = True):
+                 battle_ui_color: Color, element_id: int = 0, knows_magic: bool = True, spells=list[Spell]):
 
         self._sprite_pack_path = PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
         super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle,
                          sprite_folder_name=sprite_folder_name, name=name, max_hp=max_hp, attack=attack,
-                         defense=defense)
+                         defense=defense, element_id=element_id)
 
         self.knows_magic = knows_magic
         self.magic = magic
@@ -25,6 +26,12 @@ class PlayerCharacter(character.Character):
             "battle_idle": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_idle",
                 frame_duration=0.15,
+                loop_animation=True
+            ),
+
+            "battle_act_ready": graphics_objects.SimpleLoopAnimation(
+                sprite_pack_path=self._sprite_pack_path + "/battle_act_ready",
+                frame_duration=0.10,
                 loop_animation=True
             ),
 
@@ -100,3 +107,22 @@ class PlayerCharacter(character.Character):
                 loop_animation=False
             )
         })
+
+        if self.knows_magic:
+            self._animations_by_state.update(
+                {
+                    "battle_magic_ready": graphics_objects.SimpleLoopAnimation(
+                        sprite_pack_path=self._sprite_pack_path + "/battle_magic_ready",
+                        frame_duration=0.10,
+                        loop_animation=True
+                    ),
+
+                    "battle_magic": graphics_objects.SimpleLoopAnimation(
+                        sprite_pack_path=self._sprite_pack_path + "/battle_magic",
+                        frame_duration=0.10,
+                        loop_animation=False
+                    )
+                }
+            )
+
+            self.spells = spells

@@ -2,9 +2,12 @@ from enum import Enum, auto
 import command
 
 import arcade.key
-from arcade.gui import UILayout, UIWidget
+from arcade.gui import UILayout, UIWidget, UIManager
 
 import character
+from battle_widgets import SpellList, SpellSelect
+from focus_stack import FocusStackMember, FocusStack
+from player_character import PlayerCharacter
 
 """
 This architecture is my attempt at replicating the state architecture recommended by Robert Nystrom in his book
@@ -155,8 +158,14 @@ def move(array, current_member, index, dx):
 
 
 class BattleController:
-    def __init__(self, battle_textbox: UIWidget, battle_player_character_cards: UILayout):
+    def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget, battle_player_character_cards: UILayout):
         self.battle_textbox = battle_textbox
+        self.ui_manager = ui_manager
+
+        self.state = BattleState.PLAYER_COMMAND
+        self.turn = 0
+        self.selected_command = None
+        self.selected_target = None
 
         # References to all of the battle buttons and their indexes
         self.battle_player_character_cards = battle_player_character_cards.children
@@ -164,17 +173,16 @@ class BattleController:
         self.current_player_character_card_index = 0
         self.current_player_button_layout = self.current_player_character_card.children[1].children
         self.current_player_character_card_focused_button = self.current_player_button_layout[0]
-        self.current_player_character_card_focused_button.focus()
         self.current_player_character_card_focused_button_index = 0
         self.open_menus = []
 
-        self.state = BattleState.PLAYER_COMMAND
-        self.turn = 0
-        self.selected_command = None
-        self.selected_target = None
+        # The focus stack for the battle GUI.
+        self.focus_stack = FocusStack(self.ui_manager)
+        self.focus_stack.push(self.current_player_character_card.children[1], self.current_player_character_card.children[1], self.state)
 
         # Loads menu sounds
-        self.menu_move_sound = arcade.load_sound("assets/audio/gui/battle/snd_menumove.wav", False)
+        self.menu_move_sound = arcade.load_sound("assets/audio/gui/snd_menumove.wav", False)
+        self.menu_select_sound = arcade.load_sound("assets/audio/gui/snd_select.wav", False)
 
     def move_to_next_player_card(self):
         """ Moves self.current_player_character_card to the next card. """
@@ -186,21 +194,11 @@ class BattleController:
         self.current_player_character_card = self.battle_player_character_cards[
             self.current_player_character_card_index]
 
-    def move_between_player_action_buttons(self, dx):
-        self.current_player_character_card_focused_button.unfocus()
-        self.current_player_character_card_focused_button, self.current_player_character_card_focused_button_index = \
-            move(self.current_player_button_layout,
-                 self.current_player_character_card_focused_button,
-                 self.current_player_character_card_focused_button_index,
-                 dx)
-        self.menu_move_sound.play()
-        self.current_player_character_card_focused_button.focus()
-
     def confirm_command(self):
         SelectCommand(self).execute()
 
     def cancel_command(self):
-        SelectCommand(self).execute()
+        CancelCommand(self).execute()
 
     def right_command(self):
         RightCommand(self).execute()
@@ -208,16 +206,28 @@ class BattleController:
     def left_command(self):
         LeftCommand(self).execute()
 
+    def up_command(self):
+        UpCommand(self).execute()
+
+    def down_command(self):
+        DownCommand(self).execute()
+
     def handle_key(self, key):
         """ Handles user inputs made during the battle. """
 
         match key:
             case arcade.key.Z:
                 self.confirm_command()
+            case arcade.key.X:
+                self.cancel_command()
             case arcade.key.RIGHT:
                 self.right_command()
             case arcade.key.LEFT:
                 self.left_command()
+            case arcade.key.UP:
+                self.up_command()
+            case arcade.key.DOWN:
+                self.down_command()
 
 
 class Command:
@@ -237,7 +247,8 @@ class SelectCommand(Command):
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
                 # TODO: add functions to open UIs, set character animations
-                match self.controller.current_player_character_card_focused_button_index:
+                self.controller.menu_select_sound.play()
+                match self.controller.focus_stack.get_highest_member().focused_widget_index:
                     case 0:  # user selects ATTACK button
                         self.controller.state = BattleState.PLAYER_ATTACK_SELECT
                         # TODO: include code to open an enemy select UI
@@ -249,7 +260,10 @@ class SelectCommand(Command):
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            # TODO: include code to open the MAGIC menu
+                            spell_list_full_layout = SpellSelect(self.controller.current_player_character_card.player_character)
+                            spell_list_interactive_layout = spell_list_full_layout.children[0]
+                            self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout, self.controller.state, 2)
+                            print("spell list layout added")
                             return
                     case 2:  # user selects the ITEM button
                         self.controller.state = BattleState.PLAYER_ITEM_SELECT
@@ -291,19 +305,83 @@ class SelectCommand(Command):
                 return
 
 
-class RightCommand(Command):
-    """ A command object representing the user selecting (usually pressing Z in the original game.) """
+class CancelCommand(Command):
+    """ A command object representing the user canceling (usually pressing X in the original game.) """
 
     def execute(self):
+        focus_stack_member = self.controller.focus_stack.pop()
+        if focus_stack_member:
+            self.controller.state = self.controller.focus_stack.get_highest_member().state
+            self.controller.menu_move_sound.play()
+            print("spell list layout removed")
+
+
+class RightCommand(Command):
+    """ A command object representing the user pressing right (usually pressing -> in the original game.) """
+
+    def execute(self):
+        if self.controller.focus_stack.get_highest_member().move_right():
+            self.controller.menu_move_sound.play()
+            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
+        """
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
                 self.controller.move_between_player_action_buttons(1)
+        """
 
 
 class LeftCommand(Command):
-    """ A command object representing the user selecting (usually pressing Z in the original game.) """
+    """ A command object representing the user pressing left (usually pressing <- in the original game.) """
 
     def execute(self):
+        if self.controller.focus_stack.get_highest_member().move_left():
+            self.controller.menu_move_sound.play()
+            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
+
+        """
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
                 self.controller.move_between_player_action_buttons(-1)
+        """
+
+
+class UpCommand(Command):
+    """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """
+
+    def execute(self):
+        if self.controller.focus_stack.get_highest_member().move_up():
+            self.controller.menu_move_sound.play()
+            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
+        """
+        match self.controller.state:
+            case BattleState.PLAYER_COMMAND:
+                self.controller.move_between_player_action_buttons(1)
+        """
+
+
+class DownCommand(Command):
+    """
+    A command object representing the user pressing down (usually pressing the down arrow key in the original game.)
+    """
+
+    def execute(self):
+        if self.controller.focus_stack.get_highest_member().move_down():
+            self.controller.menu_move_sound.play()
+            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
+        """
+        match self.controller.state:
+            case BattleState.PLAYER_COMMAND:
+                self.controller.move_between_player_action_buttons(1)
+        """

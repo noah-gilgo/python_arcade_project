@@ -1,10 +1,11 @@
-import arcade
+from arcade import Sprite
 
 import texture_methods
 
 
-class Frame:
-    def __init__(self, sprite: arcade.Sprite):
+class AnimatedSprite:
+    def __init__(self, sprite: Sprite, sprite_id: int):
+        self.sprite_id = sprite_id
         self.sprite = sprite
         self.age = 0.0
 
@@ -86,3 +87,16 @@ class SimpleLoopAnimation:
         :return: A List[Texture] containing Textures representing every image located at the file path.
         """
         return self._texture_array
+
+
+class MultiSpriteAnimation:
+    def __init__(self, sprites: list[AnimatedSprite], duration: float = 1.0, delta_time: float = 0.05):
+        self.sprites = sprites
+        self.time = 0.0
+        self.duration = duration
+        self.delta_time = delta_time
+
+    def update(self):
+        """ Skeleton function for child animations to inherit. """
+        pass
+

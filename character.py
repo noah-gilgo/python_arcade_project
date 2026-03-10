@@ -35,7 +35,8 @@ class Player(arcade.Sprite):
 
 class Character(arcade.Sprite):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
-                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int):
+                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int,
+                 element_id: int = 0):
         super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle)
         self.sprite_folder_name = sprite_folder_name
         self.name = name
@@ -43,8 +44,9 @@ class Character(arcade.Sprite):
         self.hp = max_hp
         self.attack = attack
         self.defense = defense
+        self.element_id = element_id
 
-        self._current_animation_state = "default"
+        self.current_animation_state = "default"
 
         # This dictionary maps state names to texture arrays that represent the animations of said state.
         self._animations_by_state = {
@@ -55,10 +57,10 @@ class Character(arcade.Sprite):
             )
         }
 
-        self._state = "default"  # This is the default texture state upon game creation, as of right now.
-        self._current_animation = self._animations_by_state["default"]
-        self._current_animation_timer = 0.0
-        self._current_texture_index = 0
+        self.state = "default"  # This is the default texture state upon game creation, as of right now.
+        self.current_animation = self._animations_by_state["default"]
+        self.current_animation_timer = 0.0
+        self.current_texture_index = 0
 
         # Initialize the character with its first default texture
         # if len(self._animations_by_state["default"]) > 0:
@@ -81,16 +83,16 @@ class Character(arcade.Sprite):
 
         # Gets the current animation textures.
         # current_animation = self._animations_by_state.get(self._state)
-        if not self._current_animation or len(self._current_animation) <= 1:
+        if not self.current_animation or len(self.current_animation) <= 1:
             return
 
         # Update frame timer. If self._current_animation._loop_animation == False, don't loop the animation.
-        self._current_animation_timer += delta_time
-        if self._current_animation_timer > self._current_animation.get_frame_duration():
-            self._current_animation_timer = 0
-            if self._current_animation.get_loop_animation() or self._current_texture_index < len(self._current_animation) - 1:
-                self._current_texture_index = (self._current_texture_index + 1) % len(self._current_animation)
-                self.texture = self._current_animation[self._current_texture_index]
+        self.current_animation_timer += delta_time
+        if self.current_animation_timer > self.current_animation.get_frame_duration():
+            self.current_animation_timer = 0
+            if self.current_animation.get_loop_animation() or self.current_texture_index < len(self.current_animation) - 1:
+                self.current_texture_index = (self.current_texture_index + 1) % len(self.current_animation)
+                self.texture = self.current_animation[self.current_texture_index]
 
     def set_animation_state(self, state: str = "default"):
         """
@@ -100,11 +102,11 @@ class Character(arcade.Sprite):
         :return: None
         """
         if state in self._animations_by_state:
-            self._state = state
-            self._current_animation = self._animations_by_state.get(state)
-            self._current_animation_timer = 0.0
-            self._current_texture_index = 0
-            self.texture = self._current_animation[0]
+            self.state = state
+            self.current_animation = self._animations_by_state.get(state)
+            self.current_animation_timer = 0.0
+            self.current_texture_index = 0
+            self.texture = self.current_animation[0]
 
         else:
             raise ValueError("set_animation_state was given a state that is not present in self._animations_by_state.")

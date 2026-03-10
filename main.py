@@ -13,8 +13,10 @@ import sound_methods
 import graphics_methods
 import math
 import dialogue_box
-import character_options_widget
+import battle_widgets
 from battle_state_machine import BattleController
+from spell_animations import IceShockAnimation
+from spells import Spell
 
 
 class GameView(arcade.View):
@@ -31,6 +33,7 @@ class GameView(arcade.View):
         self.background_sprites = arcade.SpriteList()
         self.player_sprites = arcade.SpriteList()
         self.foreground_sprites = arcade.SpriteList()
+        self.spell_sprites = arcade.SpriteList()
 
         # Set up the player info
         self.player_one = None
@@ -54,7 +57,7 @@ class GameView(arcade.View):
         self.camera = arcade.Camera2D()
 
         # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(3)
+        self._holy_arc = math_methods.initialize_holy_arc(1)
         self._unholy_arc = math_methods.initialize_unholy_arc(1)
 
         # Temporary, for testing player animations.
@@ -121,13 +124,12 @@ class GameView(arcade.View):
 
         self.battle_controller = None
 
-    def setup(self):
-        # Create the SpriteList
-        self.background_sprites = arcade.SpriteList()
-        self.player_sprites = arcade.SpriteList()
-        self.foreground_sprites = arcade.SpriteList()
+        self.iceshock_animation = None
 
+    def setup(self):
         # Create and append the players to the SpriteList.
+
+        """
         self.player_one = player_character.PlayerCharacter(scale=4.0,
                                                            center_x=self._holy_arc[0][0],
                                                            center_y=self._holy_arc[0][1],
@@ -145,7 +147,9 @@ class GameView(arcade.View):
         self.players.append(self.player_one)
 
         self._animation_states = self.player_one.get_valid_animation_states()
+        """
 
+        """
         self.player_two = player_character.PlayerCharacter(scale=4.0,
                                                            center_x=self._holy_arc[1][0],
                                                            center_y=self._holy_arc[1][1],
@@ -160,7 +164,9 @@ class GameView(arcade.View):
         self.player_two.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.players.append(self.player_two)
+        """
 
+        """
         self.player_three = player_character.PlayerCharacter(scale=4.0,
                                                              center_x=self._holy_arc[2][0],
                                                              center_y=self._holy_arc[2][1],
@@ -175,11 +181,11 @@ class GameView(arcade.View):
         self.player_three.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.players.append(self.player_three)
-
         """
+
         self.player_four = player_character.PlayerCharacter(scale=4.0,
-                                                            center_x=self._holy_arc[3][0],
-                                                            center_y=self._holy_arc[3][1],
+                                                            center_x=self._holy_arc[0][0],
+                                                            center_y=self._holy_arc[0][1],
                                                             angle=0,
                                                             sprite_folder_name="noelle",
                                                             name="Noelle",
@@ -187,11 +193,48 @@ class GameView(arcade.View):
                                                             attack=10,
                                                             defense=2,
                                                             magic=0,
-                                                            battle_ui_color=Color(255, 255, 0, 255))  # Sprite initialization
+                                                            battle_ui_color=Color(255, 255, 0, 255),
+                                                            spells=[
+                                                                Spell(
+                                                                    name="Heal Prayer",
+                                                                    description="Heal Ally",
+                                                                    tp_cost=32,
+                                                                    element_id=2,
+                                                                    base_health_change=30,
+                                                                    is_friendly_spell=True,
+                                                                    is_healing_spell=True,
+                                                                    is_pacifying_spell=False,
+                                                                    is_aoe_spell=False
+                                                                ),
+                                                                Spell(
+                                                                    name="Sleep Mist",
+                                                                    description="Spare TIRED foes",
+                                                                    tp_cost=32,
+                                                                    element_id=8,
+                                                                    base_health_change=0,
+                                                                    is_friendly_spell=False,
+                                                                    is_healing_spell=False,
+                                                                    is_pacifying_spell=True,
+                                                                    is_aoe_spell=True
+                                                                ),
+                                                                Spell(
+                                                                    name="IceShock",
+                                                                    description="Damage w/ ICE",
+                                                                    tp_cost=16,
+                                                                    element_id=8,
+                                                                    base_health_change=100,
+                                                                    is_friendly_spell=False,
+                                                                    is_healing_spell=False,
+                                                                    is_pacifying_spell=False,
+                                                                    is_aoe_spell=False
+                                                                ),
+                                                            ])
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
         self.players.append(self.player_four)
-        """
+
+        self.player_four.get_valid_animation_states()
+
 
         # Create and append the players to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
@@ -225,10 +268,14 @@ class GameView(arcade.View):
         self.text_box = dialogue_box.TextBox()
         self.manager.add(self.text_box)
 
-        self.battle_hud_container = character_options_widget.BattleHUDCharacterClamshellDisplay(self.players)
+        self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.players)
         self.manager.add(self.battle_hud_container)
 
-        self.battle_controller = BattleController(self.text_box, self.battle_hud_container)
+        self.battle_controller = BattleController(self.manager, self.text_box, self.battle_hud_container)
+
+        self.iceshock_animation = IceShockAnimation(self.enemy_one.center_x, self.enemy_one.center_y)
+        for sprite in self.iceshock_animation.sprites:
+            self.spell_sprites.append(sprite.sprite)
 
     def on_draw(self):
         # 3. Clear the screen
@@ -239,7 +286,9 @@ class GameView(arcade.View):
             self.background_sprites.draw(pixelated=True)
             self.player_sprites.draw(pixelated=True)
             self.foreground_sprites.draw(pixelated=True)
+            self.spell_sprites.draw(pixelated=True)
             self.manager.draw(pixelated=True)
+            self.iceshock_animation.draw()
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -265,6 +314,8 @@ class GameView(arcade.View):
             self._global_timer = 0.0
 
         self._global_timer += delta_time
+
+        self.iceshock_animation.update()
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
