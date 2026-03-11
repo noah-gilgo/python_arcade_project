@@ -755,7 +755,7 @@ class EnemySelectInstance(UIBoxLayout):
     def __init__(self, enemy: non_player_character.NonPlayerCharacter):
         super().__init__(
             width=int(settings.WINDOW_WIDTH * .9),
-            height=52,
+            height=40,
             vertical=False,
             children=[
                 EnemySelectInstanceName(enemy),

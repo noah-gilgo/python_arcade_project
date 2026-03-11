@@ -321,7 +321,6 @@ class CancelCommand(Command):
         if focus_stack_member:
             self.controller.state = self.controller.focus_stack.get_highest_member().state
             self.controller.menu_move_sound.play()
-            print("spell list layout removed")
 
 
 class RightCommand(Command):
