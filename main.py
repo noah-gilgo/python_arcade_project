@@ -44,6 +44,8 @@ class GameView(arcade.View):
         self.players = []
 
         self.enemy_one = None
+        self.enemy_two = None
+        self.enemy_three = None
 
         self.enemies = []
 
@@ -58,7 +60,7 @@ class GameView(arcade.View):
 
         # Initializes the starting positions of the player characters and enemy characters.
         self._holy_arc = math_methods.initialize_holy_arc(1)
-        self._unholy_arc = math_methods.initialize_unholy_arc(1)
+        self._unholy_arc = math_methods.initialize_unholy_arc(3)
 
         # Temporary, for testing player animations.
         self._global_timer = 0.0
@@ -247,7 +249,7 @@ class GameView(arcade.View):
         self.player_four.get_valid_animation_states()
 
 
-        # Create and append the players to the SpriteList.
+        # Create and append the enemies to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
                                                                  center_x=self._unholy_arc[0][0],
                                                                  center_y=self._unholy_arc[0][1],
@@ -261,6 +263,34 @@ class GameView(arcade.View):
         self.enemy_one.set_animation_state("battle_idle")
         self.player_sprites.append(self.enemy_one)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_one)
+
+        self.enemy_two = non_player_character.NonPlayerCharacter(scale=4.0,
+                                                                 center_x=self._unholy_arc[1][0],
+                                                                 center_y=self._unholy_arc[1][1],
+                                                                 angle=0,
+                                                                 sprite_folder_name="rudinn",
+                                                                 name="Rudinn",
+                                                                 max_hp=90,
+                                                                 attack=10,
+                                                                 defense=2
+                                                                 )
+        self.enemy_two.set_animation_state("battle_idle")
+        self.player_sprites.append(self.enemy_two)  # Append the instance to the SpriteList
+        self.enemies.append(self.enemy_two)
+
+        self.enemy_three = non_player_character.NonPlayerCharacter(scale=4.0,
+                                                                 center_x=self._unholy_arc[2][0],
+                                                                 center_y=self._unholy_arc[2][1],
+                                                                 angle=0,
+                                                                 sprite_folder_name="rudinn",
+                                                                 name="Rudinn",
+                                                                 max_hp=90,
+                                                                 attack=10,
+                                                                 defense=2
+                                                                 )
+        self.enemy_three.set_animation_state("battle_idle")
+        self.player_sprites.append(self.enemy_three)  # Append the instance to the SpriteList
+        self.enemies.append(self.enemy_three)
 
         # self._animation_states = self.enemy_one.get_valid_animation_states()
 
@@ -282,7 +312,7 @@ class GameView(arcade.View):
         self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.players)
         self.manager.add(self.battle_hud_container)
 
-        self.battle_controller = BattleController(self.manager, self.text_box, self.battle_hud_container)
+        self.battle_controller = BattleController(self.manager, self.text_box, self.battle_hud_container, self.enemies)
 
         self.iceshock_animation = IceShockAnimation(self.enemy_one.center_x, self.enemy_one.center_y)
         for sprite in self.iceshock_animation.sprites:

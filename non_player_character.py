@@ -7,7 +7,7 @@ NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/non_player_characters
 class NonPlayerCharacter(character.Character):
     def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int,
-                 element_id: int = 0, tired: float = 0, mercy: float = 0):
+                 element_id: int = 0, tired: int = 0, mercy: int = 0):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -15,8 +15,8 @@ class NonPlayerCharacter(character.Character):
                          sprite_folder_name=sprite_folder_name, name=name, max_hp=max_hp, attack=attack,
                          defense=defense, element_id=element_id)
 
-        self._tired = tired
-        self._mercy = mercy
+        self.tired = tired
+        self.mercy = mercy
 
         self._animations_by_state.update({
             "overworld": graphics_objects.SimpleLoopAnimation(
@@ -43,3 +43,11 @@ class NonPlayerCharacter(character.Character):
                 loop_animation=True
             ),
         })
+
+    def get_hp_percentage_as_string(self):
+        """ Returns the whole number HP percentage of the NPC. """
+        return str(int(self.hp / self.max_hp)) + "%"
+
+    def get_mercy_percentage_as_string(self):
+        """ Returns the whole number HP percentage of the NPC. """
+        return str(self.mercy) + "%"

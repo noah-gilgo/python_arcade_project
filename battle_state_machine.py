@@ -5,7 +5,8 @@ import arcade.key
 from arcade.gui import UILayout, UIWidget, UIManager
 
 import character
-from battle_widgets import SpellList, SpellSelect
+import non_player_character
+from battle_widgets import SpellList, SpellSelect, EnemySelect
 from focus_stack import FocusStackMember, FocusStack
 from player_character import PlayerCharacter
 
@@ -20,6 +21,7 @@ class BattleState(Enum):
     PLAYER_COMMAND = auto()
     PLAYER_ATTACK_SELECT = auto()
     PLAYER_ACT_ENEMY_SELECT = auto()
+    PLAYER_MAGIC_ENEMY_SELECT = auto()
     PLAYER_ACT_SELECT = auto()
     PLAYER_ITEM_SELECT = auto()
     PLAYER_MAGIC_SELECT = auto()
@@ -158,9 +160,11 @@ def move(array, current_member, index, dx):
 
 
 class BattleController:
-    def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget, battle_player_character_cards: UILayout):
+    def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget, battle_player_character_cards: UILayout,
+                 enemies: list[non_player_character.NonPlayerCharacter]):
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
+        self.enemies = enemies
 
         self.state = BattleState.PLAYER_COMMAND
         self.turn = 0
@@ -263,7 +267,6 @@ class SelectCommand(Command):
                             spell_list_full_layout = SpellSelect(self.controller.current_player_character_card.player_character)
                             spell_list_interactive_layout = spell_list_full_layout.children[0]
                             self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout, self.controller.state, 2)
-                            print("spell list layout added")
                             return
                     case 2:  # user selects the ITEM button
                         self.controller.state = BattleState.PLAYER_ITEM_SELECT
@@ -294,6 +297,11 @@ class SelectCommand(Command):
 
             case BattleState.PLAYER_MAGIC_SELECT:
                 # TODO: select the focused spell, animate the player character, queue the act
+                self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
+                enemy_list_full_layout = EnemySelect(self.controller.enemies)
+                enemy_list_interactive_layout = EnemySelect(self.controller.enemies)
+                self.controller.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
+                                                 self.controller.state, 1)
                 return
 
             case BattleState.PLAYER_ITEM_SELECT:
