@@ -3,7 +3,7 @@ from PIL import Image
 from arcade import LBWH
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
     UIKeyPressEvent, UIKeyEvent, Surface
-from arcade.gui.widgets import FocusMode
+from arcade.gui.widgets import FocusMode, UISpace
 from arcade.shape_list import create_line
 from arcade.types.color import Color
 
@@ -414,7 +414,7 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
         super().__init__(
             children=[],
             x=x_offset,
-            y=int(settings.WINDOW_HEIGHT / 4.5),
+            y=int(settings.WINDOW_HEIGHT / 4.5) + 12,
             width=width,
             align_vertical="center",
             align_horizontal="center",
@@ -605,13 +605,13 @@ class EnemySelectInstanceName(UILabel):
     def __init__(self, enemy: non_player_character.NonPlayerCharacter):
         text_color = arcade.color.WHITE
         if enemy.tired >= 100:
-            text_color = arcade.color.CYAN
+            text_color = Color(0, 178, 255)
         if enemy.mercy >= 100:
             text_color = arcade.color.YELLOW
 
         super().__init__(
             text="     " + enemy.name,
-            width=320,
+            width=240,
             height=56,
             font_name="8bitoperator JVE",
             font_size=48,
@@ -651,7 +651,8 @@ class EnemySelectInstanceIcons(UIBoxLayout):
             children=[spare_icon, tired_icon, tired_label],
             align="center",
             vertical=False,
-            size_hint=None
+            size_hint=None,
+            space_between=8
         )
 
 
@@ -691,15 +692,22 @@ class EnemySelectInstanceHPMeter(UIWidget):
 
         super().do_render(surface)
 
-        arcade.draw_text(
-            text=" " + self.enemy.get_mercy_percentage_as_string(),
-            x=4,
-            y=20,
+        text_sprite = arcade.create_text_sprite(
+            text=" " + self.enemy.get_hp_percentage_as_string(),
             color=arcade.color.WHITE,
             font_name="8bitoperator JVE",
-            font_size=36,
-            anchor_x="left",
-            anchor_y="center",
+            font_size=36
+        )
+
+        arcade.draw_sprite_rect(
+            sprite=text_sprite,
+            rect=LBWH(
+                0,
+                -4,
+                width=text_sprite.width * 1.4,
+                height=self.content_height + 8
+            ),
+            pixelated=True
         )
 
 
@@ -717,10 +725,9 @@ class EnemySelectInstanceMercyMeter(UIWidget):
 
         self.with_background(color=arcade.color.ORANGE)
 
-        self.hp = enemy.hp
-        self.max_hp = enemy.max_hp
+        self.mercy = enemy.mercy
 
-        self.value = self.hp / self.max_hp
+        self.value = self.mercy / 100
         self.color = arcade.color.YELLOW
 
         # trigger a render when the value changes
@@ -739,15 +746,22 @@ class EnemySelectInstanceMercyMeter(UIWidget):
 
         super().do_render(surface)
 
-        arcade.draw_text(
+        text_sprite = arcade.create_text_sprite(
             text=" " + self.enemy.get_mercy_percentage_as_string(),
-            x=4,
-            y=20,
             color=arcade.color.DARK_RED,
             font_name="8bitoperator JVE",
-            font_size=36,
-            anchor_x="left",
-            anchor_y="center",
+            font_size=36
+        )
+
+        arcade.draw_sprite_rect(
+            sprite=text_sprite,
+            rect=LBWH(
+                0,
+                -4,
+                width=text_sprite.width * 1.4,
+                height=self.content_height + 8
+            ),
+            pixelated=True
         )
 
 
@@ -763,7 +777,7 @@ class EnemySelectInstance(UIBoxLayout):
                 EnemySelectInstanceHPMeter(enemy),
                 EnemySelectInstanceMercyMeter(enemy)
             ],
-            space_between=10
+            space_between=40
         )
 
         self.focus_mode = FocusMode(2)
@@ -773,8 +787,6 @@ class EnemySelectInstance(UIBoxLayout):
         x = self.left - 20
         y = self.center_y
 
-        self.prepare_render(surface)
-        
         arcade.draw_sprite_rect(
             self.soul_sprite,
             arcade.XYWH(
@@ -785,11 +797,81 @@ class EnemySelectInstance(UIBoxLayout):
             ),
             pixelated=True
         )
-        
-        super().do_render(surface)
+
+"""
+class EnemySelectInstanceWidget(UIWidget):
+    def __init__(self, enemy: non_player_character.NonPlayerCharacter):
+        super().__init__(
+            width=int(settings.WINDOW_WIDTH * .9),
+            height=40
+        )
+
+        self.enemy_select_instance = EnemySelectInstance(enemy)
+
+        self.focus_mode = FocusMode(2)
+        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
+
+    def do_render(self, surface):
+        self.enemy_select_instance.do_render(surface)
+
+    def do_render_focus(self, surface: arcade.gui.Surface):
+        x = self.left - 20
+        y = self.center_y
+
+        arcade.draw_sprite_rect(
+            self.soul_sprite,
+            arcade.XYWH(
+                16,
+                32,
+                32,
+                32
+            ),
+            pixelated=True
+        )
+"""
 
 
-class EnemySelect(UIBoxLayout):
+class EnemySelectMeterColumnLabel(UIWidget):
+    def __init__(self, text: str):
+        super().__init__(
+            width=220,
+            height=32,
+            size_hint=None
+        )
+        self.text = text
+
+    def do_render(self, surface: Surface):
+        text_sprite = arcade.create_text_sprite(
+            text=self.text.upper(),
+            color=arcade.color.WHITE,
+            font_name="8bitoperator JVE",
+            font_size=36
+        )
+
+        arcade.draw_sprite_rect(
+            sprite=text_sprite,
+            rect=LBWH(
+                0,
+                0,
+                width=text_sprite.width * 1.5,
+                height=self.content_height + 8
+            ),
+            pixelated=True
+        )
+
+
+class EnemySelectMeterColumnLabels(UIBoxLayout):
+    def __init__(self):
+        super().__init__(
+            children=[UISpace(width=730), EnemySelectMeterColumnLabel("HP"), EnemySelectMeterColumnLabel("MERCY")],
+            width=1400,
+            size_hint=None,
+            vertical=False,
+            align="left"
+        )
+
+
+class EnemySelectOptions(UIBoxLayout):
     def __init__(self, enemies: list[non_player_character.NonPlayerCharacter]):
         children = []
 
@@ -800,15 +882,31 @@ class EnemySelect(UIBoxLayout):
             x=36,
             y=0,
             width=settings.WINDOW_WIDTH,
-            height=int(settings.WINDOW_HEIGHT / 4) - 20,
+            height=int(settings.WINDOW_HEIGHT / 4),
             vertical=True,
             children=children,
             align="left"
         )
 
+
+class EnemySelect(UIBoxLayout):
+    def __init__(self, enemies: list[non_player_character.NonPlayerCharacter]):
+        super().__init__(
+            x=36,
+            y=-30,
+            width=settings.WINDOW_WIDTH,
+            height=int(settings.WINDOW_HEIGHT / 4),
+            children=[
+                EnemySelectMeterColumnLabels(),
+                EnemySelectOptions(enemies)
+            ],
+            vertical=True,
+            align="left"
+        )
+
     def do_render(self, surface):
         arcade.draw_rect_filled(
-            arcade.LBWH(0, 0, self.width, self.height),
+            arcade.LBWH(0, 0, self.width, self.height + 32),
             arcade.color.BLACK
         )
 

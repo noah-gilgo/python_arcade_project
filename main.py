@@ -256,6 +256,7 @@ class GameView(arcade.View):
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
                                                                  name="Rudinn",
+                                                                 hp=90,
                                                                  max_hp=90,
                                                                  attack=10,
                                                                  defense=2
@@ -270,11 +271,13 @@ class GameView(arcade.View):
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
                                                                  name="Rudinn",
+                                                                 hp=50,
                                                                  max_hp=90,
                                                                  attack=10,
                                                                  defense=2
                                                                  )
         self.enemy_two.set_animation_state("battle_idle")
+        self.enemy_two.mercy = 100
         self.player_sprites.append(self.enemy_two)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_two)
 
@@ -284,11 +287,13 @@ class GameView(arcade.View):
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
                                                                  name="Rudinn",
+                                                                 hp=10,
                                                                  max_hp=90,
                                                                  attack=10,
                                                                  defense=2
                                                                  )
         self.enemy_three.set_animation_state("battle_idle")
+        self.enemy_three.tired = 100
         self.player_sprites.append(self.enemy_three)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_three)
 

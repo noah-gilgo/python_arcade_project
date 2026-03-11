@@ -6,7 +6,7 @@ from arcade.gui import UILayout, UIWidget, UIManager
 
 import character
 import non_player_character
-from battle_widgets import SpellList, SpellSelect, EnemySelect
+from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from focus_stack import FocusStackMember, FocusStack
 from player_character import PlayerCharacter
 
@@ -299,9 +299,10 @@ class SelectCommand(Command):
                 # TODO: select the focused spell, animate the player character, queue the act
                 self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
                 enemy_list_full_layout = EnemySelect(self.controller.enemies)
-                enemy_list_interactive_layout = EnemySelect(self.controller.enemies)
+                enemy_list_interactive_layout = enemy_list_full_layout.children[1]
                 self.controller.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
                                                  self.controller.state, 1)
+                self.controller.menu_select_sound.play()
                 return
 
             case BattleState.PLAYER_ITEM_SELECT:
