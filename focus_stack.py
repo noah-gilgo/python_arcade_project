@@ -21,9 +21,6 @@ class FocusStackMember:
         self.focused_widget_index = 0
         self.column_count = column_count if column_count else len(self.widgets)
         self.row_count = 1 if not column_count else math.ceil(len(self.widgets) / self.column_count)
-        print(self.row_count)
-        print(self.column_count)
-        print(len(self.widgets))
 
         self.state = state
 
