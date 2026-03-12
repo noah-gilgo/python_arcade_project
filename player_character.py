@@ -119,7 +119,7 @@ class PlayerCharacter(character.Character):
 
                     "battle_magic": graphics_objects.SimpleLoopAnimation(
                         sprite_pack_path=self._sprite_pack_path + "/battle_magic",
-                        frame_duration=0.08,
+                        frame_duration=0.06,
                         loop_animation=False
                     )
                 }

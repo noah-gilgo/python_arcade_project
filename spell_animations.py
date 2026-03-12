@@ -1,8 +1,8 @@
 import math
 
 import arcade
-from arcade import Sprite, Sound, play_sound, SpriteCircle
-from math import sin, cos, tan, atan2
+from arcade import Sprite, Sound, play_sound
+from math import sin, cos, atan2
 
 from graphics_objects import MultiSpriteAnimation, AnimatedSprite
 
