@@ -191,11 +191,14 @@ class TextBox(UIWidget):
             if self._dialog_box.has_portrait():
                 self._text_box_text.move(dx=-96)
                 self._text_box_text.resize(width=settings.WINDOW_WIDTH - 88)
-            self._text_box_portrait_path = ""
-            self.remove(self._text_box_portrait)
-            self._text_box_portrait = None
+                self._text_box_portrait_path = ""
+                self.remove(self._text_box_portrait)
+                self._text_box_portrait = None
 
-        self._text_sound = arcade.load_sound(text_box_dialog.get_text_sound_path(), False)
+        if text_box_dialog.get_text_sound_path():
+            self._text_sound = arcade.load_sound(text_box_dialog.get_text_sound_path(), False)
+        else:
+            self._text_sound = None
 
         self._dialog_box = text_box_dialog
 
@@ -214,7 +217,8 @@ class TextBox(UIWidget):
 
         if self._current_character_in_text_box_index < len(self._dialog_string):
             self._text_box_text.text += self._dialog_string[self._current_character_in_text_box_index]
-            self._text_sound.play()
+            if self._text_sound:
+                self._text_sound.play()
             self._current_character_in_text_box_index += 1
         else:
             self._current_character_in_text_box_index = 0

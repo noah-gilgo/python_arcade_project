@@ -318,10 +318,11 @@ class SelectCommand(Command):
                         actor=current_player_character,
                         targets=[selected_target_enemy],
                         spell=selected_spell,
-                        sprite_list=self.controller.spell_animations_sprite_list,
-                        animation_list=self.controller.spell_animations
+                        controller=self.controller
                     )
                 )
+
+                self.controller.state = BattleState.PLAYER_COMMAND
 
                 if self.controller.focus_stack.get_highest_member().get_focused_widget_index() + 1 < self.controller.focus_stack.get_highest_member().get_full_layout_length():
                     self.controller.state = BattleState.PLAYER_COMMAND
