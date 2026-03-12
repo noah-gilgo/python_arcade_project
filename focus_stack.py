@@ -33,8 +33,14 @@ class FocusStackMember:
     def get_interactive_ui_layout(self):
         return self.interactive_ui_layout
 
-    def get_layout_length(self):
+    def get_full_ui_layout(self):
+        return self.full_ui_layout
+
+    def get_interactive_layout_length(self):
         return len(self.interactive_ui_layout.children)
+
+    def get_full_layout_length(self):
+        return len(self.full_ui_layout.children)
 
     def move(self, direction: Direction):
         old_focused_widget = self.focused_widget
@@ -91,17 +97,18 @@ class FocusStack:
 
     # Returns the highest member in the focus stack. This would presumably be the member that the user wants to
     # interact with when shifting focus between widgets.
-    def get_highest_member(self):
+    def get_highest_member(self) -> FocusStackMember:
         return self.focus_stack[-1]
 
     # Adds a member to the top of the focus stack. Adds the ui_layout in said member to the ui
     def push(self, full_ui_layout: UILayout, interactive_ui_layout, state, column_count: int = 0):
         self.focus_stack.append(FocusStackMember(full_ui_layout, interactive_ui_layout, state, column_count))
-        self.ui_manager.add(self.focus_stack[-1].full_ui_layout)
+        self.ui_manager.add(full_ui_layout)
+        self.ui_manager.trigger_render()
 
     # Removes the higest member from the focus stack.
     def pop(self):
         if len(self.focus_stack) > 1:
-            self.ui_manager.remove(self.focus_stack[-1].full_ui_layout)
+            self.ui_manager.remove(self.get_highest_member().get_full_ui_layout())
             return self.focus_stack.pop(-1)
         return None

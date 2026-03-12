@@ -6,6 +6,7 @@ import pyglet
 from arcade import SpriteList
 from arcade.gui import UILayout, UIWidget, UIManager
 
+import battle_widgets
 import character
 import non_player_character
 import player_character
@@ -156,7 +157,7 @@ class CommandInput:
 
 
 class BattleController:
-    def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget, battle_player_character_cards: UILayout,
+    def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget,
                  player_characters: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
                  spell_animations_sprite_list: SpriteList,
@@ -172,20 +173,14 @@ class BattleController:
         self.selected_target = None
 
         # References to all of the battle buttons and their indexes
-        self.battle_player_character_cards = battle_player_character_cards
-        self.current_player_character_card = self.battle_player_character_cards.children[0]
-        self.current_player_character_card_index = 0
+        self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
 
         # The focus stack for the battle GUI.
         self.focus_stack = FocusStack(self.ui_manager)
+
         self.focus_stack.push(
             self.battle_player_character_cards,
-            self.battle_player_character_cards,
-            BattleState.PLAYER_COMMAND
-        )
-        self.focus_stack.push(
-            self.current_player_character_card.children[1],
-            self.current_player_character_card.children[1],
+            self.battle_player_character_cards.children[0].children[1],
             self.state
         )
 
@@ -270,7 +265,7 @@ class SelectCommand(Command):
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            spell_list_full_layout = SpellSelect(self.controller.current_player_character_card.player_character)
+                            spell_list_full_layout = SpellSelect(self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character)
                             spell_list_interactive_layout = spell_list_full_layout.children[0]
                             self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout, self.controller.state, 2)
                             return
@@ -328,13 +323,8 @@ class SelectCommand(Command):
                     )
                 )
 
-                self.controller.focus_stack.pop()
-
-                if self.controller.focus_stack.get_highest_member().get_focused_widget_index() + 1 < self.controller.focus_stack.get_highest_member().get_layout_length():
+                if self.controller.focus_stack.get_highest_member().get_focused_widget_index() + 1 < self.controller.focus_stack.get_highest_member().get_full_layout_length():
                     self.controller.state = BattleState.PLAYER_COMMAND
-                    print(type(self.controller.focus_stack.get_highest_member().get_interactive_ui_layout()))
-                    print(self.controller.focus_stack.get_highest_member().get_focused_widget_index() + 1)
-                    print(self.controller.focus_stack.get_highest_member().get_layout_length())
                 else:
                     self.controller.state = BattleState.EXECUTE_QUEUED_PLAYER_COMMANDS
                     self.controller.execute_actions_queue()

@@ -50,13 +50,14 @@ class Spell:
 
     def animate_spell(self, targets: list[character.Character], spell_sprite_list, animation_list):
         """ Animate the spell being cast. """
-        for target in targets:
-            new_animation = self.animation.__class__(target.center_x, target.center_y)
-            animation_list.append(new_animation)
-            new_animation.center_x = target.center_x
-            new_animation.center_y = target.center_y
-            for animated_sprite in new_animation.sprites:
-                spell_sprite_list.append(animated_sprite.sprite)
+        if self.animation:
+            for target in targets:
+                new_animation = self.animation.__class__(target.center_x, target.center_y)
+                animation_list.append(new_animation)
+                new_animation.center_x = target.center_x
+                new_animation.center_y = target.center_y
+                for animated_sprite in new_animation.sprites:
+                    spell_sprite_list.append(animated_sprite.sprite)
 
 
 def generate_basic_spells():

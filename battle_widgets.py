@@ -366,7 +366,8 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
             ],
             width=408,
             height=240,
-            vertical=True
+            vertical=True,
+            space_between=2
         )
         self.focus_mode = FocusMode(0)
 
@@ -378,7 +379,7 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
         self.children[0].visible = False
 
 
-class BattleHUDCharacterClamshellDisplay(UIGridLayout):
+class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
     """
     The part of the screen that renders the character data clamshells.
     """
@@ -394,11 +395,10 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
             x=x_offset,
             y=int(settings.WINDOW_HEIGHT / 4.5) + 12,
             width=width,
-            align_vertical="center",
-            align_horizontal="center",
-            horizontal_spacing=self._horizontal_spacing,
-            row_count=1,
-            column_count=len(player_characters)
+            align="center",
+            space_between=self._horizontal_spacing,
+            vertical=False,
+            size_hint=None
         )
         self.focus_mode = FocusMode(0)
 

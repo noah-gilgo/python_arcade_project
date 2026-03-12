@@ -317,13 +317,12 @@ class GameView(arcade.View):
         self.text_box = dialogue_box.TextBox()
         self.manager.add(self.text_box)
 
-        self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
+        # self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
         # self.manager.add(self.battle_hud_container)
 
         self.battle_controller = BattleController(
             ui_manager=self.manager,
             battle_textbox=self.text_box,
-            battle_player_character_cards=self.battle_hud_container,
             player_characters=self.player_characters,
             enemies=self.enemies,
             spell_animations_sprite_list=self.spell_animation_sprites,

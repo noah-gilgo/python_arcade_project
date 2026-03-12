@@ -80,20 +80,20 @@ class IceShockAnimation(MultiSpriteAnimation):
     def update_animation(self, delta_time):
         self.time += delta_time
 
-        if self.time >= 0.02 and not self.flag1:
+        if self.time >= 0.05 and not self.flag1:
             self.sprites[0].sprite.visible = True
             self.flag1 = True
             play_sound(self.iceshock_sound)
 
-        if self.time >= 0.12 and not self.flag2:
+        if self.time >= 0.15 and not self.flag2:
             self.sprites[1].sprite.visible = True
             self.flag2 = True
 
-        if self.time >= 0.23 and not self.flag3:
+        if self.time >= 0.25 and not self.flag3:
             self.sprites[2].sprite.visible = True
             self.flag3 = True
 
-        if self.time >= 0.45 and not self.flag4:
+        if self.time >= 0.40 and not self.flag4:
             self.sprites[0].sprite.visible = False
             self.sprites[1].sprite.visible = False
             self.sprites[2].sprite.visible = False
@@ -109,7 +109,7 @@ class IceShockAnimation(MultiSpriteAnimation):
             self.circle_active = True
             self.flag4 = True
 
-        if self.time > 0.45:
+        if self.time > 0.40:
             dt = (self.time - 0.4) * 2
             sprite_index = 0
             for sprite in self.sprites[3:]:

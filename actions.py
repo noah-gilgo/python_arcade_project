@@ -48,7 +48,7 @@ class SpellAction(Action):
 
     def execute(self):
         # Casts the spell.
-        print("Spell Action executed")
         self.actor.set_animation_state("battle_magic")
         pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(self.targets, self.sprite_list, self.animation_list), 0.5)
         pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, self.targets), 1.5)
+        pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
