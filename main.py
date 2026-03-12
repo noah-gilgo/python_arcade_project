@@ -1,4 +1,5 @@
 import arcade
+from arcade import SpriteList
 from arcade.gui import UIManager
 from arcade.resources import resolve_resource_path
 from arcade.types import Color
@@ -33,7 +34,7 @@ class GameView(arcade.View):
         self.background_sprites = arcade.SpriteList()
         self.player_sprites = arcade.SpriteList()
         self.foreground_sprites = arcade.SpriteList()
-        self.spell_sprites = arcade.SpriteList()
+        self.spell_animation_sprites = arcade.SpriteList()
 
         # Set up the player info
         self.player_one = None
@@ -41,7 +42,7 @@ class GameView(arcade.View):
         self.player_three = None
         self.player_four = None
 
-        self.players = []
+        self.player_characters = []
 
         self.enemy_one = None
         self.enemy_two = None
@@ -126,7 +127,8 @@ class GameView(arcade.View):
 
         self.battle_controller = None
 
-        self.iceshock_animation = None
+        self.spell_animation_sprites = SpriteList()
+        self.spell_animations = []
 
     def setup(self):
         # Create and append the players to the SpriteList.
@@ -228,7 +230,8 @@ class GameView(arcade.View):
                                                                     is_friendly_spell=False,
                                                                     is_healing_spell=False,
                                                                     is_pacifying_spell=False,
-                                                                    is_aoe_spell=False
+                                                                    is_aoe_spell=False,
+                                                                    animation=IceShockAnimation()
                                                                 ),
                                                                 Spell(
                                                                     name="SnowGrave",
@@ -244,7 +247,7 @@ class GameView(arcade.View):
                                                             ])
         self.player_four.set_animation_state("battle_idle")
         self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
-        self.players.append(self.player_four)
+        self.player_characters.append(self.player_four)
 
         self.player_four.get_valid_animation_states()
 
@@ -314,14 +317,17 @@ class GameView(arcade.View):
         self.text_box = dialogue_box.TextBox()
         self.manager.add(self.text_box)
 
-        self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.players)
-        self.manager.add(self.battle_hud_container)
+        # self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
+        # self.manager.add(self.battle_hud_container)
 
-        self.battle_controller = BattleController(self.manager, self.text_box, self.battle_hud_container, self.enemies)
-
-        self.iceshock_animation = IceShockAnimation(self.enemy_one.center_x, self.enemy_one.center_y)
-        for sprite in self.iceshock_animation.sprites:
-            self.spell_sprites.append(sprite.sprite)
+        self.battle_controller = BattleController(
+            ui_manager=self.manager,
+            battle_textbox=self.text_box,
+            player_characters=self.player_characters,
+            enemies=self.enemies,
+            spell_animations_sprite_list=self.spell_animation_sprites,
+            spell_animations=self.spell_animations
+        )
 
     def on_draw(self):
         # 3. Clear the screen
@@ -332,9 +338,8 @@ class GameView(arcade.View):
             self.background_sprites.draw(pixelated=True)
             self.player_sprites.draw(pixelated=True)
             self.foreground_sprites.draw(pixelated=True)
-            self.spell_sprites.draw(pixelated=True)
+            self.spell_animation_sprites.draw(pixelated=True)
             self.manager.draw(pixelated=True)
-            self.iceshock_animation.draw()
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -344,24 +349,30 @@ class GameView(arcade.View):
         """ Movement and game logic """
 
         # Update the player's animation.
-        for player in self.players:
+        for player in self.player_characters:
             player.update_animation(delta_time)
 
         for enemy in self.enemies:
             enemy.update_animation(delta_time)
 
+        for spell_animation in self.spell_animations:
+            if spell_animation.time < spell_animation.total_duration:
+                spell_animation.update_animation(delta_time)
+            else:
+                self.spell_animations.remove(spell_animation)
+
         # Used for testing the animation system
 
+        """
         if self._global_timer > 2.0:
             if self._animation_state_index < len(self._animation_states):
-                for player in self.players:
+                for player in self.player_characters:
                     player.set_animation_state(self._animation_states[self._animation_state_index])
                 self._animation_state_index += 1
             self._global_timer = 0.0
 
         self._global_timer += delta_time
-
-        self.iceshock_animation.update()
+        """
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
@@ -372,50 +383,6 @@ class GameView(arcade.View):
             self.camera.zoom = settings.WINDOW_SCALE
 
         self.battle_controller.handle_key(key)
-
-        """
-        if key == arcade.key.UP:
-            self.up_pressed = True
-            self.update_player_speed()
-        elif key == arcade.key.DOWN:
-            self.down_pressed = True
-            self.update_player_speed()
-        elif key == arcade.key.LEFT:
-            self.left_pressed = True
-            self.update_player_speed()
-        elif key == arcade.key.RIGHT:
-            self.right_pressed = True
-            self.update_player_speed()
-        """
-
-        # if key == arcade.key.RIGHT:
-
-        """
-        if key == arcade.key.Z:
-            self._text_box.load_dialog(self._dialog[self._dialog_box_index])
-            if self._dialog_box_index < len(self._dialog) - 1:
-                self._dialog_box_index += 1
-            else:
-                self._dialog_box_index = 0
-        """
-
-    """
-    def on_key_release(self, key, modifiers):
-        # Called when the user releases a key.
-
-        if key == arcade.key.UP:
-            self.up_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.DOWN:
-            self.down_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.LEFT:
-            self.left_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.RIGHT:
-            self.right_pressed = False
-            self.update_player_speed()
-    """
 
 
 def main():

@@ -8,7 +8,7 @@ from graphics_objects import MultiSpriteAnimation, AnimatedSprite
 
 
 class IceShockAnimation(MultiSpriteAnimation):
-    def __init__(self, center_x: float, center_y: float):
+    def __init__(self, center_x: float = 0, center_y: float = 0):
         self.triangle = (
             (center_x - 45, center_y + 30),
             (center_x + 45, center_y + 30),
@@ -75,30 +75,32 @@ class IceShockAnimation(MultiSpriteAnimation):
 
         self.iceshock_sound = Sound("assets/audio/magic/snd_icespell.ogg", False)
 
-    def update(self):
-        self.time += self.delta_time
+        self.total_duration = 2.0
+
+    def update_animation(self, delta_time):
+        self.time += delta_time
 
         if self.time >= 0.05 and not self.flag1:
             self.sprites[0].sprite.visible = True
             self.flag1 = True
             play_sound(self.iceshock_sound)
 
-        if self.time >= 0.25 and not self.flag2:
+        if self.time >= 0.15 and not self.flag2:
             self.sprites[1].sprite.visible = True
             self.flag2 = True
 
-        if self.time >= 0.45 and not self.flag3:
+        if self.time >= 0.25 and not self.flag3:
             self.sprites[2].sprite.visible = True
             self.flag3 = True
 
-        if self.time >= 0.9 and not self.flag4:
+        if self.time >= 0.40 and not self.flag4:
             self.sprites[0].sprite.visible = False
             self.sprites[1].sprite.visible = False
             self.sprites[2].sprite.visible = False
             sprite_index = 0
             for sprite in self.sprites[3:]:
                 sprite.sprite.visible = True
-                angle = math.radians(((sprite_index * 60)) % 360)
+                angle = math.radians((sprite_index * 60) % 360)
                 sprite_velocity_x = cos(angle)
                 sprite_velocity_y = sin(angle)
                 sprite.sprite.velocity = (sprite_velocity_x, sprite_velocity_y)
@@ -107,8 +109,8 @@ class IceShockAnimation(MultiSpriteAnimation):
             self.circle_active = True
             self.flag4 = True
 
-        if self.time > 0.9:
-            dt = self.time - 0.8
+        if self.time > 0.40:
+            dt = (self.time - 0.4) * 2
             sprite_index = 0
             for sprite in self.sprites[3:]:
                 center = self.triangle[sprite_index // 6]
@@ -135,7 +137,7 @@ class IceShockAnimation(MultiSpriteAnimation):
                 sprite.sprite.alpha = max(0, int(255 * (1 - (dt/1.5))))
                 sprite_index += 1
 
-        if self.time >= 2.5:
+        if self.time >= self.total_duration:
             for sprite in self.sprites:
                 sprite.sprite.kill()
 

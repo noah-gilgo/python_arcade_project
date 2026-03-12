@@ -53,7 +53,8 @@ class BattleHUDButton(UITextureButton):
 
 class BattleHUDButtonLayout(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
-        if character.knows_magic:
+        self.player_character = character
+        if self.player_character.knows_magic:
             buttons = [
                 BattleHUDButton("FIGHT",
                                 "assets/textures/gui_graphics/battle/character_battle_buttons/battle_buttons_13.png",
@@ -104,32 +105,6 @@ class BattleHUDButtonLayout(UIBoxLayout):
         self.with_background(color=Color(0, 0, 0, 255))
         # self.with_border(width=3, color=character.battle_ui_color)
         self.with_padding(left=33, right=33)
-
-        self._selected_button_index = 0
-
-        # self.children[0].focused = True
-        # for i in range(1, len(self.children)):
-        #     self.children[i].focused = False
-
-    """
-    def on_event(self, event):
-        if isinstance(event, UIKeyPressEvent):
-            print("key press event detected")
-            if event.symbol == arcade.key.RIGHT:
-                print("event fired")
-                for i in range(len(self.children)):
-                    if self.children[i].focused:
-                        self.children[i].focused = False
-                        self.children[int((i + 1) % len(self.children))].focused = True
-                        return
-
-            if event.symbol == arcade.key.LEFT:
-                for i in range(len(self.children)):
-                    if self.children[i].focused:
-                        self.children[i].focused = False
-                        self.children[int((i - 1) % len(self.children))].focused = True
-                        return
-    """
 
 
 class BattleHUDCharacterHPText(UILabel):
@@ -391,7 +366,8 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
             ],
             width=408,
             height=240,
-            vertical=True
+            vertical=True,
+            space_between=2
         )
         self.focus_mode = FocusMode(0)
 
@@ -399,8 +375,11 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
         #self.with_border(width=3, color=character.battle_ui_color)
         #self.with_padding(top=2, right=8, bottom=0, left=8)
 
+    def do_render_focus(self, surface: Surface):
+        self.children[0].visible = False
 
-class BattleHUDCharacterClamshellDisplay(UIGridLayout):
+
+class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
     """
     The part of the screen that renders the character data clamshells.
     """
@@ -416,11 +395,10 @@ class BattleHUDCharacterClamshellDisplay(UIGridLayout):
             x=x_offset,
             y=int(settings.WINDOW_HEIGHT / 4.5) + 12,
             width=width,
-            align_vertical="center",
-            align_horizontal="center",
-            horizontal_spacing=self._horizontal_spacing,
-            row_count=1,
-            column_count=len(player_characters)
+            align="center",
+            space_between=self._horizontal_spacing,
+            vertical=False,
+            size_hint=None
         )
         self.focus_mode = FocusMode(0)
 
@@ -779,6 +757,7 @@ class EnemySelectInstance(UIBoxLayout):
             ],
             space_between=40
         )
+        self.enemy = enemy
 
         self.focus_mode = FocusMode(2)
         self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
@@ -791,7 +770,7 @@ class EnemySelectInstance(UIBoxLayout):
             self.soul_sprite,
             arcade.XYWH(
                 16,
-                32,
+                28,
                 32,
                 32
             ),
