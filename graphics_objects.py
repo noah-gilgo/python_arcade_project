@@ -90,13 +90,17 @@ class SimpleLoopAnimation:
 
 
 class MultiSpriteAnimation:
-    def __init__(self, sprites: list[AnimatedSprite], duration: float = 1.0, delta_time: float = 0.05):
+    def __init__(self, sprites: list[AnimatedSprite], duration: float = 1.0, delta_time: float = 0.05,
+                 total_duration: float = 1.0):
         self.sprites = sprites
         self.time = 0.0
         self.duration = duration
         self.delta_time = delta_time
+        self.center_x = 0
+        self.center_y = 0
+        self.total_duration = total_duration
 
-    def update(self):
+    def update_animation(self, delta_time):
         """ Skeleton function for child animations to inherit. """
         pass
 

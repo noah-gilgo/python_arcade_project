@@ -2,12 +2,17 @@ from enum import Enum, auto
 import command
 
 import arcade.key
+import pyglet
+from arcade import SpriteList
 from arcade.gui import UILayout, UIWidget, UIManager
 
 import character
 import non_player_character
+import player_character
+from actions import SpellAction
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from focus_stack import FocusStackMember, FocusStack
+from graphics_objects import MultiSpriteAnimation
 from player_character import PlayerCharacter
 
 """
@@ -27,6 +32,7 @@ class BattleState(Enum):
     PLAYER_MAGIC_SELECT = auto()
     PLAYER_SPARE_SELECT = auto()
     PLAYER_TARGET = auto()
+    EXECUTE_QUEUED_PLAYER_COMMANDS = auto()
     DIALOGUE = auto()
     ENEMY_ATTACK = auto()
     VICTORY = auto()
@@ -149,21 +155,15 @@ class CommandInput:
 """
 
 
-def move(array, current_member, index, dx):
-    """
-    Abstract function for moving between different members of a one-dimensional array.
-    Returns the new focused member of the array as well as it's associated index.
-    """
-    index = (index + dx) % len(array)
-    current_member = array[index]
-    return current_member, index
-
-
 class BattleController:
     def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget, battle_player_character_cards: UILayout,
-                 enemies: list[non_player_character.NonPlayerCharacter]):
+                 player_characters: list[player_character.PlayerCharacter],
+                 enemies: list[non_player_character.NonPlayerCharacter],
+                 spell_animations_sprite_list: SpriteList,
+                 spell_animations: list[MultiSpriteAnimation]):
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
+        self.player_characters = player_characters
         self.enemies = enemies
 
         self.state = BattleState.PLAYER_COMMAND
@@ -172,31 +172,37 @@ class BattleController:
         self.selected_target = None
 
         # References to all of the battle buttons and their indexes
-        self.battle_player_character_cards = battle_player_character_cards.children
-        self.current_player_character_card = self.battle_player_character_cards[0]
+        self.battle_player_character_cards = battle_player_character_cards
+        self.current_player_character_card = self.battle_player_character_cards.children[0]
         self.current_player_character_card_index = 0
-        self.current_player_button_layout = self.current_player_character_card.children[1].children
-        self.current_player_character_card_focused_button = self.current_player_button_layout[0]
-        self.current_player_character_card_focused_button_index = 0
-        self.open_menus = []
 
         # The focus stack for the battle GUI.
         self.focus_stack = FocusStack(self.ui_manager)
-        self.focus_stack.push(self.current_player_character_card.children[1], self.current_player_character_card.children[1], self.state)
+        self.focus_stack.push(
+            self.battle_player_character_cards,
+            self.battle_player_character_cards,
+            BattleState.PLAYER_COMMAND
+        )
+        self.focus_stack.push(
+            self.current_player_character_card.children[1],
+            self.current_player_character_card.children[1],
+            self.state
+        )
 
         # Loads menu sounds
         self.menu_move_sound = arcade.load_sound("assets/audio/gui/snd_menumove.wav", False)
         self.menu_select_sound = arcade.load_sound("assets/audio/gui/snd_select.wav", False)
 
-    def move_to_next_player_card(self):
-        """ Moves self.current_player_character_card to the next card. """
-        if self.current_player_character_card_index < len(self.battle_player_character_cards) - 1:
-            self.current_player_character_card_index += 1
-        else:  # if the player is already on the last player card
-            self.current_player_character_card_index = 0
-            # TODO: add code to execute player character actions in lieu of enemy attack
-        self.current_player_character_card = self.battle_player_character_cards[
-            self.current_player_character_card_index]
+        # The queue of actions selected by the player for each character.
+        self.actions_queue = []
+
+        # Sprite lists that need to be accessed for animations.
+        self.spell_animations_sprite_list = spell_animations_sprite_list
+        self.spell_animations = spell_animations
+
+    def execute_actions_queue(self):
+        for action in self.actions_queue:
+            action.execute()
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -258,7 +264,7 @@ class SelectCommand(Command):
                         # TODO: include code to open an enemy select UI
                         return
                     case 1:  # user selects ACT/MAGIC button
-                        if self.controller.current_player_character_card_focused_button.name == "ACT":  # ACT button
+                        if self.controller.focus_stack.get_highest_member().get_focused_widget().name == "ACT":  # ACT button
                             self.controller.state = BattleState.PLAYER_ACT_ENEMY_SELECT
                             # TODO: include code to open an enemy select UI
                             return
@@ -296,13 +302,42 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_MAGIC_SELECT:
-                # TODO: select the focused spell, animate the player character, queue the act
+                # TODO: animate the player character, queue the act
                 self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
                 enemy_list_full_layout = EnemySelect(self.controller.enemies)
                 enemy_list_interactive_layout = enemy_list_full_layout.children[1]
                 self.controller.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
                                                  self.controller.state, 1)
                 self.controller.menu_select_sound.play()
+                return
+
+            case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
+                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                self.controller.focus_stack.pop()
+                selected_spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                self.controller.focus_stack.pop()
+                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+
+                self.controller.actions_queue.append(
+                    SpellAction(
+                        actor=current_player_character,
+                        targets=[selected_target_enemy],
+                        spell=selected_spell,
+                        sprite_list=self.controller.spell_animations_sprite_list,
+                        animation_list=self.controller.spell_animations
+                    )
+                )
+
+                self.controller.focus_stack.pop()
+
+                if self.controller.focus_stack.get_highest_member().get_focused_widget_index() + 1 < self.controller.focus_stack.get_highest_member().get_layout_length():
+                    self.controller.state = BattleState.PLAYER_COMMAND
+                    print(type(self.controller.focus_stack.get_highest_member().get_interactive_ui_layout()))
+                    print(self.controller.focus_stack.get_highest_member().get_focused_widget_index() + 1)
+                    print(self.controller.focus_stack.get_highest_member().get_layout_length())
+                else:
+                    self.controller.state = BattleState.EXECUTE_QUEUED_PLAYER_COMMANDS
+                    self.controller.execute_actions_queue()
                 return
 
             case BattleState.PLAYER_ITEM_SELECT:

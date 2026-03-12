@@ -27,6 +27,15 @@ class FocusStackMember:
     def get_focused_widget(self):
         return self.focused_widget
 
+    def get_focused_widget_index(self):
+        return self.focused_widget_index
+
+    def get_interactive_ui_layout(self):
+        return self.interactive_ui_layout
+
+    def get_layout_length(self):
+        return len(self.interactive_ui_layout.children)
+
     def move(self, direction: Direction):
         old_focused_widget = self.focused_widget
         match direction:
