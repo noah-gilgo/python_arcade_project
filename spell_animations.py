@@ -152,4 +152,4 @@ class IceShockAnimation(MultiSpriteAnimation):
             )
 
             self.circle_radius += 5
-            self.circle_alpha = self.circle_alpha - 16 if self.circle_alpha - 16 > 0 else 0
+            self.circle_alpha = self.circle_alpha - 18 if self.circle_alpha - 18 > 0 else 0

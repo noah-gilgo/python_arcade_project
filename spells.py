@@ -1,10 +1,13 @@
 from copy import copy, deepcopy
 
 import pyglet.clock
+from arcade.types import Color
 
 import character
 import default_data
 import non_player_character
+from animations.battle_animations import DamageDealtAnimation
+from animations.common_animations import ShakeAnimation
 from character import Character
 from elemental_pairs import ElementalPair
 from graphics_objects import MultiSpriteAnimation
@@ -26,10 +29,11 @@ class Spell:
         self.is_aoe_spell = is_aoe_spell  # True if the spell affects all targets on the targeted side
         self.animation = animation
 
-    def affect_targets_with_spell(self, caster, targets):
+    def affect_targets_with_spell(self, caster, targets, controller):
         """ Perform the calculations required after a spell is cast on a character. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
         for target in targets:
+            damage_dealt = 0
             if self.is_friendly_spell:
                 new_hp = target.hp + self.base_health_change
                 if new_hp < target.max_hp:
@@ -47,6 +51,29 @@ class Spell:
                                 damage_dealt *= 1.5
 
                 target.hp -= int(damage_dealt)
+
+            damage_dealt_color = Color.from_iterable([
+                int((caster.battle_ui_color.r + 255) / 2),
+                int((caster.battle_ui_color.g + 255) / 2),
+                int((caster.battle_ui_color.b + 255) / 2),
+                int(caster.battle_ui_color.a)
+            ])
+
+            damage_dealt_animation = DamageDealtAnimation(
+                damage_amount=damage_dealt,
+                color=damage_dealt_color,
+                target=target
+            )
+
+            shake_animation = ShakeAnimation(
+                sprite=target
+            )
+
+            controller.effects_sprite_list.append(damage_dealt_animation.sprite)
+            controller.effects_list.append(damage_dealt_animation)
+            controller.effects_list.append(shake_animation)
+            target.set_animation_state("battle_hurt")
+            pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
 
     def animate_spell(self, targets: list[character.Character], spell_sprite_list, animation_list):
         """ Animate the spell being cast. """

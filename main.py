@@ -34,7 +34,7 @@ class GameView(arcade.View):
         self.background_sprites = arcade.SpriteList()
         self.player_sprites = arcade.SpriteList()
         self.foreground_sprites = arcade.SpriteList()
-        self.spell_animation_sprites = arcade.SpriteList()
+        self.effects_sprites = arcade.SpriteList()
 
         # Set up the player info
         self.player_one = None
@@ -72,6 +72,7 @@ class GameView(arcade.View):
         arcade.load_font("assets/fonts/8bitoperator_jve.ttf")
         arcade.load_font("assets/fonts/3x5-font.ttf")
         arcade.load_font("assets/fonts/roarin.ttf")
+        arcade.load_font("assets/fonts/greater-determination-dr-damage.ttf")
 
         # Initialize the UIManager.
         self.manager = UIManager()
@@ -127,8 +128,8 @@ class GameView(arcade.View):
 
         self.battle_controller = None
 
-        self.spell_animation_sprites = SpriteList()
-        self.spell_animations = []
+        self.effects_sprites = SpriteList()
+        self.effects = []
 
     def setup(self):
         # Create and append the players to the SpriteList.
@@ -325,8 +326,8 @@ class GameView(arcade.View):
             battle_textbox=self.text_box,
             player_characters=self.player_characters,
             enemies=self.enemies,
-            spell_animations_sprite_list=self.spell_animation_sprites,
-            spell_animations=self.spell_animations
+            effects_sprite_list=self.effects_sprites,
+            effects_list=self.effects
         )
 
     def on_draw(self):
@@ -338,7 +339,10 @@ class GameView(arcade.View):
             self.background_sprites.draw(pixelated=True)
             self.player_sprites.draw(pixelated=True)
             self.foreground_sprites.draw(pixelated=True)
-            self.spell_animation_sprites.draw(pixelated=True)
+            self.effects_sprites.draw(pixelated=True)
+            for effect in self.effects:
+                if hasattr(effect, "draw") and callable(effect.draw):
+                    effect.draw()
             self.manager.draw(pixelated=True)
 
     def on_resize(self, width, height):
@@ -355,11 +359,11 @@ class GameView(arcade.View):
         for enemy in self.enemies:
             enemy.update_animation(delta_time)
 
-        for spell_animation in self.spell_animations:
-            if spell_animation.time < spell_animation.total_duration:
-                spell_animation.update_animation(delta_time)
+        for effect in self.effects:
+            if effect.time < effect.total_duration:
+                effect.update_animation(delta_time)
             else:
-                self.spell_animations.remove(spell_animation)
+                self.effects.remove(effect)
 
         # Used for testing the animation system
 

@@ -1,4 +1,6 @@
-from arcade import Sprite
+from PIL.ImagePath import Path
+from arcade import Sprite, Texture
+from pyglet.math import Vec2
 
 import texture_methods
 
@@ -90,11 +92,10 @@ class SimpleLoopAnimation:
 
 
 class MultiSpriteAnimation:
-    def __init__(self, sprites: list[AnimatedSprite], duration: float = 1.0, delta_time: float = 0.05,
+    def __init__(self, sprites: list[AnimatedSprite], delta_time: float = 0.05,
                  total_duration: float = 1.0):
         self.sprites = sprites
         self.time = 0.0
-        self.duration = duration
         self.delta_time = delta_time
         self.center_x = 0
         self.center_y = 0
@@ -103,4 +104,15 @@ class MultiSpriteAnimation:
     def update_animation(self, delta_time):
         """ Skeleton function for child animations to inherit. """
         pass
+
+
+class SingleSpriteAnimation:
+    def __init__(self, sprite: Sprite,
+                 total_duration: float = 1.0,
+                 delta_time: float = 0.05
+                 ):
+        self.sprite = sprite
+        self.time = 0
+        self.delta_time = delta_time
+        self.total_duration = total_duration
 
