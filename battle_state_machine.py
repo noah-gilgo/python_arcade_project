@@ -160,8 +160,8 @@ class BattleController:
     def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget,
                  player_characters: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
-                 spell_animations_sprite_list: SpriteList,
-                 spell_animations: list[MultiSpriteAnimation]):
+                 effects_sprite_list: SpriteList,
+                 effects_list: list):
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
         self.player_characters = player_characters
@@ -192,8 +192,8 @@ class BattleController:
         self.actions_queue = []
 
         # Sprite lists that need to be accessed for animations.
-        self.spell_animations_sprite_list = spell_animations_sprite_list
-        self.spell_animations = spell_animations
+        self.effects_sprite_list = effects_sprite_list
+        self.effects_list = effects_list
 
     def execute_actions_queue(self):
         for action in self.actions_queue:

@@ -47,8 +47,8 @@ class SpellAction(Action):
                  controller):
         super().__init__(actor, targets, controller)
         self.spell = spell
-        self.sprite_list = self.controller.spell_animations_sprite_list
-        self.animation_list = self.controller.spell_animations
+        self.sprite_list = self.controller.effects_sprite_list
+        self.animation_list = self.controller.effects_list
 
     def execute(self):
         # Casts the spell.
@@ -58,5 +58,5 @@ class SpellAction(Action):
             rate_of_text=0.04
         ))
         pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(self.targets, self.sprite_list, self.animation_list), 0.5)
-        pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, self.targets), 1.5)
+        pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, self.targets, self.controller), 1.0)
         pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
