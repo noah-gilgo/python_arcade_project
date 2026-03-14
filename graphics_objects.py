@@ -1,3 +1,4 @@
+import arcade
 from PIL.ImagePath import Path
 from arcade import Sprite, Texture
 from pyglet.math import Vec2
@@ -115,4 +116,3 @@ class SingleSpriteAnimation:
         self.time = 0
         self.delta_time = delta_time
         self.total_duration = total_duration
-
