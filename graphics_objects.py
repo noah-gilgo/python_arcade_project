@@ -101,10 +101,15 @@ class MultiSpriteAnimation:
         self.center_x = 0
         self.center_y = 0
         self.total_duration = total_duration
+        self.is_terminated = False
 
     def update_animation(self, delta_time):
         """ Skeleton function for child animations to inherit. """
         pass
+
+    # Communicates to parent animation lists to remove this animation.
+    def terminate_animation(self):
+        self.is_terminated = True
 
 
 class SingleSpriteAnimation:
@@ -116,3 +121,8 @@ class SingleSpriteAnimation:
         self.time = 0
         self.delta_time = delta_time
         self.total_duration = total_duration
+        self.is_terminated = False
+
+    # Communicates to parent animation lists to remove this animation.
+    def terminate_animation(self):
+        self.is_terminated = True

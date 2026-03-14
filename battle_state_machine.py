@@ -11,6 +11,7 @@ import character
 import non_player_character
 import player_character
 from actions import SpellAction
+from animations.common_animations import FadeInFadeOutColorAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from focus_stack import FocusStackMember, FocusStack
 from graphics_objects import MultiSpriteAnimation
@@ -304,11 +305,15 @@ class SelectCommand(Command):
                 enemy_list_interactive_layout = enemy_list_full_layout.children[1]
                 self.controller.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
                                                  self.controller.state, 1)
+                new_focus_animation = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy.focus()
+                self.controller.effects_list.append(new_focus_animation)
+                self.controller.effects_sprite_list.append(new_focus_animation.filter_sprite)
                 self.controller.menu_select_sound.play()
                 return
 
             case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
                 selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                selected_target_enemy.unfocus()
                 self.controller.focus_stack.pop()
                 selected_spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 self.controller.focus_stack.pop()
@@ -379,12 +384,20 @@ class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """
 
     def execute(self):
+        previously_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
         if self.controller.focus_stack.get_highest_member().move_up():
+            currently_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
             self.controller.menu_move_sound.play()
-            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
-                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                )
+            match self.controller.state:
+                case BattleState.PLAYER_MAGIC_SELECT:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                    )
+                case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
+                    new_focus_animation = currently_focused_widget.enemy.focus()
+                    self.controller.effects_list.append(new_focus_animation)
+                    self.controller.effects_sprite_list.append(new_focus_animation.filter_sprite)
+                    previously_focused_widget.enemy.unfocus()
 
 
 class DownCommand(Command):
@@ -393,9 +406,17 @@ class DownCommand(Command):
     """
 
     def execute(self):
+        previously_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
         if self.controller.focus_stack.get_highest_member().move_down():
+            currently_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
             self.controller.menu_move_sound.play()
-            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
-                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                )
+            match self.controller.state:
+                case BattleState.PLAYER_MAGIC_SELECT:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                    )
+                case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
+                    new_focus_animation = currently_focused_widget.enemy.focus()
+                    self.controller.effects_list.append(new_focus_animation)
+                    self.controller.effects_sprite_list.append(new_focus_animation.filter_sprite)
+                    previously_focused_widget.enemy.unfocus()

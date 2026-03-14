@@ -140,6 +140,7 @@ class IceShockAnimation(MultiSpriteAnimation):
         if self.time >= self.total_duration:
             for sprite in self.sprites:
                 sprite.sprite.kill()
+            self.terminate_animation()
 
     def draw(self):
         if self.circle_active and self.circle_alpha > 0:
