@@ -181,7 +181,8 @@ class BattleController:
         self.focus_stack.push(
             self.battle_player_character_cards,
             self.battle_player_character_cards.children[0].children[1],
-            self.state
+            self.state,
+            5
         )
 
         # Loads menu sounds

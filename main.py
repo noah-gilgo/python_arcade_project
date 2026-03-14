@@ -32,7 +32,7 @@ class GameView(arcade.View):
 
         # Variables that will hold sprite lists
         self.background_sprites = arcade.SpriteList()
-        self.player_sprites = arcade.SpriteList()
+        self.character_sprites = arcade.SpriteList()
         self.foreground_sprites = arcade.SpriteList()
         self.effects_sprites = arcade.SpriteList()
 
@@ -247,11 +247,10 @@ class GameView(arcade.View):
                                                                 )
                                                             ])
         self.player_four.set_animation_state("battle_idle")
-        self.player_sprites.append(self.player_four)  # Append the instance to the SpriteList
+        self.character_sprites.append(self.player_four)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_four)
 
         self.player_four.get_valid_animation_states()
-
 
         # Create and append the enemies to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
@@ -266,7 +265,7 @@ class GameView(arcade.View):
                                                                  defense=2
                                                                  )
         self.enemy_one.set_animation_state("battle_idle")
-        self.player_sprites.append(self.enemy_one)  # Append the instance to the SpriteList
+        self.character_sprites.append(self.enemy_one)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_one)
 
         self.enemy_two = non_player_character.NonPlayerCharacter(scale=4.0,
@@ -282,7 +281,7 @@ class GameView(arcade.View):
                                                                  )
         self.enemy_two.set_animation_state("battle_idle")
         self.enemy_two.mercy = 100
-        self.player_sprites.append(self.enemy_two)  # Append the instance to the SpriteList
+        self.character_sprites.append(self.enemy_two)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_two)
 
         self.enemy_three = non_player_character.NonPlayerCharacter(scale=4.0,
@@ -298,7 +297,7 @@ class GameView(arcade.View):
                                                                  )
         self.enemy_three.set_animation_state("battle_idle")
         self.enemy_three.tired = 100
-        self.player_sprites.append(self.enemy_three)  # Append the instance to the SpriteList
+        self.character_sprites.append(self.enemy_three)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_three)
 
         # self._animation_states = self.enemy_one.get_valid_animation_states()
@@ -337,7 +336,7 @@ class GameView(arcade.View):
         # Draw in layer order (background -> player -> foreground)
         with self.camera.activate():
             self.background_sprites.draw(pixelated=True)
-            self.player_sprites.draw(pixelated=True)
+            self.character_sprites.draw(pixelated=True)
             self.foreground_sprites.draw(pixelated=True)
             self.effects_sprites.draw(pixelated=True)
             for effect in self.effects:

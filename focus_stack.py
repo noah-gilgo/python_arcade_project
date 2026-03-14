@@ -106,7 +106,7 @@ class FocusStack:
         self.ui_manager.add(full_ui_layout)
         self.ui_manager.trigger_render()
 
-    # Removes the higest member from the focus stack.
+    # Removes the highest member from the focus stack.
     def pop(self):
         if len(self.focus_stack) > 1:
             self.ui_manager.remove(self.get_highest_member().get_full_ui_layout())

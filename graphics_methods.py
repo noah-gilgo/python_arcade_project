@@ -2,6 +2,8 @@ import arcade
 import pyglet
 import math
 
+from arcade import Texture
+
 import settings
 from graphics_objects import AnimatedSprite
 
@@ -124,3 +126,23 @@ def instantly_terminate_depths_animation(sprite_list: list[arcade.Sprite]):
         if frame.sprite in sprite_list:
             sprite_list.remove(frame.sprite)
     depths_frame_array.clear()
+
+
+# Makes a texture of a solid color in the shape of an existing texture.
+def make_texture_solid_color(texture: arcade.Texture) -> Texture:
+
+    image = texture.image.convert("RGBA")
+    data = image.getdata()
+
+    new_pixel_matrix = []
+    for r, g, b, a in data:
+        if a == 0:
+            new_pixel_matrix.append((0, 0, 0, 0))
+        else:
+            new_pixel_matrix.append((255, 255, 255, a))
+
+    image.putdata(new_pixel_matrix)
+
+    return arcade.Texture(
+        image=image
+    )

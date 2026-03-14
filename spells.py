@@ -1,5 +1,6 @@
 from copy import copy, deepcopy
 
+import arcade.color
 import pyglet.clock
 from arcade.types import Color
 
@@ -7,7 +8,7 @@ import character
 import default_data
 import non_player_character
 from animations.battle_animations import DamageDealtAnimation
-from animations.common_animations import ShakeAnimation
+from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from character import Character
 from elemental_pairs import ElementalPair
 from graphics_objects import MultiSpriteAnimation
@@ -17,7 +18,8 @@ class Spell:
     """ Parent class for spells """
     def __init__(self, name: str = "Default Spell", description: str = "", tp_cost: int = 0, element_id: int = 0,
                  base_health_change: int = 0, is_friendly_spell: bool = False, is_healing_spell: bool = False,
-                 is_pacifying_spell: bool = False, is_aoe_spell: bool = False, animation: MultiSpriteAnimation = None):
+                 is_pacifying_spell: bool = False, is_aoe_spell: bool = False, animation: MultiSpriteAnimation = None,
+                 magic_color: Color = arcade.color.WHITE):
         self.name = name  # Name of the spell
         self.description = description
         self.tp_cost = tp_cost  # TP cost of the spell
@@ -28,6 +30,7 @@ class Spell:
         self.is_pacifying_spell = is_pacifying_spell  # True if the spell is meant to pacify the target
         self.is_aoe_spell = is_aoe_spell  # True if the spell affects all targets on the targeted side
         self.animation = animation
+        self.magic_color = magic_color
 
     def affect_targets_with_spell(self, caster, targets, controller):
         """ Perform the calculations required after a spell is cast on a character. """
@@ -69,10 +72,17 @@ class Spell:
                 sprite=target
             )
 
+            color_filter_animation = FadeInFadeOutColorAnimation(
+                sprite=target,
+                color=self.magic_color
+            )
+
+            target.set_animation_state("battle_hurt")
             controller.effects_sprite_list.append(damage_dealt_animation.sprite)
             controller.effects_list.append(damage_dealt_animation)
             controller.effects_list.append(shake_animation)
-            target.set_animation_state("battle_hurt")
+            controller.effects_list.append(color_filter_animation)
+            controller.effects_sprite_list.append(color_filter_animation.filter_sprite)
             pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
 
     def animate_spell(self, targets: list[character.Character], spell_sprite_list, animation_list):
