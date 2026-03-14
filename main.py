@@ -359,10 +359,10 @@ class GameView(arcade.View):
             enemy.update_animation(delta_time)
 
         for effect in self.effects:
-            if effect.time < effect.total_duration:
-                effect.update_animation(delta_time)
-            else:
+            if effect.is_terminated:
                 self.effects.remove(effect)
+            else:
+                effect.update_animation(delta_time)
 
         # Used for testing the animation system
 

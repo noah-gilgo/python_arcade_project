@@ -1,9 +1,10 @@
 import arcade
+from arcade.types import Color
 
 import graphics_objects
 import settings
 import texture_methods
-
+from animations.common_animations import FadeInFadeOutColorAnimation
 
 SPRITE_SCALING = 1.0
 MOVEMENT_SPEED = 5
@@ -61,6 +62,8 @@ class Character(arcade.Sprite):
         self.current_animation = self._animations_by_state["default"]
         self.current_animation_timer = 0.0
         self.current_texture_index = 0
+
+        self.focus_animation = None
 
         # Initialize the character with its first default texture
         # if len(self._animations_by_state["default"]) > 0:
@@ -130,3 +133,25 @@ class Character(arcade.Sprite):
         for key in self._animations_by_state.keys():
             keys_list.append(key)
         return keys_list
+
+    def focus(self):
+        """
+        Creates an instance of a repeating FadeInFadeOutColorAnimation. Returns it so it can be added to the
+        animation queue in main.
+        """
+        self.focus_animation = FadeInFadeOutColorAnimation(
+            sprite=self,
+            color=arcade.color.WHITE,
+            total_duration=1,
+            is_continuous=True
+        )
+        return self.focus_animation
+
+    def unfocus(self):
+        """
+        Creates an instance of a repeating FadeInFadeOutColorAnimation. Returns it so it can be added to the
+        animation queue in main.
+        """
+        if self.focus_animation:
+            self.focus_animation.is_terminated = True
+            self.focus_animation.filter_sprite.kill()

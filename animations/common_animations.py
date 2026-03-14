@@ -45,11 +45,12 @@ class ShakeAnimation(SingleSpriteAnimation):
         else:
             self.sprite.center_x = self.initial_center_x
             self.sprite.center_y = self.initial_center_y
+            self.terminate_animation()
 
 
 class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
     def __init__(self, sprite: Sprite, color: Color = arcade.color.WHITE, max_alpha: int = 255,
-                 total_duration: float = 0.15):
+                 total_duration: float = 0.15, is_continuous: bool = False):
         super().__init__(
             sprite=sprite,
             total_duration=total_duration
@@ -57,9 +58,10 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
 
         self.color = color
         self.max_alpha = max_alpha
+        self.is_continuous = is_continuous
 
         self.filter_sprite = arcade.Sprite()
-        self.filter_sprite.texture = self.sprite.texture
+        self.filter_sprite.texture = make_texture_solid_color(self.sprite.texture)
         self.filter_sprite.scale = self.sprite.scale
         self.filter_sprite.color = self.color
         self.filter_sprite.alpha = 0
@@ -67,7 +69,8 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
 
     def update_animation(self, delta_time):
         # This is probably not the most optimal way to do this.
-        self.filter_sprite.texture = make_texture_solid_color(self.sprite.texture)
+        if self.filter_sprite.texture != self.sprite.texture:
+            self.filter_sprite.texture = make_texture_solid_color(self.sprite.texture)
         self.time += delta_time
 
         self.filter_sprite.center_x = self.sprite.center_x
@@ -75,9 +78,11 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
 
         if self.time < self.inflection_point:
             self.filter_sprite.alpha += delta_time * ((2 / self.total_duration) * 255)
-        else:
+        elif self.inflection_point <= self.time < self.total_duration:
             self.filter_sprite.alpha -= delta_time * ((2 / self.total_duration) * 255)
-
-        if self.time >= self.total_duration:
-            self.filter_sprite.kill()
-
+        else:
+            if self.is_continuous:
+                self.time = 0
+            else:
+                self.filter_sprite.kill()
+                self.terminate_animation()
