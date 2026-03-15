@@ -420,7 +420,6 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_character_data.center_y = new_hud_center_y
         if self.character_display_transition_time > self.hud_raise_animation_time:
             self.battle_hud_character_data.center_y = self.hud_raised_center_y
-            self.battle_hud_character_data.do_layout()
             self.character_display_transition_time = 0
             pyglet.clock.unschedule(self.move_up_character_display_slightly)
 
@@ -446,7 +445,6 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_character_data.center_y = new_hud_center_y
         if self.character_display_transition_time > self.hud_raise_animation_time:
             self.battle_hud_character_data.center_y = self.hud_lowered_center_y
-            self.battle_hud_character_data.do_layout()
             self.character_display_transition_time = 0
             pyglet.clock.unschedule(self.move_down_character_display_slightly)
 

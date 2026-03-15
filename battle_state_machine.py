@@ -390,6 +390,7 @@ class CancelCommand(Command):
                         self.controller.state,
                         5
                     )
+                    self.controller.actions_queue.pop()
                     self.controller.menu_move_sound.play()
 
 
