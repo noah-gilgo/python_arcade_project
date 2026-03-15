@@ -109,6 +109,82 @@ class BattleHUDButtonLayout(UIBoxLayout):
         # self.with_border(width=3, color=character.battle_ui_color)
         self.with_padding(left=50, right=50)
 
+        self.delta_time = 0
+        self.lines_coming_from_left = []
+        self.lines_coming_from_right = []
+        self.character_color_r = self.player_character.battle_ui_color.r
+        self.character_color_g = self.player_character.battle_ui_color.g
+        self.character_color_b = self.player_character.battle_ui_color.b
+        self.line_lifetime = 2
+        self.velocity_magnifier = 0.1
+
+        for i in range(4):
+            time = ((self.line_lifetime * i) / 3)
+            distance = (time ** 2) * (self.width * self.velocity_magnifier)
+            start_x = distance
+            end_x = distance
+            alpha = min(255, int(max(255 - distance, 0)))
+            self.lines_coming_from_left.append(
+                [start_x, 0, end_x, self.height,
+                 [self.character_color_r, self.character_color_g, self.character_color_b, alpha], 5, time]
+            )
+
+        for i in range(4):
+            time = ((self.line_lifetime * i) / 3)
+            distance = self.width - ((time ** 2) * (self.width * self.velocity_magnifier))
+            start_x = distance
+            end_x = distance
+            alpha = min(255, int(max(255 - (self.width - distance), 0)))
+            self.lines_coming_from_right.append(
+                [start_x, 0, end_x, self.height,
+                 [self.character_color_r, self.character_color_g, self.character_color_b, alpha], 5, time]
+            )
+
+    def on_update(self, dt):
+        self.delta_time = dt
+        self.trigger_render()
+
+    def do_render(self, surface: Surface):
+        super().do_render(surface)
+        arcade.draw_rect_filled(
+            rect=self.rect,
+            color=[0, 0, 0]
+        )
+
+        for line in self.lines_coming_from_left:
+            # Check if the line is older than the max line lifetime
+            if line[6] >= self.line_lifetime:
+                # Set line back to initial conditions
+                line[0] = 0
+                line[2] = 0
+                line[4][3] = 255
+                line[6] = 0
+            else:
+                # Progress the line animation
+                distance = (line[6] ** 2) * (self.width * self.velocity_magnifier)
+                line[0] = distance
+                line[2] = distance
+                line[4][3] = min(255, int(max(255 - distance, 0)))
+                line[6] += self.delta_time
+            arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
+
+        for line in self.lines_coming_from_right:
+            # Check if the line is older than the max line lifetime
+            if line[6] >= self.line_lifetime:
+                # Set line back to initial conditions
+                line[0] = self.width
+                line[2] = self.width
+                line[4][3] = 255
+                line[6] = 0
+            else:
+                # Progress the line animation
+                distance = self.width - ((line[6] ** 2) * (self.width * self.velocity_magnifier))
+                line[0] = distance
+                line[2] = distance
+                line[4][3] = min(255, int(max(255 - (self.width - distance), 0)))
+                line[6] += self.delta_time
+            arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
+
 
 class BattleHUDCharacterHPText(UILabel):
     def __init__(self, character: player_character.PlayerCharacter):
@@ -386,8 +462,12 @@ class BattleHUDCharacterClamshell(UILayout):
         self.distance_hud_raised = 80
         self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
         self.hud_raise_animation_time = 0.25
+        self.inverse_of_hud_raise_animation_time = 1 / self.hud_raise_animation_time
 
         self.is_instantiated = False
+
+    def on_update(self, dt):
+        self.trigger_render()
 
     def do_layout(self):
         super().do_layout()
@@ -416,7 +496,7 @@ class BattleHUDCharacterClamshell(UILayout):
 
     def move_up_character_display_slightly(self, dt):
         self.character_display_transition_time += dt
-        new_hud_center_y = self.hud_lowered_center_y + (self.distance_hud_raised * math.sin((1 / self.hud_raise_animation_time) * self.character_display_transition_time * (math.pi / 2)))
+        new_hud_center_y = self.hud_lowered_center_y + (-self.distance_hud_raised * (self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) * ((self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) - 2))
         self.battle_hud_character_data.center_y = new_hud_center_y
         if self.character_display_transition_time > self.hud_raise_animation_time:
             self.battle_hud_character_data.center_y = self.hud_raised_center_y
@@ -431,7 +511,7 @@ class BattleHUDCharacterClamshell(UILayout):
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y
             self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
 
-        pyglet.clock.schedule_interval(self.move_up_character_display_slightly, 0.05)
+        pyglet.clock.schedule_interval(self.move_up_character_display_slightly, 1/60)
 
     def focus(self):
         """ Moves the character data display up so the buttons can be shown. """
@@ -441,7 +521,7 @@ class BattleHUDCharacterClamshell(UILayout):
 
     def move_down_character_display_slightly(self, dt):
         self.character_display_transition_time += dt
-        new_hud_center_y = self.hud_raised_center_y - (self.distance_hud_raised * math.sin((1 / self.hud_raise_animation_time) * self.character_display_transition_time * (math.pi / 2)))
+        new_hud_center_y = self.hud_raised_center_y - (-self.distance_hud_raised * (self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) * ((self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) - 2))
         self.battle_hud_character_data.center_y = new_hud_center_y
         if self.character_display_transition_time > self.hud_raise_animation_time:
             self.battle_hud_character_data.center_y = self.hud_lowered_center_y
@@ -456,7 +536,7 @@ class BattleHUDCharacterClamshell(UILayout):
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y
             self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
 
-        pyglet.clock.schedule_interval(self.move_down_character_display_slightly, 0.05)
+        pyglet.clock.schedule_interval(self.move_down_character_display_slightly, 1/60)
 
     def unfocus(self):
         """ Moves the character data display up so the buttons can be shown. """
@@ -479,7 +559,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
         super().__init__(
             children=[],
             x=x_offset,
-            y=int(settings.WINDOW_HEIGHT / 4.5) + 12,
+            y=int(settings.WINDOW_HEIGHT / 5.1),
             width=width,
             align="center",
             space_between=self._horizontal_spacing,

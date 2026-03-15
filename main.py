@@ -367,6 +367,8 @@ class GameView(arcade.View):
             else:
                 effect.update_animation(delta_time)
 
+        self.manager.on_update(delta_time)
+
         # Used for testing the animation system
 
         """
