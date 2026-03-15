@@ -168,6 +168,8 @@ class BattleController:
         self.player_characters = player_characters
         self.enemies = enemies
 
+        self.current_player_index = 0
+
         self.state = BattleState.PLAYER_COMMAND
         self.turn = 0
         self.selected_command = None
@@ -175,13 +177,16 @@ class BattleController:
 
         # References to all of the battle buttons and their indexes
         self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
+        self.ui_manager.add(self.battle_player_character_cards)
+
+        self.ui_manager.execute_layout()
 
         # The focus stack for the battle GUI.
         self.focus_stack = FocusStack(self.ui_manager)
 
         self.focus_stack.push(
             self.battle_player_character_cards,
-            self.battle_player_character_cards.children[0].children[1],
+            self.battle_player_character_cards.children[self.current_player_index].children[0],
             self.state,
             5
         )
@@ -330,11 +335,24 @@ class SelectCommand(Command):
 
                 self.controller.state = BattleState.PLAYER_COMMAND
 
-                if self.controller.focus_stack.get_highest_member().get_focused_widget_index() + 1 < self.controller.focus_stack.get_highest_member().get_full_layout_length():
+                if self.controller.focus_stack.get_highest_member().get_focused_widget_index() < self.controller.focus_stack.get_highest_member().get_full_layout_length():
                     self.controller.state = BattleState.PLAYER_COMMAND
+                    self.controller.focus_stack.pop()
+                    self.controller.battle_player_character_cards.children[
+                        self.controller.current_player_index].unfocus()
+                    self.controller.current_player_index += 1
+                    self.controller.battle_player_character_cards.children[
+                        self.controller.current_player_index].focus()
+                    self.controller.focus_stack.push(
+                        self.controller.battle_player_character_cards,
+                        self.controller.battle_player_character_cards.children[self.controller.current_player_index].children[0],
+                        self.controller.state,
+                        5
+                    )
                 else:
                     self.controller.state = BattleState.EXECUTE_QUEUED_PLAYER_COMMANDS
                     self.controller.execute_actions_queue()
+                self.controller.menu_select_sound.play()
                 return
 
             case BattleState.PLAYER_ITEM_SELECT:
@@ -350,10 +368,30 @@ class CancelCommand(Command):
     """ A command object representing the user canceling (usually pressing X in the original game.) """
 
     def execute(self):
-        focus_stack_member = self.controller.focus_stack.pop()
-        if focus_stack_member:
-            self.controller.state = self.controller.focus_stack.get_highest_member().state
-            self.controller.menu_move_sound.play()
+        match self.controller.state:
+            case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
+                focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                focused_enemy.unfocus()
+                focus_stack_member = self.controller.focus_stack.pop()
+                if focus_stack_member:
+                    self.controller.state = self.controller.focus_stack.get_highest_member().state
+                self.controller.menu_move_sound.play()
+            case BattleState.PLAYER_COMMAND:
+                if self.controller.current_player_index > 0:
+                    self.controller.battle_player_character_cards.children[
+                        self.controller.current_player_index].unfocus()
+                    self.controller.current_player_index -= 1
+                    self.controller.battle_player_character_cards.children[
+                        self.controller.current_player_index].focus()
+                    self.controller.focus_stack.push(
+                        self.controller.battle_player_character_cards,
+                        self.controller.battle_player_character_cards.children[
+                            self.controller.current_player_index].children[0],
+                        self.controller.state,
+                        5
+                    )
+                    self.controller.actions_queue.pop()
+                    self.controller.menu_move_sound.play()
 
 
 class RightCommand(Command):

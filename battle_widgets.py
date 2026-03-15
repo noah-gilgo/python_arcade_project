@@ -1,9 +1,12 @@
+import math
+
 import arcade
+import pyglet.clock
 from PIL import Image
 from arcade import LBWH
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
     UIKeyPressEvent, UIKeyEvent, Surface
-from arcade.gui.widgets import FocusMode, UISpace
+from arcade.gui.widgets import FocusMode, UISpace, UILayout
 from arcade.shape_list import create_line
 from arcade.types.color import Color
 
@@ -92,11 +95,11 @@ class BattleHUDButtonLayout(UIBoxLayout):
             ]
 
         super().__init__(
-            width=380,
-            height=60,
+            width=420,
+            height=72,
             vertical=False,
             space_between=2,
-            align="bottom",
+            align="center",
             children=buttons
         )
 
@@ -104,7 +107,95 @@ class BattleHUDButtonLayout(UIBoxLayout):
 
         self.with_background(color=Color(0, 0, 0, 255))
         # self.with_border(width=3, color=character.battle_ui_color)
-        self.with_padding(left=33, right=33)
+        self.with_padding(left=50, right=50)
+
+        self.delta_time = 0
+        self.lines_coming_from_left = []
+        self.lines_coming_from_right = []
+        self.character_color_r = self.player_character.battle_ui_color.r
+        self.character_color_g = self.player_character.battle_ui_color.g
+        self.character_color_b = self.player_character.battle_ui_color.b
+        self.line_lifetime = 2
+        self.velocity_magnifier = 0.1
+        self.alpha_loss_magnifier = 4
+
+        for i in range(6):
+            time = (self.line_lifetime * ((i + 1) / 5))
+            distance = (time ** 2) * (self.width * self.velocity_magnifier)
+            start_x = distance
+            end_x = distance
+            alpha = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
+            self.lines_coming_from_left.append(
+                [start_x, 0, end_x, self.height,
+                 [self.character_color_r, self.character_color_g, self.character_color_b, alpha], 5, time]
+            )
+
+        self.lines_coming_from_left.pop(2)
+
+        for i in range(6):
+            time = (self.line_lifetime * ((i + 1) / 5))
+            distance = self.width - ((time ** 2) * (self.width * self.velocity_magnifier))
+            start_x = distance
+            end_x = distance
+            alpha = min(255, int(max(255 - ((self.width - distance) * self.alpha_loss_magnifier), 0)))
+            self.lines_coming_from_right.append(
+                [start_x, 0, end_x, self.height,
+                 [self.character_color_r, self.character_color_g, self.character_color_b, alpha], 5, time]
+            )
+
+        self.lines_coming_from_right.pop(2)
+
+    def on_update(self, dt):
+        self.delta_time = dt
+        self.trigger_render()
+
+    def do_render(self, surface: Surface):
+        super().do_render(surface)
+        arcade.draw_rect_filled(
+            rect=self.rect,
+            color=[0, 0, 0]
+        )
+
+        arcade.draw_line(0, 0, 0, self.height,
+                         [self.character_color_r, self.character_color_g, self.character_color_b, 255], 8)
+
+        arcade.draw_line(self.width, 0, self.width, self.height,
+                         [self.character_color_r, self.character_color_g, self.character_color_b, 255], 8)
+
+        for line in self.lines_coming_from_left:
+            # Check if the line is older than the max line lifetime
+            if line[6] >= self.line_lifetime:
+                # Set line back to initial conditions
+                line[0] = 0
+                line[2] = 0
+                line[4][3] = 255
+                line[6] -= self.line_lifetime
+            else:
+                # Progress the line animation
+                line[6] += self.delta_time
+                distance = (line[6] ** 2) * (self.width * self.velocity_magnifier)
+                line[0] = distance
+                line[2] = distance
+                line[4][3] = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
+            arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
+            # print("start x = " + str(line[0]) + ", end x = " + str(line[2]) + ", time = " + str(line[6]))
+
+        for line in self.lines_coming_from_right:
+            # Check if the line is older than the max line lifetime
+            if line[6] >= self.line_lifetime:
+                # Set line back to initial conditions
+                line[0] = self.width
+                line[2] = self.width
+                line[4][3] = 255
+                line[6] -= self.line_lifetime
+            else:
+                # Progress the line animation
+                line[6] += self.delta_time
+                distance = self.width - ((line[6] ** 2) * (self.width * self.velocity_magnifier))
+                line[0] = distance
+                line[2] = distance
+                line[4][3] = min(255, int(max(255 - ((self.width - distance) * self.alpha_loss_magnifier), 0)))
+            arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
 
 
 class BattleHUDCharacterHPText(UILabel):
@@ -327,29 +418,30 @@ class BattleHUDCharacterData(UIBoxLayout):
 
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=408,
-            height=96,
+            width=420,
+            height=84,
             children=[
                 BattleHUDCharacterIconAndName(character),
                 BattleHUDHPData(character)
             ],
             vertical=False,
             space_between=24,
-            align="center"
+            align="center",
+            size_hint=None
         )
         self.focus_mode = FocusMode(0)
 
-        #self.with_background(color=Color(0, 0, 0, 255))
-        self.with_border(width=3, color=character.battle_ui_color)
+        self.with_background(color=Color(0, 0, 0, 255))
+        self.with_border(width=10, color=character.battle_ui_color)
         self.with_padding(top=8, left=12, bottom=8, right=12)
 
 
-class BattleHUDCharacterClamshell(UIBoxLayout):
+class BattleHUDCharacterClamshell(UILayout):
     """
     Card containing the player battle HUD data and buttons.
     Built to automatically display the character data.
     """
-    def __init__(self, character: player_character.PlayerCharacter):
+    def __init__(self, character: player_character.PlayerCharacter, is_focused: bool = False):
         # This is the default data for a newly created clamshell. All of the child components of the clamshell
         # will read from this data and render themselves in accordance with it.
         self.player_character = character
@@ -358,25 +450,111 @@ class BattleHUDCharacterClamshell(UIBoxLayout):
         self._character_name = character.name
         self._hp = character.hp
         self._max_hp = character.max_hp
+        self.battle_hud_character_data = BattleHUDCharacterData(character)
+        self.battle_hud_button_layout = BattleHUDButtonLayout(character)
 
         super().__init__(
-            children=[
-                BattleHUDCharacterData(character),
-                BattleHUDButtonLayout(character)
-            ],
-            width=408,
-            height=240,
-            vertical=True,
-            space_between=2
+            children=[],
+            x=0,
+            width=420,
+            height=180
         )
-        self.focus_mode = FocusMode(0)
 
-        self.with_background(color=Color(0, 0, 0, 255))
+        self.add(self.battle_hud_button_layout)
+        self.add(self.battle_hud_character_data)
+
+        self.focus_mode = FocusMode(0)
         #self.with_border(width=3, color=character.battle_ui_color)
         #self.with_padding(top=2, right=8, bottom=0, left=8)
 
+        self.is_focused = is_focused
+
+        self.character_display_transition_time = 0
+        self.hud_lowered_center_y = self.battle_hud_character_data.center_y
+        self.distance_hud_raised = 78
+        self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
+        self.hud_raise_animation_time = 0.2
+        self.inverse_of_hud_raise_animation_time = 1 / self.hud_raise_animation_time
+
+        self.is_instantiated = False
+
+    def on_update(self, dt):
+        self.trigger_render()
+
+    def do_layout(self):
+        super().do_layout()
+
+        rect = self.rect
+
+        if not self.is_instantiated:
+            if self.is_focused:
+                self.battle_hud_character_data.center_y = rect.center_y + self.distance_hud_raised
+                self.children[1].with_border(width=3, color=self.player_character.battle_ui_color)
+            else:
+                self.battle_hud_character_data.center_y = rect.center_y
+                self.children[1].with_border(width=0, color=self.player_character.battle_ui_color)
+            self.is_instantiated = True
+
+        self.battle_hud_character_data.center_x = rect.center_x
+
+        self.battle_hud_button_layout.center_x = rect.center_x
+        self.battle_hud_button_layout.center_y = rect.center_y
+
+
+    """
     def do_render_focus(self, surface: Surface):
         self.children[0].visible = False
+    """
+
+    def move_up_character_display_slightly(self, dt):
+        self.character_display_transition_time += dt
+        new_hud_center_y = self.hud_lowered_center_y + (-self.distance_hud_raised * (self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) * ((self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) - 2))
+        self.battle_hud_character_data.center_y = new_hud_center_y
+        if self.character_display_transition_time > self.hud_raise_animation_time:
+            self.battle_hud_character_data.center_y = self.hud_raised_center_y
+            self.character_display_transition_time = 0
+            pyglet.clock.unschedule(self.move_up_character_display_slightly)
+
+    def move_up_character_data_display(self):
+        if self.is_focused:
+            self.hud_raised_center_y = self.battle_hud_character_data.center_y
+            self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
+        else:
+            self.hud_lowered_center_y = self.battle_hud_character_data.center_y
+            self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
+
+        pyglet.clock.schedule_interval(self.move_up_character_display_slightly, 1/60)
+
+    def focus(self):
+        """ Moves the character data display up so the buttons can be shown. """
+        self.move_up_character_data_display()
+        self.is_focused = True
+        self.battle_hud_character_data.with_border(width=3, color=self.player_character.battle_ui_color)
+
+    def move_down_character_display_slightly(self, dt):
+        self.character_display_transition_time += dt
+        new_hud_center_y = self.hud_raised_center_y - (-self.distance_hud_raised * (self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) * ((self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) - 2))
+        self.battle_hud_character_data.center_y = new_hud_center_y
+        if self.character_display_transition_time > self.hud_raise_animation_time:
+            self.battle_hud_character_data.center_y = self.hud_lowered_center_y
+            self.character_display_transition_time = 0
+            pyglet.clock.unschedule(self.move_down_character_display_slightly)
+
+    def move_down_character_data_display(self):
+        if self.is_focused:
+            self.hud_raised_center_y = self.battle_hud_character_data.center_y
+            self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
+        else:
+            self.hud_lowered_center_y = self.battle_hud_character_data.center_y
+            self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
+
+        pyglet.clock.schedule_interval(self.move_down_character_display_slightly, 1/60)
+
+    def unfocus(self):
+        """ Moves the character data display up so the buttons can be shown. """
+        self.move_down_character_data_display()
+        self.is_focused = False
+        self.battle_hud_character_data.with_border(width=0, color=self.player_character.battle_ui_color)
 
 
 class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
@@ -385,7 +563,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
     """
     def __init__(self, player_characters: list[player_character]):
 
-        self._horizontal_spacing = 10
+        self._horizontal_spacing = 0
         self._clamshell_width = BattleHUDCharacterClamshell(player_characters[0]).width
         width = (self._clamshell_width * len(player_characters)) + (self._horizontal_spacing * (len(player_characters) - 1))
         x_offset = int((settings.WINDOW_WIDTH - width) / 2)
@@ -393,7 +571,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
         super().__init__(
             children=[],
             x=x_offset,
-            y=int(settings.WINDOW_HEIGHT / 4.5) + 12,
+            y=int(settings.WINDOW_HEIGHT / 5.1) - 2,
             width=width,
             align="center",
             space_between=self._horizontal_spacing,
@@ -409,14 +587,16 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
 
         self.player_characters = player_characters
 
-        col_index = 0
+        is_clamshell_focused = True
+
         for character in player_characters:
-            self.add(
-                BattleHUDCharacterClamshell(character),
-                column=col_index,
-                row=0
-            )
-            col_index += 1
+            clamshell = BattleHUDCharacterClamshell(character, is_clamshell_focused)
+            self.add(clamshell)
+            is_clamshell_focused = False
+
+    def do_layout(self):
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
+        super().do_layout()
 
     """
     def draw(self):
@@ -445,7 +625,8 @@ class SpellListOption(UILabel):
             height=64,
             font_name="8bitoperator JVE",
             font_size=48,
-            text_color=color
+            text_color=color,
+            size_hint=None
         )
 
         self.spell = spell
@@ -474,13 +655,15 @@ class SpellList(UIGridLayout):
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             x=36,
-            y=-32,
+            y=0,
             width=(2 * settings.WINDOW_WIDTH) / 3,
-            height=int(settings.WINDOW_HEIGHT / 4),
+            height=int(settings.WINDOW_HEIGHT / 4) - 30,
             row_count=3,
             column_count=2,
             align_horizontal="left",
-            horizontal_spacing=100
+            alight_vertical="center",
+            horizontal_spacing=100,
+            size_hint=None
         )
 
         action_color = Color.from_iterable([
@@ -560,23 +743,45 @@ class SpellDescriptionAndTPCost(UIBoxLayout):
 
 class SpellSelect(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
+        view_width = settings.WINDOW_WIDTH - 40
+
+        spell_list = SpellList(character)
+        spell_description = SpellDescriptionAndTPCost()
+
+        self.space_between = view_width - (spell_list.width + spell_description.width)
+
         super().__init__(
             x=36,
             y=0,
-            width=settings.WINDOW_WIDTH,
-            height=int(settings.WINDOW_HEIGHT / 4) - 20,
+            width=view_width,
+            height=int(settings.WINDOW_HEIGHT / 4),
             vertical=False,
-            space_between=100,
+            space_between=self.space_between,
             children=[
                 SpellList(character),
                 SpellDescriptionAndTPCost()
             ],
-            align="top"
+            align="center"
         )
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
 
     def update_spell_data(self, spell: Spell = None):
         """ Updates the spell data shown in the layout. """
         self.children[1].update_spell_data(spell)
+
+    def calculate_space_between(self):
+        """ Calculate the space between the spell list and the spell description card. """
+        view_width = self.width
+
+        spell_list = self.children[0]
+        spell_description = self.children[1]
+
+        self.space_between = view_width - (spell_list.width + spell_description.width)
+
+    def do_layout(self):
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
+
+        super().do_layout()
 
 
 class EnemySelectInstanceName(UILabel):
@@ -746,7 +951,7 @@ class EnemySelectInstanceMercyMeter(UIWidget):
 class EnemySelectInstance(UIBoxLayout):
     def __init__(self, enemy: non_player_character.NonPlayerCharacter):
         super().__init__(
-            width=int(settings.WINDOW_WIDTH * .9),
+            width=int(settings.WINDOW_WIDTH - 40),
             height=40,
             vertical=False,
             children=[
@@ -842,11 +1047,12 @@ class EnemySelectMeterColumnLabel(UIWidget):
 class EnemySelectMeterColumnLabels(UIBoxLayout):
     def __init__(self):
         super().__init__(
-            children=[UISpace(width=730), EnemySelectMeterColumnLabel("HP"), EnemySelectMeterColumnLabel("MERCY")],
+            children=[UISpace(width=860), EnemySelectMeterColumnLabel("HP"), EnemySelectMeterColumnLabel("MERCY")],
             width=1400,
+            height=40,
             size_hint=None,
             vertical=False,
-            align="left"
+            align="bottom"
         )
 
 
@@ -860,11 +1066,12 @@ class EnemySelectOptions(UIBoxLayout):
         super().__init__(
             x=36,
             y=0,
-            width=settings.WINDOW_WIDTH,
-            height=int(settings.WINDOW_HEIGHT / 4),
+            width=settings.WINDOW_WIDTH - 40,
+            height=int(settings.WINDOW_HEIGHT / 4) - 80,
             vertical=True,
             children=children,
-            align="left"
+            align="center",
+            size_hint=None
         )
 
 
@@ -872,7 +1079,7 @@ class EnemySelect(UIBoxLayout):
     def __init__(self, enemies: list[non_player_character.NonPlayerCharacter]):
         super().__init__(
             x=36,
-            y=-30,
+            y=0,
             width=settings.WINDOW_WIDTH,
             height=int(settings.WINDOW_HEIGHT / 4),
             children=[
@@ -883,6 +1090,9 @@ class EnemySelect(UIBoxLayout):
             align="left"
         )
 
+        self.with_background(color=arcade.color.BLACK)
+
+    """
     def do_render(self, surface):
         arcade.draw_rect_filled(
             arcade.LBWH(0, 0, self.width, self.height + 32),
@@ -890,3 +1100,10 @@ class EnemySelect(UIBoxLayout):
         )
 
         super().do_render(surface)
+    """
+
+    def do_layout(self):
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
+        self.height = int(settings.WINDOW_HEIGHT / 4)
+
+        super().do_layout()

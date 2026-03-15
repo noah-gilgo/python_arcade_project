@@ -1,6 +1,6 @@
 import pyglet.clock
 from PIL import Image
-from arcade.gui import UIWidget, UILabel, UIImage
+from arcade.gui import UIWidget, UILabel, UIImage, Surface, UILayout
 
 import settings
 import arcade
@@ -63,6 +63,9 @@ class TextBoxText(UILabel):
         :return:
         """
         self.text = text
+
+    def do_render(self, surface: Surface):
+        self.width = settings.WINDOW_WIDTH - 144
 
 
 class TextBoxDialog:
@@ -128,7 +131,7 @@ class TextBoxDialog:
         return self._text_sound_path
 
 
-class TextBox(UIWidget):
+class TextBox(UILayout):
     def __init__(self, dialog_box: TextBoxDialog = None):
         self._dialog_box = TextBoxDialog()
         if dialog_box:
@@ -229,3 +232,8 @@ class TextBox(UIWidget):
             self.add_character_to_text_box_text,
             self._rate_of_text
         )
+
+    def do_layout(self):
+        self.width = settings.WINDOW_WIDTH
+        self.height = int(settings.WINDOW_HEIGHT / 4)
+        self.with_background(color=arcade.uicolor.BLACK)

@@ -16,9 +16,20 @@ class FocusStackMember:
         self.interactive_ui_layout = interactive_ui_layout
         self.full_ui_layout = full_ui_layout
         self.widgets = self.interactive_ui_layout.children
-        self.focused_widget = self.widgets[0]
-        self.focused_widget.focused = True
-        self.focused_widget_index = 0
+        focused_widget_not_found = True
+        index = 0
+        for widget in self.widgets:
+            if widget.focused:
+                focused_widget_not_found = False
+                self.focused_widget = self.widgets[index]
+                self.focused_widget.focused = True
+                self.focused_widget_index = index
+                break
+            index += 1
+        if focused_widget_not_found:
+            self.focused_widget = self.widgets[0]
+            self.focused_widget.focused = True
+            self.focused_widget_index = 0
         self.column_count = column_count if column_count else len(self.widgets)
         self.row_count = 1 if not column_count else math.ceil(len(self.widgets) / self.column_count)
 
