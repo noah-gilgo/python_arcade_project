@@ -133,7 +133,6 @@ class GameView(arcade.View):
 
     def setup(self):
         # Create and append the players to the SpriteList.
-
         """
         self.player_one = player_character.PlayerCharacter(scale=4.0,
                                                            center_x=self._holy_arc[0][0],
@@ -148,12 +147,11 @@ class GameView(arcade.View):
                                                            battle_ui_color=Color(0, 255, 255, 255),
                                                            knows_magic=False)
         self.player_one.set_animation_state("battle_idle")
-        self.player_sprites.append(self.player_one)  # Append the instance to the SpriteList
-        self.players.append(self.player_one)
+        self.character_sprites.append(self.player_one)  # Append the instance to the SpriteList
+        self.player_characters.append(self.player_one)
 
         self._animation_states = self.player_one.get_valid_animation_states()
         """
-
         """
         self.player_two = player_character.PlayerCharacter(scale=4.0,
                                                            center_x=self._holy_arc[1][0],
@@ -346,7 +344,12 @@ class GameView(arcade.View):
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
+
+        settings.WINDOW_WIDTH = width
+        settings.WINDOW_HEIGHT = height
+
         self.camera.match_window()
+        self.manager.trigger_render()
 
     def on_update(self, delta_time):
         """ Movement and game logic """
@@ -384,6 +387,8 @@ class GameView(arcade.View):
             self.window.set_fullscreen(not self.window.fullscreen)
             settings.WINDOW_SCALE = math.sqrt((self.width / self._initial_width) * (self.height / self._initial_height))
             self.camera.zoom = settings.WINDOW_SCALE
+            # self.manager.trigger_render()
+            # self.manager.execute_layout()
 
         self.battle_controller.handle_key(key)
 

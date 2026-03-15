@@ -175,13 +175,16 @@ class BattleController:
 
         # References to all of the battle buttons and their indexes
         self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
+        self.ui_manager.add(self.battle_player_character_cards)
+
+        self.ui_manager.execute_layout()
 
         # The focus stack for the battle GUI.
         self.focus_stack = FocusStack(self.ui_manager)
 
         self.focus_stack.push(
             self.battle_player_character_cards,
-            self.battle_player_character_cards.children[0].children[1],
+            self.battle_player_character_cards.children[0].children[0],
             self.state,
             5
         )
