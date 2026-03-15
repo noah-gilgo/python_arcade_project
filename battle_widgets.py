@@ -96,7 +96,7 @@ class BattleHUDButtonLayout(UIBoxLayout):
 
         super().__init__(
             width=420,
-            height=80,
+            height=72,
             vertical=False,
             space_between=2,
             align="center",
@@ -117,28 +117,33 @@ class BattleHUDButtonLayout(UIBoxLayout):
         self.character_color_b = self.player_character.battle_ui_color.b
         self.line_lifetime = 2
         self.velocity_magnifier = 0.1
+        self.alpha_loss_magnifier = 4
 
-        for i in range(4):
-            time = ((self.line_lifetime * i) / 3)
+        for i in range(6):
+            time = (self.line_lifetime * ((i + 1) / 5))
             distance = (time ** 2) * (self.width * self.velocity_magnifier)
             start_x = distance
             end_x = distance
-            alpha = min(255, int(max(255 - distance, 0)))
+            alpha = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
             self.lines_coming_from_left.append(
                 [start_x, 0, end_x, self.height,
                  [self.character_color_r, self.character_color_g, self.character_color_b, alpha], 5, time]
             )
 
-        for i in range(4):
-            time = ((self.line_lifetime * i) / 3)
+        self.lines_coming_from_left.pop(2)
+
+        for i in range(6):
+            time = (self.line_lifetime * ((i + 1) / 5))
             distance = self.width - ((time ** 2) * (self.width * self.velocity_magnifier))
             start_x = distance
             end_x = distance
-            alpha = min(255, int(max(255 - (self.width - distance), 0)))
+            alpha = min(255, int(max(255 - ((self.width - distance) * self.alpha_loss_magnifier), 0)))
             self.lines_coming_from_right.append(
                 [start_x, 0, end_x, self.height,
                  [self.character_color_r, self.character_color_g, self.character_color_b, alpha], 5, time]
             )
+
+        self.lines_coming_from_right.pop(2)
 
     def on_update(self, dt):
         self.delta_time = dt
@@ -151,6 +156,12 @@ class BattleHUDButtonLayout(UIBoxLayout):
             color=[0, 0, 0]
         )
 
+        arcade.draw_line(0, 0, 0, self.height,
+                         [self.character_color_r, self.character_color_g, self.character_color_b, 255], 8)
+
+        arcade.draw_line(self.width, 0, self.width, self.height,
+                         [self.character_color_r, self.character_color_g, self.character_color_b, 255], 8)
+
         for line in self.lines_coming_from_left:
             # Check if the line is older than the max line lifetime
             if line[6] >= self.line_lifetime:
@@ -158,15 +169,16 @@ class BattleHUDButtonLayout(UIBoxLayout):
                 line[0] = 0
                 line[2] = 0
                 line[4][3] = 255
-                line[6] = 0
+                line[6] -= self.line_lifetime
             else:
                 # Progress the line animation
+                line[6] += self.delta_time
                 distance = (line[6] ** 2) * (self.width * self.velocity_magnifier)
                 line[0] = distance
                 line[2] = distance
-                line[4][3] = min(255, int(max(255 - distance, 0)))
-                line[6] += self.delta_time
+                line[4][3] = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
             arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
+            # print("start x = " + str(line[0]) + ", end x = " + str(line[2]) + ", time = " + str(line[6]))
 
         for line in self.lines_coming_from_right:
             # Check if the line is older than the max line lifetime
@@ -175,14 +187,14 @@ class BattleHUDButtonLayout(UIBoxLayout):
                 line[0] = self.width
                 line[2] = self.width
                 line[4][3] = 255
-                line[6] = 0
+                line[6] -= self.line_lifetime
             else:
                 # Progress the line animation
+                line[6] += self.delta_time
                 distance = self.width - ((line[6] ** 2) * (self.width * self.velocity_magnifier))
                 line[0] = distance
                 line[2] = distance
-                line[4][3] = min(255, int(max(255 - (self.width - distance), 0)))
-                line[6] += self.delta_time
+                line[4][3] = min(255, int(max(255 - ((self.width - distance) * self.alpha_loss_magnifier), 0)))
             arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
 
 
@@ -420,7 +432,7 @@ class BattleHUDCharacterData(UIBoxLayout):
         self.focus_mode = FocusMode(0)
 
         self.with_background(color=Color(0, 0, 0, 255))
-        self.with_border(width=3, color=character.battle_ui_color)
+        self.with_border(width=10, color=character.battle_ui_color)
         self.with_padding(top=8, left=12, bottom=8, right=12)
 
 
@@ -459,9 +471,9 @@ class BattleHUDCharacterClamshell(UILayout):
 
         self.character_display_transition_time = 0
         self.hud_lowered_center_y = self.battle_hud_character_data.center_y
-        self.distance_hud_raised = 80
+        self.distance_hud_raised = 78
         self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
-        self.hud_raise_animation_time = 0.25
+        self.hud_raise_animation_time = 0.2
         self.inverse_of_hud_raise_animation_time = 1 / self.hud_raise_animation_time
 
         self.is_instantiated = False
@@ -559,7 +571,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
         super().__init__(
             children=[],
             x=x_offset,
-            y=int(settings.WINDOW_HEIGHT / 5.1),
+            y=int(settings.WINDOW_HEIGHT / 5.1) - 2,
             width=width,
             align="center",
             space_between=self._horizontal_spacing,
