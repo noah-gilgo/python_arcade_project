@@ -95,11 +95,11 @@ class BattleHUDButtonLayout(UIBoxLayout):
             ]
 
         super().__init__(
-            width=380,
-            height=60,
+            width=420,
+            height=80,
             vertical=False,
             space_between=2,
-            align="bottom",
+            align="center",
             children=buttons
         )
 
@@ -107,7 +107,7 @@ class BattleHUDButtonLayout(UIBoxLayout):
 
         self.with_background(color=Color(0, 0, 0, 255))
         # self.with_border(width=3, color=character.battle_ui_color)
-        self.with_padding(left=33, right=33)
+        self.with_padding(left=50, right=50)
 
 
 class BattleHUDCharacterHPText(UILabel):
@@ -331,14 +331,15 @@ class BattleHUDCharacterData(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
             width=420,
-            height=96,
+            height=84,
             children=[
                 BattleHUDCharacterIconAndName(character),
                 BattleHUDHPData(character)
             ],
             vertical=False,
             space_between=24,
-            align="center"
+            align="center",
+            size_hint=None
         )
         self.focus_mode = FocusMode(0)
 
@@ -352,7 +353,7 @@ class BattleHUDCharacterClamshell(UILayout):
     Card containing the player battle HUD data and buttons.
     Built to automatically display the character data.
     """
-    def __init__(self, character: player_character.PlayerCharacter):
+    def __init__(self, character: player_character.PlayerCharacter, is_focused: bool = False):
         # This is the default data for a newly created clamshell. All of the child components of the clamshell
         # will read from this data and render themselves in accordance with it.
         self.player_character = character
@@ -366,37 +367,47 @@ class BattleHUDCharacterClamshell(UILayout):
 
         super().__init__(
             children=[],
+            x=0,
             width=420,
-            height=160,
-            space_between=2,
-            vertical=True
+            height=180
         )
 
         self.add(self.battle_hud_button_layout)
         self.add(self.battle_hud_character_data)
 
         self.focus_mode = FocusMode(0)
-
-        self.with_background(color=Color(0, 0, 0, 255))
         #self.with_border(width=3, color=character.battle_ui_color)
         #self.with_padding(top=2, right=8, bottom=0, left=8)
 
+        self.is_focused = is_focused
+
         self.character_display_transition_time = 0
         self.hud_lowered_center_y = self.battle_hud_character_data.center_y
-        self.distance_hud_raised = 40
+        self.distance_hud_raised = 80
         self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
-        self.hud_raise_animation_time = 0.5
+        self.hud_raise_animation_time = 0.25
+
+        self.is_instantiated = False
 
     def do_layout(self):
         super().do_layout()
 
         rect = self.rect
 
+        if not self.is_instantiated:
+            if self.is_focused:
+                self.battle_hud_character_data.center_y = rect.center_y + self.distance_hud_raised
+                self.children[1].with_border(width=3, color=self.player_character.battle_ui_color)
+            else:
+                self.battle_hud_character_data.center_y = rect.center_y
+                self.children[1].with_border(width=0, color=self.player_character.battle_ui_color)
+            self.is_instantiated = True
+
         self.battle_hud_character_data.center_x = rect.center_x
-        self.battle_hud_character_data.center_y = rect.center_y
 
         self.battle_hud_button_layout.center_x = rect.center_x
         self.battle_hud_button_layout.center_y = rect.center_y
+
 
     """
     def do_render_focus(self, surface: Surface):
@@ -405,17 +416,55 @@ class BattleHUDCharacterClamshell(UILayout):
 
     def move_up_character_display_slightly(self, dt):
         self.character_display_transition_time += dt
-        new_hud_center_y = self.hud_lowered_center_y + (self.distance_hud_raised * math.cos((1 / self.hud_raise_animation_time) * self.character_display_transition_time * (math.pi / 2)))
+        new_hud_center_y = self.hud_lowered_center_y + (self.distance_hud_raised * math.sin((1 / self.hud_raise_animation_time) * self.character_display_transition_time * (math.pi / 2)))
         self.battle_hud_character_data.center_y = new_hud_center_y
         if self.character_display_transition_time > self.hud_raise_animation_time:
+            self.battle_hud_character_data.center_y = self.hud_raised_center_y
+            self.battle_hud_character_data.do_layout()
+            self.character_display_transition_time = 0
             pyglet.clock.unschedule(self.move_up_character_display_slightly)
 
     def move_up_character_data_display(self):
+        if self.is_focused:
+            self.hud_raised_center_y = self.battle_hud_character_data.center_y
+            self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
+        else:
+            self.hud_lowered_center_y = self.battle_hud_character_data.center_y
+            self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
+
         pyglet.clock.schedule_interval(self.move_up_character_display_slightly, 0.05)
 
-    def show_buttons(self):
+    def focus(self):
         """ Moves the character data display up so the buttons can be shown. """
-        pass
+        self.move_up_character_data_display()
+        self.is_focused = True
+        self.battle_hud_character_data.with_border(width=3, color=self.player_character.battle_ui_color)
+
+    def move_down_character_display_slightly(self, dt):
+        self.character_display_transition_time += dt
+        new_hud_center_y = self.hud_raised_center_y - (self.distance_hud_raised * math.sin((1 / self.hud_raise_animation_time) * self.character_display_transition_time * (math.pi / 2)))
+        self.battle_hud_character_data.center_y = new_hud_center_y
+        if self.character_display_transition_time > self.hud_raise_animation_time:
+            self.battle_hud_character_data.center_y = self.hud_lowered_center_y
+            self.battle_hud_character_data.do_layout()
+            self.character_display_transition_time = 0
+            pyglet.clock.unschedule(self.move_down_character_display_slightly)
+
+    def move_down_character_data_display(self):
+        if self.is_focused:
+            self.hud_raised_center_y = self.battle_hud_character_data.center_y
+            self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
+        else:
+            self.hud_lowered_center_y = self.battle_hud_character_data.center_y
+            self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
+
+        pyglet.clock.schedule_interval(self.move_down_character_display_slightly, 0.05)
+
+    def unfocus(self):
+        """ Moves the character data display up so the buttons can be shown. """
+        self.move_down_character_data_display()
+        self.is_focused = False
+        self.battle_hud_character_data.with_border(width=0, color=self.player_character.battle_ui_color)
 
 
 class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
@@ -424,7 +473,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
     """
     def __init__(self, player_characters: list[player_character]):
 
-        self._horizontal_spacing = 10
+        self._horizontal_spacing = 0
         self._clamshell_width = BattleHUDCharacterClamshell(player_characters[0]).width
         width = (self._clamshell_width * len(player_characters)) + (self._horizontal_spacing * (len(player_characters) - 1))
         x_offset = int((settings.WINDOW_WIDTH - width) / 2)
@@ -448,9 +497,12 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
 
         self.player_characters = player_characters
 
+        is_clamshell_focused = True
+
         for character in player_characters:
-            clamshell = BattleHUDCharacterClamshell(character)
+            clamshell = BattleHUDCharacterClamshell(character, is_clamshell_focused)
             self.add(clamshell)
+            is_clamshell_focused = False
 
     def do_layout(self):
         self.center_x = int(settings.WINDOW_WIDTH / 2)

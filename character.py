@@ -63,6 +63,7 @@ class Character(arcade.Sprite):
         self.current_animation_timer = 0.0
         self.current_texture_index = 0
 
+        self.is_focused = False
         self.focus_animation = None
 
         # Initialize the character with its first default texture
@@ -139,13 +140,15 @@ class Character(arcade.Sprite):
         Creates an instance of a repeating FadeInFadeOutColorAnimation. Returns it so it can be added to the
         animation queue in main.
         """
-        self.focus_animation = FadeInFadeOutColorAnimation(
-            sprite=self,
-            color=arcade.color.WHITE,
-            total_duration=1,
-            is_continuous=True
-        )
-        return self.focus_animation
+        if not self.is_focused:
+            self.focus_animation = FadeInFadeOutColorAnimation(
+                sprite=self,
+                color=arcade.color.WHITE,
+                total_duration=1,
+                is_continuous=True
+            )
+            self.is_focused = True
+            return self.focus_animation
 
     def unfocus(self):
         """
@@ -155,3 +158,4 @@ class Character(arcade.Sprite):
         if self.focus_animation:
             self.focus_animation.is_terminated = True
             self.focus_animation.filter_sprite.kill()
+            self.is_focused = False
