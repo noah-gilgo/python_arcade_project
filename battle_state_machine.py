@@ -380,6 +380,7 @@ class SelectCommand(Command):
                 selected_spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 self.controller.focus_stack.pop()
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                current_player_character.set_animation_state("battle_magic_ready")
 
                 self.controller.actions_queue.append(
                     SpellAction(
@@ -407,19 +408,30 @@ class CancelCommand(Command):
 
     def execute(self):
         match self.controller.state:
+            case BattleState.PLAYER_MAGIC_SELECT:
+                self.backup_out_of_focus_stack()
             case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
                 focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 focused_enemy.unfocus()
-                focus_stack_member = self.controller.focus_stack.pop()
-                if focus_stack_member:
-                    self.controller.state = self.controller.focus_stack.get_highest_member().state
-                self.controller.menu_move_sound.play()
+                self.backup_out_of_focus_stack()
             case BattleState.PLAYER_COMMAND:
                 self.controller.move_to_previous_player_card()
                 previous_player = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                 if previous_player.is_player_defending():
                     self.controller.add_tp_to_meter(-16.0)
                     previous_player.undefend()
+                previous_player.set_animation_state("battle_idle")
+
+    def backup_out_of_focus_stack(self):
+        """
+        Used to back out of loaded battle UI elements while updating self.controller.state and the focus stack.
+        Used a lot in CancelCommand.execute().
+        :return: None
+        """
+        focus_stack_member = self.controller.focus_stack.pop()
+        if focus_stack_member:
+            self.controller.state = self.controller.focus_stack.get_highest_member().state
+        self.controller.menu_move_sound.play()
 
 
 class RightCommand(Command):

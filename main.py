@@ -135,9 +135,61 @@ class GameView(arcade.View):
     def setup(self):
         # Create and append the players to the SpriteList.
 
+        self.player_one = player_character.PlayerCharacter(scale=4.0,
+                                                           center_x=self._holy_arc[0][0],
+                                                           center_y=self._holy_arc[0][1],
+                                                           angle=0,
+                                                           sprite_folder_name="kris",
+                                                           name="Kris",
+                                                           max_hp=90,
+                                                           attack=10,
+                                                           defense=2,
+                                                           magic=0,
+                                                           battle_ui_color=Color(0, 255, 255, 255),
+                                                           knows_magic=False)
+        self.player_one.set_animation_state("battle_idle")
+        self.character_sprites.append(self.player_one)  # Append the instance to the SpriteList
+        self.player_characters.append(self.player_one)
+
+        self._animation_states = self.player_one.get_valid_animation_states()
+
+        """
+        self.player_two = player_character.PlayerCharacter(scale=4.0,
+                                                           center_x=self._holy_arc[1][0],
+                                                           center_y=self._holy_arc[1][1],
+                                                           angle=0,
+                                                           sprite_folder_name="susie",
+                                                           name="Susie",
+                                                           max_hp=110,
+                                                           attack=14,
+                                                           defense=2,
+                                                           magic=1,
+                                                           battle_ui_color=Color(255, 0, 255, 255))  # Sprite initialization
+        self.player_two.set_animation_state("battle_idle")
+        self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
+        self.players.append(self.player_two)
+        """
+
+        """
+        self.player_three = player_character.PlayerCharacter(scale=4.0,
+                                                             center_x=self._holy_arc[2][0],
+                                                             center_y=self._holy_arc[2][1],
+                                                             angle=0,
+                                                             sprite_folder_name="ralsei",
+                                                             name="ralsei",
+                                                             max_hp=70,
+                                                             attack=8,
+                                                             defense=2,
+                                                             magic=7,
+                                                             battle_ui_color=Color(0, 255, 0, 255))  # Sprite initialization
+        self.player_three.set_animation_state("battle_idle")
+        self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
+        self.players.append(self.player_three)
+        """
+
         self.player_four = player_character.PlayerCharacter(scale=4.0,
-                                                            center_x=self._holy_arc[0][0],
-                                                            center_y=self._holy_arc[0][1],
+                                                            center_x=self._holy_arc[1][0],
+                                                            center_y=self._holy_arc[1][1],
                                                             angle=0,
                                                             sprite_folder_name="noelle",
                                                             name="Noelle",
@@ -198,58 +250,6 @@ class GameView(arcade.View):
         self.player_characters.append(self.player_four)
 
         self.player_four.get_valid_animation_states()
-
-        self.player_one = player_character.PlayerCharacter(scale=4.0,
-                                                           center_x=self._holy_arc[1][0],
-                                                           center_y=self._holy_arc[1][1],
-                                                           angle=0,
-                                                           sprite_folder_name="kris",
-                                                           name="Kris",
-                                                           max_hp=90,
-                                                           attack=10,
-                                                           defense=2,
-                                                           magic=0,
-                                                           battle_ui_color=Color(0, 255, 255, 255),
-                                                           knows_magic=False)
-        self.player_one.set_animation_state("battle_idle")
-        self.character_sprites.append(self.player_one)  # Append the instance to the SpriteList
-        self.player_characters.append(self.player_one)
-
-        self._animation_states = self.player_one.get_valid_animation_states()
-
-        """
-        self.player_two = player_character.PlayerCharacter(scale=4.0,
-                                                           center_x=self._holy_arc[1][0],
-                                                           center_y=self._holy_arc[1][1],
-                                                           angle=0,
-                                                           sprite_folder_name="susie",
-                                                           name="Susie",
-                                                           max_hp=110,
-                                                           attack=14,
-                                                           defense=2,
-                                                           magic=1,
-                                                           battle_ui_color=Color(255, 0, 255, 255))  # Sprite initialization
-        self.player_two.set_animation_state("battle_idle")
-        self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
-        self.players.append(self.player_two)
-        """
-
-        """
-        self.player_three = player_character.PlayerCharacter(scale=4.0,
-                                                             center_x=self._holy_arc[2][0],
-                                                             center_y=self._holy_arc[2][1],
-                                                             angle=0,
-                                                             sprite_folder_name="ralsei",
-                                                             name="ralsei",
-                                                             max_hp=70,
-                                                             attack=8,
-                                                             defense=2,
-                                                             magic=7,
-                                                             battle_ui_color=Color(0, 255, 0, 255))  # Sprite initialization
-        self.player_three.set_animation_state("battle_idle")
-        self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
-        self.players.append(self.player_three)
-        """
 
         # Create and append the enemies to the SpriteList.
         self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,

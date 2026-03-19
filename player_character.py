@@ -114,7 +114,7 @@ class PlayerCharacter(character.Character):
                 {
                     "battle_magic_ready": graphics_objects.SimpleLoopAnimation(
                         sprite_pack_path=self._sprite_pack_path + "/battle_magic_ready",
-                        frame_duration=0.10,
+                        frame_duration=0.15,
                         loop_animation=True
                     ),
 
