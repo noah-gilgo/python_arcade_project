@@ -365,6 +365,8 @@ class SelectCommand(Command):
             case BattleState.PLAYER_MAGIC_SELECT:
                 # TODO: animate the player character, queue the act
                 self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
+                spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                self.controller.tp_meter.update_tp_meter(-spell.tp_cost)
                 enemy_list_full_layout = EnemySelect(self.controller.enemies)
                 enemy_list_interactive_layout = enemy_list_full_layout.children[1]
                 self.controller.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
@@ -416,6 +418,8 @@ class CancelCommand(Command):
                 focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 focused_enemy.unfocus()
                 self.backup_out_of_focus_stack()
+                spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                self.controller.tp_meter.update_tp_meter(spell.tp_cost)
             case BattleState.PLAYER_COMMAND:
                 self.controller.move_to_previous_player_card()
                 previous_player = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
