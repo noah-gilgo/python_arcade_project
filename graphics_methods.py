@@ -146,3 +146,13 @@ def make_texture_solid_color(texture: arcade.Texture) -> Texture:
     return arcade.Texture(
         image=image
     )
+
+
+def ease_out(t: float):
+    """
+    Basic ease-out function for animations.
+    :param t: delta time
+    :return: the value of the quadratic ease out function at time t
+    """
+
+    return -t * (t - 2)

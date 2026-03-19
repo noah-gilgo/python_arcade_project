@@ -14,6 +14,7 @@ from arcade.types.color import Color
 import non_player_character
 import player_character
 import settings
+from graphics_methods import ease_out
 from spells import Spell
 
 
@@ -1209,6 +1210,9 @@ class TPMeterImage:
         self.tp = 0
         self.max_tp = 100
 
+        # Used for animating the bar.
+        self.visual_tp = 0
+
         self.tp_meter_height = int(self.height * (self.tp / self.max_tp))
 
         tp_meter_frame = Image.open("assets/textures/gui_graphics/battle/tp_meter/tp_meter_frame.png")
@@ -1221,7 +1225,6 @@ class TPMeterImage:
             size=(self.width, self.height),
             resample=Resampling.NEAREST
         )
-        self.tp_meter_frame.convert("L")
         self.tp_meter_color = (255, 163, 67, 255)
         self.tp_meter_background_color = (139, 0, 0, 255)
 
@@ -1237,10 +1240,10 @@ class TPMeterImage:
             color=self.tp_meter_color
         )
 
-        self.update()
+        self.render()
 
-    def update(self):
-        self.tp_meter_height = int(self.height * (self.tp / self.max_tp))
+    def render(self):
+        self.tp_meter_height = int(self.height * (self.visual_tp / self.max_tp))
         self.tp_meter = Image.new(
             mode="RGBA",
             size=(self.width, self.tp_meter_height),
@@ -1248,7 +1251,7 @@ class TPMeterImage:
         )
 
         self.image.paste(self.tp_meter_background)
-        self.image.paste(self.tp_meter)
+        self.image.paste(self.tp_meter, (0, self.height - self.tp_meter_height))
         self.image.paste(im=self.tp_meter_frame, mask=self.tp_meter_frame)
         self.image = ImageChops.subtract(self.image, self.tp_meter_cutoff)
 
@@ -1313,19 +1316,40 @@ class TPMeterGraphic(UIImage):
         self.is_updating = False
         self.new_tp = 0.0
 
+        self.elapsed_time = 0.0
+        self.starting_tp = 0.0
+        self.ending_tp = 0.0
+
+        self.animation_duration = 0.5
+
     def get_image_object(self):
         return self.tp_meter_image
 
     def update(self, tp: float = 0.0):
-        self.tp_meter_image.tp = tp
-        self.is_updating = True
+        self.elapsed_time = 0.0
+        if tp > 1.0:
+            self.tp_meter_image.visual_tp = self.tp_meter_image.tp
+            self.tp_meter_image.tp = min(self.tp_meter_image.tp + tp, 100.0)
+            self.starting_tp = self.tp_meter_image.visual_tp
+            self.ending_tp = self.tp_meter_image.tp
+            self.is_updating = True
+        else:
+            self.tp_meter_image.tp = min(self.tp_meter_image.tp + tp, 100.0)
+            self.tp_meter_image.visual_tp = self.tp_meter_image.tp
+            self.tp_meter_image.render()
 
     def on_update(self, delta_time):
         if self.is_updating:
-            self.tp_meter_image.update()
-            if self.tp_meter_image.tp >= self.new_tp:
-                self.tp_meter_image.tp = self.new_tp
+            self.elapsed_time += delta_time
+            normalized_time = min(self.elapsed_time / self.animation_duration, 1.0)
+            eased_time = ease_out(normalized_time)
+            self.tp_meter_image.visual_tp = self.starting_tp + ((self.ending_tp - self.starting_tp) * eased_time)
+            self.tp_meter_image.render()
+            self.texture = arcade.Texture(self.tp_meter_image.get_image())
+            if self.elapsed_time >= self.animation_duration:
+                self.tp_meter_image.visual_tp = self.tp_meter_image.tp
                 self.is_updating = False
+                self.elapsed_time = 0
 
 
 class TPMeter(UIBoxLayout):
@@ -1343,5 +1367,5 @@ class TPMeter(UIBoxLayout):
         )
 
     def update_tp_meter(self, tp: float = 0.0):
-        tp_meter = self.children[1].get_image_object()
+        tp_meter = self.children[1]
         tp_meter.update(tp)

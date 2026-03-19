@@ -162,9 +162,11 @@ class BattleController:
                  player_characters: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
                  effects_sprite_list: SpriteList,
-                 effects_list: list):
+                 effects_list: list,
+                 tp_meter: battle_widgets.TPMeter):
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
+        self.tp_meter = tp_meter
         self.player_characters = player_characters
         self.enemies = enemies
 
@@ -241,11 +243,43 @@ class BattleController:
             case arcade.key.DOWN:
                 self.down_command()
 
+    def add_tp_to_meter(self, amount: float = 0.0):
+        """
+        Adds TP to the TP meter. Negative values should also work.
+        :param amount: The amount of TP to add to the meter.
+        :return: None
+        """
+        self.tp_meter.update_tp_meter(amount)
+
+    def move_to_next_player_card(self):
+        """
+        Moves to the next player card in the HUD.
+        :return:
+        """
+        if self.focus_stack.get_highest_member().get_focused_widget_index() < self.focus_stack.get_highest_member().get_full_layout_length():
+            self.state = BattleState.PLAYER_COMMAND
+            self.focus_stack.pop()
+            self.battle_player_character_cards.children[
+                self.current_player_index].unfocus()
+            self.current_player_index += 1
+            self.battle_player_character_cards.children[
+                self.current_player_index].focus()
+            self.focus_stack.push(
+                self.battle_player_character_cards,
+                self.battle_player_character_cards.children[self.current_player_index].children[0],
+                self.state,
+                5
+            )
+        else:
+            self.state = BattleState.EXECUTE_QUEUED_PLAYER_COMMANDS
+            self.execute_actions_queue()
+        self.menu_select_sound.play()
+
 
 class Command:
     """ The default command object. Represents the Command design pattern. """
 
-    def __init__(self, controller):
+    def __init__(self, controller: BattleController):
         self.controller = controller
 
     def execute(self):
@@ -286,6 +320,9 @@ class SelectCommand(Command):
                         return
                     case 4:  # user selects the DEFEND button
                         # TODO: include functions to give the current character TP and set their animation to defend
+                        self.controller.add_tp_to_meter(16.0)
+                        defending_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                        defending_player_character.set_animation_state("battle_defend")
                         self.controller.move_to_next_player_card()
                         return
 

@@ -327,7 +327,8 @@ class GameView(arcade.View):
             player_characters=self.player_characters,
             enemies=self.enemies,
             effects_sprite_list=self.effects_sprites,
-            effects_list=self.effects
+            effects_list=self.effects,
+            tp_meter=self.tp_meter
         )
 
     def on_draw(self):
