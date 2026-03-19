@@ -56,7 +56,7 @@ class PlayerCharacter(character.Character):
 
             "battle_defend": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_defend",
-                frame_duration=0.10,
+                frame_duration=0.06,
                 loop_animation=False
             ),
 

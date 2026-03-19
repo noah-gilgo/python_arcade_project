@@ -42,16 +42,6 @@ class BattleHUDButton(UITextureButton):
         self.name = name
         self.focus_mode = FocusMode(2)
 
-    """
-    def focus(self):
-        # Highlights the selected button.
-        self.texture = self.texture_focused
-
-    def unfocus(self):
-        # De-highlights the selected button.
-        self.texture = self.texture_unfocused
-    """
-
     def do_render_focus(self, surface: Surface):
         pass
 
@@ -111,6 +101,8 @@ class BattleHUDButtonLayout(UIBoxLayout):
         # self.with_border(width=3, color=character.battle_ui_color)
         self.with_padding(left=50, right=50)
 
+        self.is_focused = False
+
         self.delta_time = 0
         self.lines_coming_from_left = []
         self.lines_coming_from_right = []
@@ -164,40 +156,41 @@ class BattleHUDButtonLayout(UIBoxLayout):
         arcade.draw_line(self.width, 0, self.width, self.height,
                          [self.character_color_r, self.character_color_g, self.character_color_b, 255], 8)
 
-        for line in self.lines_coming_from_left:
-            # Check if the line is older than the max line lifetime
-            if line[6] >= self.line_lifetime:
-                # Set line back to initial conditions
-                line[0] = 0
-                line[2] = 0
-                line[4][3] = 255
-                line[6] -= self.line_lifetime
-            else:
-                # Progress the line animation
-                line[6] += self.delta_time
-                distance = (line[6] ** 2) * (self.width * self.velocity_magnifier)
-                line[0] = distance
-                line[2] = distance
-                line[4][3] = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
-            arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
-            # print("start x = " + str(line[0]) + ", end x = " + str(line[2]) + ", time = " + str(line[6]))
+        if self.is_focused:
+            for line in self.lines_coming_from_left:
+                # Check if the line is older than the max line lifetime
+                if line[6] >= self.line_lifetime:
+                    # Set line back to initial conditions
+                    line[0] = 0
+                    line[2] = 0
+                    line[4][3] = 255
+                    line[6] -= self.line_lifetime
+                else:
+                    # Progress the line animation
+                    line[6] += self.delta_time
+                    distance = (line[6] ** 2) * (self.width * self.velocity_magnifier)
+                    line[0] = distance
+                    line[2] = distance
+                    line[4][3] = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
+                arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
+                # print("start x = " + str(line[0]) + ", end x = " + str(line[2]) + ", time = " + str(line[6]))
 
-        for line in self.lines_coming_from_right:
-            # Check if the line is older than the max line lifetime
-            if line[6] >= self.line_lifetime:
-                # Set line back to initial conditions
-                line[0] = self.width
-                line[2] = self.width
-                line[4][3] = 255
-                line[6] -= self.line_lifetime
-            else:
-                # Progress the line animation
-                line[6] += self.delta_time
-                distance = self.width - ((line[6] ** 2) * (self.width * self.velocity_magnifier))
-                line[0] = distance
-                line[2] = distance
-                line[4][3] = min(255, int(max(255 - ((self.width - distance) * self.alpha_loss_magnifier), 0)))
-            arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
+            for line in self.lines_coming_from_right:
+                # Check if the line is older than the max line lifetime
+                if line[6] >= self.line_lifetime:
+                    # Set line back to initial conditions
+                    line[0] = self.width
+                    line[2] = self.width
+                    line[4][3] = 255
+                    line[6] -= self.line_lifetime
+                else:
+                    # Progress the line animation
+                    line[6] += self.delta_time
+                    distance = self.width - ((line[6] ** 2) * (self.width * self.velocity_magnifier))
+                    line[0] = distance
+                    line[2] = distance
+                    line[4][3] = min(255, int(max(255 - ((self.width - distance) * self.alpha_loss_magnifier), 0)))
+                arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
 
 
 class BattleHUDCharacterHPText(UILabel):
@@ -456,20 +449,19 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_button_layout = BattleHUDButtonLayout(character)
 
         super().__init__(
-            children=[],
+            children=[self.battle_hud_button_layout,
+                      self.battle_hud_character_data],
             x=0,
             width=420,
             height=180
         )
 
-        self.add(self.battle_hud_button_layout)
-        self.add(self.battle_hud_character_data)
-
         self.focus_mode = FocusMode(0)
-        #self.with_border(width=3, color=character.battle_ui_color)
-        #self.with_padding(top=2, right=8, bottom=0, left=8)
 
         self.is_focused = is_focused
+
+        battle_hud_button_layout = self.children[0]
+        battle_hud_button_layout.is_focused = self.is_focused
 
         self.character_display_transition_time = 0
         self.hud_lowered_center_y = self.battle_hud_character_data.center_y
@@ -532,6 +524,8 @@ class BattleHUDCharacterClamshell(UILayout):
         self.move_up_character_data_display()
         self.is_focused = True
         self.battle_hud_character_data.with_border(width=3, color=self.player_character.battle_ui_color)
+        battle_hud_button_layout = self.children[0]
+        battle_hud_button_layout.is_focused = True
 
     def move_down_character_display_slightly(self, dt):
         self.character_display_transition_time += dt
@@ -557,6 +551,8 @@ class BattleHUDCharacterClamshell(UILayout):
         self.move_down_character_data_display()
         self.is_focused = False
         self.battle_hud_character_data.with_border(width=0, color=self.player_character.battle_ui_color)
+        battle_hud_button_layout = self.children[0]
+        battle_hud_button_layout.is_focused = False
 
 
 class BattleHUDCharacterClamshellDisplay(UIBoxLayout):

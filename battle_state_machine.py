@@ -270,6 +270,8 @@ class BattleController:
             )
             self.menu_select_sound.play()
         else:
+            self.battle_player_character_cards.children[self.current_player_index].unfocus()
+            self.focus_stack.pop()
             self.state = BattleState.EXECUTE_QUEUED_PLAYER_COMMANDS
             self.execute_actions_queue()
 
