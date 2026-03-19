@@ -1314,12 +1314,10 @@ class TPMeterGraphic(UIImage):
         )
 
         self.is_updating = False
-        self.new_tp = 0.0
 
         self.elapsed_time = 0.0
         self.starting_tp = 0.0
         self.ending_tp = 0.0
-
         self.animation_duration = 0.5
 
     def get_image_object(self):
@@ -1327,7 +1325,7 @@ class TPMeterGraphic(UIImage):
 
     def update(self, tp: float = 0.0):
         self.elapsed_time = 0.0
-        if tp > 1.0:
+        if tp > 1.0 or tp < -1.0:
             self.tp_meter_image.visual_tp = self.tp_meter_image.tp
             self.tp_meter_image.tp = min(self.tp_meter_image.tp + tp, 100.0)
             self.starting_tp = self.tp_meter_image.visual_tp

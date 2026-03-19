@@ -315,8 +315,8 @@ class GameView(arcade.View):
         # Initialize the GUI.
         self.text_box = dialogue_box.TextBox()
         self.tp_meter = battle_widgets.TPMeter()
-        self.manager.add(self.text_box)
         self.manager.add(self.tp_meter)
+        self.manager.add(self.text_box)
 
         # self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
         # self.manager.add(self.battle_hud_container)

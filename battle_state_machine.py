@@ -256,24 +256,44 @@ class BattleController:
         Moves to the next player card in the HUD.
         :return:
         """
-        if self.focus_stack.get_highest_member().get_focused_widget_index() < self.focus_stack.get_highest_member().get_full_layout_length():
+        if self.current_player_index + 1 < self.focus_stack.get_highest_member().get_full_layout_length():
             self.state = BattleState.PLAYER_COMMAND
             self.focus_stack.pop()
-            self.battle_player_character_cards.children[
-                self.current_player_index].unfocus()
+            self.battle_player_character_cards.children[self.current_player_index].unfocus()
             self.current_player_index += 1
-            self.battle_player_character_cards.children[
-                self.current_player_index].focus()
+            self.battle_player_character_cards.children[self.current_player_index].focus()
             self.focus_stack.push(
                 self.battle_player_character_cards,
                 self.battle_player_character_cards.children[self.current_player_index].children[0],
                 self.state,
                 5
             )
+            self.menu_select_sound.play()
         else:
             self.state = BattleState.EXECUTE_QUEUED_PLAYER_COMMANDS
             self.execute_actions_queue()
-        self.menu_select_sound.play()
+
+    def move_to_previous_player_card(self):
+        """
+        Move to the previous player card.
+        :return:
+        """
+        if self.current_player_index > 0:
+            self.battle_player_character_cards.children[
+                self.current_player_index].unfocus()
+            self.current_player_index -= 1
+            self.battle_player_character_cards.children[
+                self.current_player_index].focus()
+            self.focus_stack.push(
+                self.battle_player_character_cards,
+                self.battle_player_character_cards.children[
+                    self.current_player_index].children[0],
+                self.state,
+                5
+            )
+            if len(self.actions_queue) > 0:
+                self.actions_queue.pop()
+            self.menu_move_sound.play()
 
 
 class Command:
@@ -322,7 +342,7 @@ class SelectCommand(Command):
                         # TODO: include functions to give the current character TP and set their animation to defend
                         self.controller.add_tp_to_meter(16.0)
                         defending_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                        defending_player_character.set_animation_state("battle_defend")
+                        defending_player_character.defend()
                         self.controller.move_to_next_player_card()
                         return
 
@@ -370,26 +390,7 @@ class SelectCommand(Command):
                     )
                 )
 
-                self.controller.state = BattleState.PLAYER_COMMAND
-
-                if self.controller.focus_stack.get_highest_member().get_focused_widget_index() < self.controller.focus_stack.get_highest_member().get_full_layout_length():
-                    self.controller.state = BattleState.PLAYER_COMMAND
-                    self.controller.focus_stack.pop()
-                    self.controller.battle_player_character_cards.children[
-                        self.controller.current_player_index].unfocus()
-                    self.controller.current_player_index += 1
-                    self.controller.battle_player_character_cards.children[
-                        self.controller.current_player_index].focus()
-                    self.controller.focus_stack.push(
-                        self.controller.battle_player_character_cards,
-                        self.controller.battle_player_character_cards.children[self.controller.current_player_index].children[0],
-                        self.controller.state,
-                        5
-                    )
-                else:
-                    self.controller.state = BattleState.EXECUTE_QUEUED_PLAYER_COMMANDS
-                    self.controller.execute_actions_queue()
-                self.controller.menu_select_sound.play()
+                self.controller.move_to_next_player_card()
                 return
 
             case BattleState.PLAYER_ITEM_SELECT:
@@ -414,21 +415,11 @@ class CancelCommand(Command):
                     self.controller.state = self.controller.focus_stack.get_highest_member().state
                 self.controller.menu_move_sound.play()
             case BattleState.PLAYER_COMMAND:
-                if self.controller.current_player_index > 0:
-                    self.controller.battle_player_character_cards.children[
-                        self.controller.current_player_index].unfocus()
-                    self.controller.current_player_index -= 1
-                    self.controller.battle_player_character_cards.children[
-                        self.controller.current_player_index].focus()
-                    self.controller.focus_stack.push(
-                        self.controller.battle_player_character_cards,
-                        self.controller.battle_player_character_cards.children[
-                            self.controller.current_player_index].children[0],
-                        self.controller.state,
-                        5
-                    )
-                    self.controller.actions_queue.pop()
-                    self.controller.menu_move_sound.play()
+                self.controller.move_to_previous_player_card()
+                previous_player = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                if previous_player.is_player_defending():
+                    self.controller.add_tp_to_meter(-16.0)
+                    previous_player.undefend()
 
 
 class RightCommand(Command):
