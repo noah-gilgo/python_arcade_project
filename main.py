@@ -79,6 +79,7 @@ class GameView(arcade.View):
         self.manager._pixelated = True
         self.manager.enable()
         self.text_box = None
+        self.tp_meter = None
         self.battle_hud_container = None
 
         self._dialog = [
@@ -313,7 +314,9 @@ class GameView(arcade.View):
 
         # Initialize the GUI.
         self.text_box = dialogue_box.TextBox()
+        self.tp_meter = battle_widgets.TPMeter()
         self.manager.add(self.text_box)
+        self.manager.add(self.tp_meter)
 
         # self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
         # self.manager.add(self.battle_hud_container)

@@ -2,10 +2,11 @@ import math
 
 import arcade
 import pyglet.clock
-from PIL import Image
+from PIL import Image, ImageChops
+from PIL.Image import Resampling
 from arcade import LBWH
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
-    UIKeyPressEvent, UIKeyEvent, Surface
+    UIKeyPressEvent, UIKeyEvent, Surface, UIAnchorLayout
 from arcade.gui.widgets import FocusMode, UISpace, UILayout
 from arcade.shape_list import create_line
 from arcade.types.color import Color
@@ -1107,3 +1108,240 @@ class EnemySelect(UIBoxLayout):
         self.height = int(settings.WINDOW_HEIGHT / 4)
 
         super().do_layout()
+
+
+"""
+class TPMeterGauge(UIImage):
+    def __init__(self):
+        super().__init__(
+            width=25,
+            height=196,
+            texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter.png")
+        )
+"""
+
+"""
+class TPMeterMeter(UIWidget):
+    
+    #Based on the example progress bar on arcade's website.
+    #Link: https://api.arcade.academy/en/stable/programming_guide/gui/own_widgets.html#example-progressbar
+    
+
+    value = Property(0.0)
+
+    def __init__(self):
+        super().__init__(
+            width=50,
+            height=392,
+            size_hint=None
+        )
+        self.focus_mode = FocusMode(0)
+
+        self.with_background(color=arcade.color.DARK_RED)
+
+        self.tp = 40
+        self.max_tp = 100
+
+        self.value = self.tp / self.max_tp
+        self.color = arcade.color.NEON_CARROT
+
+        # trigger a render when the value changes
+        bind(self, "value", self.trigger_render)
+
+    def do_render(self, surface: arcade.gui.Surface) -> None:
+        self.prepare_render(surface)
+
+        self.with_background(color=arcade.color.DARK_RED)
+
+        arcade.draw_lbwh_rectangle_filled(
+            0,
+            0,
+            self.content_width,
+            self.content_height * self.value,
+            self.color,
+        )
+
+
+class TPMeterFrame(UIImage):
+    def __init__(self):
+        super().__init__(
+            width=50,
+            height=392,
+            texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter_frame.png")
+        )
+
+
+class TPMeter(UILayout):
+    def __init__(self):
+        super().__init__(
+            x=settings.WINDOW_HEIGHT / 2,
+            y=40,
+            width=50,
+            height=392,
+            children=[
+                TPMeterMeter(),
+                TPMeterFrame()
+            ]
+        )
+
+    def do_layout(self):
+        super().do_layout()
+        for widget in self.children:
+            widget.center_x = 65
+            widget.center_y = settings.WINDOW_HEIGHT / 2 + 192
+"""
+
+
+class TPMeterImage:
+    """
+    Dynamically renders a TP meter texture based on a PIL image.
+    """
+
+    def __init__(self):
+        self.width = 50
+        self.height = 392
+
+        self.image = Image.new(
+            mode="RGBA",
+            size=(self.width, self.height)
+        )
+
+        self.tp = 0
+        self.max_tp = 100
+
+        self.tp_meter_height = int(self.height * (self.tp / self.max_tp))
+
+        tp_meter_frame = Image.open("assets/textures/gui_graphics/battle/tp_meter/tp_meter_frame.png")
+        self.tp_meter_frame = tp_meter_frame.resize(
+            size=(self.width, self.height),
+            resample=Resampling.NEAREST
+        )
+        tp_meter_cutoff = Image.open("assets/textures/gui_graphics/battle/tp_meter/tp_meter_cutoff.png")
+        self.tp_meter_cutoff = tp_meter_cutoff.resize(
+            size=(self.width, self.height),
+            resample=Resampling.NEAREST
+        )
+        self.tp_meter_frame.convert("L")
+        self.tp_meter_color = (255, 163, 67, 255)
+        self.tp_meter_background_color = (139, 0, 0, 255)
+
+        self.tp_meter_background = Image.new(
+            mode="RGBA",
+            size=(self.width, self.height),
+            color=self.tp_meter_background_color
+        )
+
+        self.tp_meter = Image.new(
+            mode="RGBA",
+            size=(self.width, self.tp_meter_height),
+            color=self.tp_meter_color
+        )
+
+        self.update()
+
+    def update(self):
+        self.tp_meter_height = int(self.height * (self.tp / self.max_tp))
+        self.tp_meter = Image.new(
+            mode="RGBA",
+            size=(self.width, self.tp_meter_height),
+            color=self.tp_meter_color
+        )
+
+        self.image.paste(self.tp_meter_background)
+        self.image.paste(self.tp_meter)
+        self.image.paste(im=self.tp_meter_frame, mask=self.tp_meter_frame)
+        self.image = ImageChops.subtract(self.image, self.tp_meter_cutoff)
+
+    def get_image(self):
+        return self.image
+
+
+class TPMeterLabel(UIImage):
+    def __init__(self):
+        super().__init__(
+            width=44,
+            height=88,
+            texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter_label.png"),
+        )
+
+
+class TPMeterNumber(UILabel):
+    def __init__(self):
+        super().__init__(
+            width=44,
+            height=40,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text="0"
+        )
+
+
+class TPMeterPercentLabel(UILabel):
+    def __init__(self):
+        super().__init__(
+            width=44,
+            height=48,
+            font_name="8bitoperator JVE",
+            font_size=40,
+            text="%"
+        )
+
+
+class TPMeterTextContainer(UIBoxLayout):
+    def __init__(self):
+        super().__init__(
+            vertical=True,
+            width=60,
+            children=[
+                TPMeterLabel(),
+                TPMeterNumber(),
+                TPMeterPercentLabel()
+            ]
+        )
+
+
+class TPMeterGraphic(UIImage):
+    def __init__(self):
+        self.tp_meter_image = TPMeterImage()
+
+        super().__init__(
+            width=50,
+            height=392,
+            texture=arcade.Texture(self.tp_meter_image.get_image())
+        )
+
+        self.is_updating = False
+        self.new_tp = 0.0
+
+    def get_image_object(self):
+        return self.tp_meter_image
+
+    def update(self, tp: float = 0.0):
+        self.tp_meter_image.tp = tp
+        self.is_updating = True
+
+    def on_update(self, delta_time):
+        if self.is_updating:
+            self.tp_meter_image.update()
+            if self.tp_meter_image.tp >= self.new_tp:
+                self.tp_meter_image.tp = self.new_tp
+                self.is_updating = False
+
+
+class TPMeter(UIBoxLayout):
+    def __init__(self):
+        super().__init__(
+            x=40,
+            y=settings.WINDOW_HEIGHT / 2,
+            vertical=False,
+            space_between=4,
+            align="top",
+            children=[
+                TPMeterTextContainer(),
+                TPMeterGraphic()
+            ]
+        )
+
+    def update_tp_meter(self, tp: float = 0.0):
+        tp_meter = self.children[1].get_image_object()
+        tp_meter.update(tp)
