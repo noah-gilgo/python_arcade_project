@@ -65,6 +65,7 @@ class TextBoxText(UILabel):
         self.text = text
 
     def do_render(self, surface: Surface):
+        super().do_render(surface)
         self.width = settings.WINDOW_WIDTH - 144
 
 

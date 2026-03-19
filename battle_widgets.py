@@ -376,12 +376,13 @@ class BattleHUDCharacterName(UILabel):
     """
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=200,
-            height=80,
+            width=108,
+            height=48,
             text=character.name.upper(),
             font_name="""Roarin'""",
             font_size=48,
-            align="center"
+            align="left",
+            size_hint=None
         )
         self.focus_mode = FocusMode(0)
 
@@ -400,8 +401,8 @@ class BattleHUDCharacterIconAndName(UIBoxLayout):
                 BattleHUDCharacterName(character)
             ],
             vertical=False,
-            space_between=18,
-            align="center"
+            space_between=16,
+            align="left"
         )
         self.focus_mode = FocusMode(0)
 
