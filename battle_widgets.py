@@ -140,15 +140,13 @@ class BattleHUDButtonLayout(UIBoxLayout):
         self.lines_coming_from_right.pop(2)
 
     def on_update(self, dt):
-        self.delta_time = dt
-        self.trigger_render()
+        self.delta_time = min(dt, 1/60)
+        if self.is_focused:
+            self.trigger_render()
 
     def do_render(self, surface: Surface):
+        self.with_background(color=arcade.color.BLACK)
         super().do_render(surface)
-        arcade.draw_rect_filled(
-            rect=self.rect,
-            color=[0, 0, 0]
-        )
 
         arcade.draw_line(0, 0, 0, self.height,
                          [self.character_color_r, self.character_color_g, self.character_color_b, 255], 8)
@@ -473,8 +471,18 @@ class BattleHUDCharacterClamshell(UILayout):
 
         self.is_instantiated = False
 
-    def on_update(self, dt):
+        self.is_character_display_rising = False
+        self.is_character_display_lowering = False
         self.trigger_render()
+
+    def on_update(self, dt):
+        if self.is_character_display_rising or self.is_character_display_lowering:
+            self.trigger_render()
+
+        if self.is_character_display_rising:
+            self.move_up_character_display_slightly(dt)
+        elif self.is_character_display_lowering:
+            self.move_down_character_display_slightly(dt)
 
     def do_layout(self):
         super().do_layout()
@@ -495,12 +503,6 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_button_layout.center_x = rect.center_x
         self.battle_hud_button_layout.center_y = rect.center_y
 
-
-    """
-    def do_render_focus(self, surface: Surface):
-        self.children[0].visible = False
-    """
-
     def move_up_character_display_slightly(self, dt):
         self.character_display_transition_time += dt
         new_hud_center_y = self.hud_lowered_center_y + (-self.distance_hud_raised * (self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) * ((self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) - 2))
@@ -508,9 +510,11 @@ class BattleHUDCharacterClamshell(UILayout):
         if self.character_display_transition_time > self.hud_raise_animation_time:
             self.battle_hud_character_data.center_y = self.hud_raised_center_y
             self.character_display_transition_time = 0
-            pyglet.clock.unschedule(self.move_up_character_display_slightly)
+            self.is_character_display_rising = False
 
     def move_up_character_data_display(self):
+        self.character_display_transition_time = 0
+
         if self.is_focused:
             self.hud_raised_center_y = self.battle_hud_character_data.center_y
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
@@ -518,7 +522,7 @@ class BattleHUDCharacterClamshell(UILayout):
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y
             self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
 
-        pyglet.clock.schedule_interval(self.move_up_character_display_slightly, 1/60)
+        self.is_character_display_rising = True
 
     def focus(self):
         """ Moves the character data display up so the buttons can be shown. """
@@ -535,9 +539,11 @@ class BattleHUDCharacterClamshell(UILayout):
         if self.character_display_transition_time > self.hud_raise_animation_time:
             self.battle_hud_character_data.center_y = self.hud_lowered_center_y
             self.character_display_transition_time = 0
-            pyglet.clock.unschedule(self.move_down_character_display_slightly)
+            self.is_character_display_lowering = False
 
     def move_down_character_data_display(self):
+        self.character_display_transition_time = 0
+
         if self.is_focused:
             self.hud_raised_center_y = self.battle_hud_character_data.center_y
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
@@ -545,7 +551,7 @@ class BattleHUDCharacterClamshell(UILayout):
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y
             self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
 
-        pyglet.clock.schedule_interval(self.move_down_character_display_slightly, 1/60)
+        self.is_character_display_lowering = True
 
     def unfocus(self):
         """ Moves the character data display up so the buttons can be shown. """
@@ -1274,6 +1280,12 @@ class TPMeterNumber(UILabel):
             font_size=48,
             text="0"
         )
+
+        arcade.enable_timings()
+
+    def do_render(self, surface: Surface):
+        super().do_render(surface)
+        self.text = str(int(arcade.get_fps()))
 
 
 class TPMeterPercentLabel(UILabel):

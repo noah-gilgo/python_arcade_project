@@ -281,8 +281,7 @@ class BattleController:
         :return:
         """
         if self.current_player_index > 0:
-            self.battle_player_character_cards.children[
-                self.current_player_index].unfocus()
+            self.battle_player_character_cards.children[self.current_player_index].unfocus()
             self.current_player_index -= 1
             self.battle_player_character_cards.children[
                 self.current_player_index].focus()
