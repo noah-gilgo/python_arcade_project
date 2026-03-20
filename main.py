@@ -60,7 +60,7 @@ class GameView(arcade.View):
         self.camera = arcade.Camera2D()
 
         # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(2)
+        self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(3)
 
         # Temporary, for testing player animations.
@@ -153,7 +153,7 @@ class GameView(arcade.View):
 
         self._animation_states = self.player_one.get_valid_animation_states()
 
-        """
+
         self.player_two = player_character.PlayerCharacter(scale=4.0,
                                                            center_x=self._holy_arc[1][0],
                                                            center_y=self._holy_arc[1][1],
@@ -166,9 +166,8 @@ class GameView(arcade.View):
                                                            magic=1,
                                                            battle_ui_color=Color(255, 0, 255, 255))  # Sprite initialization
         self.player_two.set_animation_state("battle_idle")
-        self.player_sprites.append(self.player_two)  # Append the instance to the SpriteList
-        self.players.append(self.player_two)
-        """
+        self.character_sprites.append(self.player_two)  # Append the instance to the SpriteList
+        self.player_characters.append(self.player_two)
 
         """
         self.player_three = player_character.PlayerCharacter(scale=4.0,
@@ -183,13 +182,13 @@ class GameView(arcade.View):
                                                              magic=7,
                                                              battle_ui_color=Color(0, 255, 0, 255))  # Sprite initialization
         self.player_three.set_animation_state("battle_idle")
-        self.player_sprites.append(self.player_three)  # Append the instance to the SpriteList
-        self.players.append(self.player_three)
+        self.character_sprites.append(self.player_three)  # Append the instance to the SpriteList
+        self.player_characters.append(self.player_three)
         """
 
         self.player_four = player_character.PlayerCharacter(scale=4.0,
-                                                            center_x=self._holy_arc[1][0],
-                                                            center_y=self._holy_arc[1][1],
+                                                            center_x=self._holy_arc[2][0],
+                                                            center_y=self._holy_arc[2][1],
                                                             angle=0,
                                                             sprite_folder_name="noelle",
                                                             name="Noelle",
@@ -318,9 +317,6 @@ class GameView(arcade.View):
         self.manager.add(self.tp_meter)
         self.manager.add(self.text_box)
 
-        # self.battle_hud_container = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
-        # self.manager.add(self.battle_hud_container)
-
         self.battle_controller = BattleController(
             ui_manager=self.manager,
             battle_textbox=self.text_box,
@@ -339,7 +335,7 @@ class GameView(arcade.View):
         with self.camera.activate():
             self.background_sprites.draw(pixelated=True)
             self.character_sprites.draw(pixelated=True)
-            self.foreground_sprites.draw(pixelated=True)
+            # self.foreground_sprites.draw(pixelated=True)
             self.effects_sprites.draw(pixelated=True)
             for effect in self.effects:
                 if hasattr(effect, "draw") and callable(effect.draw):
@@ -371,7 +367,6 @@ class GameView(arcade.View):
             else:
                 effect.update_animation(delta_time)
 
-        self.manager.on_update(delta_time)
 
         # Used for testing the animation system
 
@@ -402,7 +397,7 @@ class GameView(arcade.View):
 def main():
     # Create a window class. This is what actually shows up on screen
     window = arcade.Window(settings.WINDOW_WIDTH, settings.WINDOW_HEIGHT, settings.WINDOW_TITLE)
-    window.set_update_rate(1 / 30)
+    window.set_update_rate(settings.FRAMERATE)
 
     # Create and setup the GameView
     game = GameView()

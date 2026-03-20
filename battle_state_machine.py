@@ -12,7 +12,8 @@ import items
 import non_player_character
 import player_character
 from actions import SpellAction
-from animations.common_animations import FadeInFadeOutColorAnimation
+from animations.battle_animations import DamageDealtAnimation
+from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from focus_stack import FocusStackMember, FocusStack
 from graphics_objects import MultiSpriteAnimation
@@ -198,6 +199,8 @@ class BattleController:
         # Loads menu sounds
         self.menu_move_sound = arcade.load_sound("assets/audio/gui/snd_menumove.wav", False)
         self.menu_select_sound = arcade.load_sound("assets/audio/gui/snd_select.wav", False)
+        self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
+        self.heal_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_power.wav", False)
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = []
@@ -299,6 +302,59 @@ class BattleController:
             if len(self.actions_queue) > 0:
                 self.actions_queue.pop()
             self.menu_move_sound.play()
+
+    def use_consumable_item_on_targets(self, item: ConsumableItem, targets: list[PlayerCharacter]):
+        """
+        Uses a consumable item on a list of targets. Probably going to be used by the action queue. Probably.
+        :param item: the item being used.
+        :param targets: the targets of the item.
+        :return: None
+        """
+
+        #TODO: Add particle animation, fade in, and number animations for healing, add corner case for TP items.
+
+        for target in targets:
+            damage_healt = 0
+            if item.is_revive_item:
+                if target.hp < 0:
+                    previous_target_hp = target.hp
+                    target.hp = 1
+                    damage_healt = target.hp - previous_target_hp
+            if item.is_relative_healing_item:
+                amount_healed_by_percent = min(target.hp + (target.max_hp * item.hp_percentage_restored), target.max_hp)
+                target.hp = amount_healed_by_percent
+                damage_healt += amount_healed_by_percent
+            else:
+                amount_healed_by_absolute = min(target.hp + item.hp_restored, target.max_hp)
+                target.hp = amount_healed_by_absolute
+                damage_healt += amount_healed_by_absolute
+
+            damage_healed_color = arcade.color.WHITE
+            if damage_healt > 0:
+                damage_healed_color = arcade.color.NEON_GREEN
+                color_filter_animation = FadeInFadeOutColorAnimation(
+                    sprite=target,
+                    color=arcade.color.WHITE
+                )
+                self.effects_list.append(color_filter_animation)
+                arcade.play_sound(self.heal_sound)
+                # TODO: add green sparkles animation
+            elif damage_healt < 0:
+                target.set_animation_state("battle_hurt")
+                shake_animation = ShakeAnimation(
+                    sprite=target
+                )
+                self.effects_list.append(shake_animation)
+                pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
+                arcade.play_sound(self.hurt_sound)
+
+
+            damage_healed_animation = DamageDealtAnimation(
+                damage_amount=damage_healt,
+                color=damage_healed_color,
+                target=target
+            )
+            self.effects_list.append(damage_healed_animation)
 
 
 class Command:

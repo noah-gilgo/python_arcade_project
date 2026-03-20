@@ -16,7 +16,10 @@ class ConsumableItem(Item):
         self.tp_restored = tp_restored  # Amount of tension points restored
         self.heals_all_party_members = heals_all_party_members
         self.is_revive_item = is_revive_item  # If true, heals the party member to at least 1 health
-        self.is_relative_healing_item = is_relative_healing_item  # If true, heals a percentage of max health
+        if self.is_revive_item:
+            self.is_relative_healing_item = True  # Revive items only bring players up to 1 hp. the percent does the rest
+        else:
+            self.is_relative_healing_item = is_relative_healing_item  # If true, heals a percentage of max health
         self.hp_percentage_restored = hp_percentage_restored  # Percentage of max health healed with relative healing
 
 
@@ -71,7 +74,6 @@ def initialize_default_items():
             name="Revive Mint",
             description="Heals a fallen ally to MAX HP. A minty green crystal.",
             is_revive_item=True,
-            is_relative_healing_item=True,
             hp_percentage_restored=1.0
         ),
         ConsumableItem(
