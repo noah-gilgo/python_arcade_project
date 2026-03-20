@@ -1,7 +1,6 @@
 import math
 
 import arcade
-import pyglet.clock
 from PIL import Image, ImageChops
 from PIL.Image import Resampling
 from arcade import LBWH
@@ -523,9 +522,12 @@ class BattleHUDCharacterClamshell(UILayout):
             self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
 
         self.is_character_display_rising = True
+        self.is_character_display_lowering = False
 
     def focus(self):
         """ Moves the character data display up so the buttons can be shown. """
+        if self.is_focused:
+            return
         self.move_up_character_data_display()
         self.is_focused = True
         self.battle_hud_character_data.with_border(width=3, color=self.player_character.battle_ui_color)
@@ -552,9 +554,12 @@ class BattleHUDCharacterClamshell(UILayout):
             self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
 
         self.is_character_display_lowering = True
+        self.is_character_display_rising = False
 
     def unfocus(self):
         """ Moves the character data display up so the buttons can be shown. """
+        if not self.is_focused:
+            return
         self.move_down_character_data_display()
         self.is_focused = False
         self.battle_hud_character_data.with_border(width=0, color=self.player_character.battle_ui_color)

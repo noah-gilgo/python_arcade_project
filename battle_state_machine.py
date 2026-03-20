@@ -8,6 +8,7 @@ from arcade.gui import UILayout, UIWidget, UIManager
 
 import battle_widgets
 import character
+import items
 import non_player_character
 import player_character
 from actions import SpellAction
@@ -15,6 +16,7 @@ from animations.common_animations import FadeInFadeOutColorAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from focus_stack import FocusStackMember, FocusStack
 from graphics_objects import MultiSpriteAnimation
+from items import Item, ConsumableItem
 from player_character import PlayerCharacter
 
 """
@@ -204,6 +206,8 @@ class BattleController:
         self.effects_sprite_list = effects_sprite_list
         self.effects_list = effects_list
 
+        self.items = items.initialize_default_items()
+
     def execute_actions_queue(self):
         for action in self.actions_queue:
             action.execute()
@@ -278,7 +282,7 @@ class BattleController:
     def move_to_previous_player_card(self):
         """
         Move to the previous player card.
-        :return:
+        :return: None
         """
         if self.current_player_index > 0:
             self.battle_player_character_cards.children[self.current_player_index].unfocus()
@@ -340,7 +344,6 @@ class SelectCommand(Command):
                         # TODO: include code to open the SPARE menu
                         return
                     case 4:  # user selects the DEFEND button
-                        # TODO: include functions to give the current character TP and set their animation to defend
                         self.controller.add_tp_to_meter(16.0)
                         defending_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                         defending_player_character.defend()
@@ -411,6 +414,13 @@ class CancelCommand(Command):
 
     def execute(self):
         match self.controller.state:
+            case BattleState.PLAYER_COMMAND:
+                self.controller.move_to_previous_player_card()
+                previous_player = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                if previous_player.is_player_defending():
+                    self.controller.add_tp_to_meter(-16.0)
+                    previous_player.undefend()
+                previous_player.set_animation_state("battle_idle")
             case BattleState.PLAYER_MAGIC_SELECT:
                 self.backup_out_of_focus_stack()
             case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
@@ -419,13 +429,6 @@ class CancelCommand(Command):
                 self.backup_out_of_focus_stack()
                 spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 self.controller.tp_meter.update_tp_meter(spell.tp_cost)
-            case BattleState.PLAYER_COMMAND:
-                self.controller.move_to_previous_player_card()
-                previous_player = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                if previous_player.is_player_defending():
-                    self.controller.add_tp_to_meter(-16.0)
-                    previous_player.undefend()
-                previous_player.set_animation_state("battle_idle")
 
     def backup_out_of_focus_stack(self):
         """

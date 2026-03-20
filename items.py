@@ -8,11 +8,13 @@ class Item:
 class ConsumableItem(Item):
     def __init__(self, name: str = "default item name", description: str = "this is the default item description.",
                  id: int = None, hp_restored: int = 0, tp_restored: int = 0, is_revive_item: bool = False,
-                 is_relative_healing_item: bool = False, hp_percentage_restored: float = 1.0):
+                 is_relative_healing_item: bool = False, hp_percentage_restored: float = 1.0,
+                 heals_all_party_members: bool = False):
         super().__init__(name, description)
         self.id = id
         self.hp_restored = hp_restored  # Amount of health healed with absolute healing
         self.tp_restored = tp_restored  # Amount of tension points restored
+        self.heals_all_party_members = heals_all_party_members
         self.is_revive_item = is_revive_item  # If true, heals the party member to at least 1 health
         self.is_relative_healing_item = is_relative_healing_item  # If true, heals a percentage of max health
         self.hp_percentage_restored = hp_percentage_restored  # Percentage of max health healed with relative healing
@@ -48,6 +50,22 @@ def initialize_default_items():
             name="Dark Candy",
             description="Heals 40 HP. A red-and-black star that tastes like marshmallows.",
             hp_restored=40
+        ),
+        ConsumableItem(
+            name="Darker Candy",
+            description="A candy that has grown sweeter with time. Said to taste like toasted marshmallow. +120HP",
+            hp_restored=120
+        ),
+        ConsumableItem(
+            name="Scarlixir",
+            description="A red brew with a sickeningly fruity taste. Recovers 160 HP.",
+            hp_restored=160
+        ),
+        ConsumableItem(
+            name="Top Cake",
+            description="This cake will make your taste buds spin! Heals 160HP to the team.",
+            hp_restored=160,
+            heals_all_party_members=True
         ),
         ConsumableItem(
             name="Revive Mint",

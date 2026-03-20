@@ -402,6 +402,7 @@ class GameView(arcade.View):
 def main():
     # Create a window class. This is what actually shows up on screen
     window = arcade.Window(settings.WINDOW_WIDTH, settings.WINDOW_HEIGHT, settings.WINDOW_TITLE)
+    window.set_update_rate(1 / 30)
 
     # Create and setup the GameView
     game = GameView()
