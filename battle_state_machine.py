@@ -161,12 +161,15 @@ class CommandInput:
 
 
 class BattleController:
-    def __init__(self, ui_manager: UIManager, battle_textbox: UIWidget,
+    def __init__(self, ui_manager: UIManager,
+                 battle_player_character_cards: UILayout,
+                 battle_textbox: UIWidget,
                  player_characters: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
                  effects_sprite_list: SpriteList,
                  effects_list: list,
                  tp_meter: battle_widgets.TPMeter):
+        self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
         self.tp_meter = tp_meter
@@ -181,8 +184,8 @@ class BattleController:
         self.selected_target = None
 
         # References to all of the battle buttons and their indexes
-        self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
-        self.ui_manager.add(self.battle_player_character_cards)
+        # self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
+        # self.ui_manager.add(self.battle_player_character_cards)
 
         self.ui_manager.execute_layout()
 

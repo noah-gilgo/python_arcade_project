@@ -34,7 +34,7 @@ class DamageDealtAnimation(SingleSpriteAnimation):
         self.floor = self.target.center_y - 56
         self.number_has_not_bounced_again = True
 
-    def update_animation(self, delta_time: float = 0.05, *args, **kwargs) -> None:
+    def update_animation(self, delta_time: float = settings.FRAMERATE, *args, **kwargs) -> None:
         self.time += delta_time
 
         # Transition the text from being squashed to being normal-sized.

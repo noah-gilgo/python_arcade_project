@@ -81,6 +81,7 @@ class GameView(arcade.View):
         self.text_box = None
         self.tp_meter = None
         self.battle_hud_container = None
+        self.battle_player_character_cards = None
 
         self._dialog = [
             dialogue_box.TextBoxDialog(
@@ -314,11 +315,19 @@ class GameView(arcade.View):
         # Initialize the GUI.
         self.text_box = dialogue_box.TextBox()
         self.tp_meter = battle_widgets.TPMeter()
+        self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
+        self.manager.add(self.battle_player_character_cards)
         self.manager.add(self.tp_meter)
         self.manager.add(self.text_box)
 
+        clamshells = self.battle_player_character_cards.children
+        for clamshell in clamshells:
+            buttons_display = clamshell.children[0]
+            self.effects.append(buttons_display.lines_animation)
+
         self.battle_controller = BattleController(
             ui_manager=self.manager,
+            battle_player_character_cards=self.battle_player_character_cards,
             battle_textbox=self.text_box,
             player_characters=self.player_characters,
             enemies=self.enemies,
@@ -335,7 +344,6 @@ class GameView(arcade.View):
         with self.camera.activate():
             self.background_sprites.draw(pixelated=True)
             self.character_sprites.draw(pixelated=True)
-            # self.foreground_sprites.draw(pixelated=True)
             self.effects_sprites.draw(pixelated=True)
             for effect in self.effects:
                 if hasattr(effect, "draw") and callable(effect.draw):
@@ -362,10 +370,11 @@ class GameView(arcade.View):
             enemy.update_animation(delta_time)
 
         for effect in self.effects:
-            if effect.is_terminated:
+            if hasattr(effect, "is_terminated") and effect.is_terminated:
                 self.effects.remove(effect)
             else:
-                effect.update_animation(delta_time)
+                if hasattr(effect, "update_animation"):
+                    effect.update_animation(delta_time)
 
 
         # Used for testing the animation system
