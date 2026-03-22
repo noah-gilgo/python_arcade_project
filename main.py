@@ -320,11 +320,6 @@ class GameView(arcade.View):
         self.manager.add(self.tp_meter)
         self.manager.add(self.text_box)
 
-        clamshells = self.battle_player_character_cards.children
-        for clamshell in clamshells:
-            buttons_display = clamshell.children[0]
-            self.effects.append(buttons_display.lines_animation)
-
         self.battle_controller = BattleController(
             ui_manager=self.manager,
             battle_player_character_cards=self.battle_player_character_cards,
@@ -373,8 +368,7 @@ class GameView(arcade.View):
             if hasattr(effect, "is_terminated") and effect.is_terminated:
                 self.effects.remove(effect)
             else:
-                if hasattr(effect, "update_animation"):
-                    effect.update_animation(delta_time)
+                effect.update_animation(delta_time)
 
 
         # Used for testing the animation system
