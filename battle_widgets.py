@@ -3,7 +3,7 @@ import math
 import arcade
 from PIL import Image, ImageChops
 from PIL.Image import Resampling
-from arcade import LBWH
+from arcade import LBWH, Rect
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
     UIKeyPressEvent, UIKeyEvent, Surface, UIAnchorLayout
 from arcade.gui.widgets import FocusMode, UISpace, UILayout
@@ -1223,45 +1223,19 @@ class TPMeterImage:
 
         self.tp_meter_height = int(self.height * (self.tp / self.max_tp))
 
-        tp_meter_frame = Image.open("assets/textures/gui_graphics/battle/tp_meter/tp_meter_frame.png")
-        self.tp_meter_frame = tp_meter_frame.resize(
-            size=(self.width, self.height),
-            resample=Resampling.NEAREST
-        )
-        tp_meter_cutoff = Image.open("assets/textures/gui_graphics/battle/tp_meter/tp_meter_cutoff.png")
-        self.tp_meter_cutoff = tp_meter_cutoff.resize(
-            size=(self.width, self.height),
-            resample=Resampling.NEAREST
-        )
-        self.tp_meter_color = (255, 163, 67, 255)
-        self.tp_meter_background_color = (139, 0, 0, 255)
+        self.tp_meter_spritesheet = arcade.load_spritesheet("assets/textures/gui_graphics/battle/tp_meter/tp_meter_spritesheet.png")
 
-        self.tp_meter_background = Image.new(
-            mode="RGBA",
-            size=(self.width, self.height),
-            color=self.tp_meter_background_color
-        )
-
-        self.tp_meter = Image.new(
-            mode="RGBA",
-            size=(self.width, self.tp_meter_height),
-            color=self.tp_meter_color
-        )
+        self.tp_meter_background = self.tp_meter_spritesheet.get_image(arcade.LRBT(left=0, right=48, bottom=0, top=392), y_up=True)
+        self.tp_meter = None
 
         self.render()
 
     def render(self):
         self.tp_meter_height = int(self.height * (self.visual_tp / self.max_tp))
-        self.tp_meter = Image.new(
-            mode="RGBA",
-            size=(self.width, self.tp_meter_height),
-            color=self.tp_meter_color
-        )
+        self.tp_meter = self.tp_meter_spritesheet.get_image(arcade.LRBT(left=100, right=147, bottom=0, top=self.tp_meter_height), y_up=True)
 
         self.image.paste(self.tp_meter_background)
-        self.image.paste(self.tp_meter, (0, self.height - self.tp_meter_height))
-        self.image.paste(im=self.tp_meter_frame, mask=self.tp_meter_frame)
-        self.image = ImageChops.subtract(self.image, self.tp_meter_cutoff)
+        self.image.paste(self.tp_meter, (0, self.height - self.tp_meter_height), self.tp_meter)
 
     def get_image(self):
         return self.image
