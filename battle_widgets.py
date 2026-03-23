@@ -1,11 +1,11 @@
 import math
 
 import arcade
-import pyglet.clock
-from PIL import Image
-from arcade import LBWH
+from PIL import Image, ImageChops
+from PIL.Image import Resampling
+from arcade import LBWH, Rect
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
-    UIKeyPressEvent, UIKeyEvent, Surface
+    UIKeyPressEvent, UIKeyEvent, Surface, UIAnchorLayout
 from arcade.gui.widgets import FocusMode, UISpace, UILayout
 from arcade.shape_list import create_line
 from arcade.types.color import Color
@@ -13,6 +13,7 @@ from arcade.types.color import Color
 import non_player_character
 import player_character
 import settings
+from graphics_methods import ease_out
 from spells import Spell
 
 
@@ -39,16 +40,6 @@ class BattleHUDButton(UITextureButton):
 
         self.name = name
         self.focus_mode = FocusMode(2)
-
-    """
-    def focus(self):
-        # Highlights the selected button.
-        self.texture = self.texture_focused
-
-    def unfocus(self):
-        # De-highlights the selected button.
-        self.texture = self.texture_unfocused
-    """
 
     def do_render_focus(self, surface: Surface):
         pass
@@ -109,6 +100,8 @@ class BattleHUDButtonLayout(UIBoxLayout):
         # self.with_border(width=3, color=character.battle_ui_color)
         self.with_padding(left=50, right=50)
 
+        self.is_focused = False
+
         self.delta_time = 0
         self.lines_coming_from_left = []
         self.lines_coming_from_right = []
@@ -146,15 +139,13 @@ class BattleHUDButtonLayout(UIBoxLayout):
         self.lines_coming_from_right.pop(2)
 
     def on_update(self, dt):
-        self.delta_time = dt
-        self.trigger_render()
+        self.delta_time = min(dt, 1/60)
+        if self.is_focused:
+            self.trigger_render()
 
     def do_render(self, surface: Surface):
+        self.with_background(color=arcade.color.BLACK)
         super().do_render(surface)
-        arcade.draw_rect_filled(
-            rect=self.rect,
-            color=[0, 0, 0]
-        )
 
         arcade.draw_line(0, 0, 0, self.height,
                          [self.character_color_r, self.character_color_g, self.character_color_b, 255], 8)
@@ -162,40 +153,41 @@ class BattleHUDButtonLayout(UIBoxLayout):
         arcade.draw_line(self.width, 0, self.width, self.height,
                          [self.character_color_r, self.character_color_g, self.character_color_b, 255], 8)
 
-        for line in self.lines_coming_from_left:
-            # Check if the line is older than the max line lifetime
-            if line[6] >= self.line_lifetime:
-                # Set line back to initial conditions
-                line[0] = 0
-                line[2] = 0
-                line[4][3] = 255
-                line[6] -= self.line_lifetime
-            else:
-                # Progress the line animation
-                line[6] += self.delta_time
-                distance = (line[6] ** 2) * (self.width * self.velocity_magnifier)
-                line[0] = distance
-                line[2] = distance
-                line[4][3] = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
-            arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
-            # print("start x = " + str(line[0]) + ", end x = " + str(line[2]) + ", time = " + str(line[6]))
+        if self.is_focused:
+            for line in self.lines_coming_from_left:
+                # Check if the line is older than the max line lifetime
+                if line[6] >= self.line_lifetime:
+                    # Set line back to initial conditions
+                    line[0] = 0
+                    line[2] = 0
+                    line[4][3] = 255
+                    line[6] -= self.line_lifetime
+                else:
+                    # Progress the line animation
+                    line[6] += self.delta_time
+                    distance = (line[6] ** 2) * (self.width * self.velocity_magnifier)
+                    line[0] = distance
+                    line[2] = distance
+                    line[4][3] = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
+                arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
+                # print("start x = " + str(line[0]) + ", end x = " + str(line[2]) + ", time = " + str(line[6]))
 
-        for line in self.lines_coming_from_right:
-            # Check if the line is older than the max line lifetime
-            if line[6] >= self.line_lifetime:
-                # Set line back to initial conditions
-                line[0] = self.width
-                line[2] = self.width
-                line[4][3] = 255
-                line[6] -= self.line_lifetime
-            else:
-                # Progress the line animation
-                line[6] += self.delta_time
-                distance = self.width - ((line[6] ** 2) * (self.width * self.velocity_magnifier))
-                line[0] = distance
-                line[2] = distance
-                line[4][3] = min(255, int(max(255 - ((self.width - distance) * self.alpha_loss_magnifier), 0)))
-            arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
+            for line in self.lines_coming_from_right:
+                # Check if the line is older than the max line lifetime
+                if line[6] >= self.line_lifetime:
+                    # Set line back to initial conditions
+                    line[0] = self.width
+                    line[2] = self.width
+                    line[4][3] = 255
+                    line[6] -= self.line_lifetime
+                else:
+                    # Progress the line animation
+                    line[6] += self.delta_time
+                    distance = self.width - ((line[6] ** 2) * (self.width * self.velocity_magnifier))
+                    line[0] = distance
+                    line[2] = distance
+                    line[4][3] = min(255, int(max(255 - ((self.width - distance) * self.alpha_loss_magnifier), 0)))
+                arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
 
 
 class BattleHUDCharacterHPText(UILabel):
@@ -381,12 +373,13 @@ class BattleHUDCharacterName(UILabel):
     """
     def __init__(self, character: player_character.PlayerCharacter):
         super().__init__(
-            width=200,
-            height=80,
+            width=108,
+            height=48,
             text=character.name.upper(),
             font_name="""Roarin'""",
             font_size=48,
-            align="center"
+            align="left",
+            size_hint=None
         )
         self.focus_mode = FocusMode(0)
 
@@ -405,8 +398,8 @@ class BattleHUDCharacterIconAndName(UIBoxLayout):
                 BattleHUDCharacterName(character)
             ],
             vertical=False,
-            space_between=18,
-            align="center"
+            space_between=16,
+            align="left"
         )
         self.focus_mode = FocusMode(0)
 
@@ -454,20 +447,19 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_button_layout = BattleHUDButtonLayout(character)
 
         super().__init__(
-            children=[],
+            children=[self.battle_hud_button_layout,
+                      self.battle_hud_character_data],
             x=0,
             width=420,
             height=180
         )
 
-        self.add(self.battle_hud_button_layout)
-        self.add(self.battle_hud_character_data)
-
         self.focus_mode = FocusMode(0)
-        #self.with_border(width=3, color=character.battle_ui_color)
-        #self.with_padding(top=2, right=8, bottom=0, left=8)
 
         self.is_focused = is_focused
+
+        battle_hud_button_layout = self.children[0]
+        battle_hud_button_layout.is_focused = self.is_focused
 
         self.character_display_transition_time = 0
         self.hud_lowered_center_y = self.battle_hud_character_data.center_y
@@ -478,8 +470,18 @@ class BattleHUDCharacterClamshell(UILayout):
 
         self.is_instantiated = False
 
-    def on_update(self, dt):
+        self.is_character_display_rising = False
+        self.is_character_display_lowering = False
         self.trigger_render()
+
+    def on_update(self, dt):
+        if self.is_character_display_rising or self.is_character_display_lowering:
+            self.trigger_render()
+
+        if self.is_character_display_rising:
+            self.move_up_character_display_slightly(dt)
+        elif self.is_character_display_lowering:
+            self.move_down_character_display_slightly(dt)
 
     def do_layout(self):
         super().do_layout()
@@ -500,12 +502,6 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_button_layout.center_x = rect.center_x
         self.battle_hud_button_layout.center_y = rect.center_y
 
-
-    """
-    def do_render_focus(self, surface: Surface):
-        self.children[0].visible = False
-    """
-
     def move_up_character_display_slightly(self, dt):
         self.character_display_transition_time += dt
         new_hud_center_y = self.hud_lowered_center_y + (-self.distance_hud_raised * (self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) * ((self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) - 2))
@@ -513,9 +509,11 @@ class BattleHUDCharacterClamshell(UILayout):
         if self.character_display_transition_time > self.hud_raise_animation_time:
             self.battle_hud_character_data.center_y = self.hud_raised_center_y
             self.character_display_transition_time = 0
-            pyglet.clock.unschedule(self.move_up_character_display_slightly)
+            self.is_character_display_rising = False
 
     def move_up_character_data_display(self):
+        self.character_display_transition_time = 0
+
         if self.is_focused:
             self.hud_raised_center_y = self.battle_hud_character_data.center_y
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
@@ -523,13 +521,18 @@ class BattleHUDCharacterClamshell(UILayout):
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y
             self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
 
-        pyglet.clock.schedule_interval(self.move_up_character_display_slightly, 1/60)
+        self.is_character_display_rising = True
+        self.is_character_display_lowering = False
 
     def focus(self):
         """ Moves the character data display up so the buttons can be shown. """
+        if self.is_focused:
+            return
         self.move_up_character_data_display()
         self.is_focused = True
         self.battle_hud_character_data.with_border(width=3, color=self.player_character.battle_ui_color)
+        battle_hud_button_layout = self.children[0]
+        battle_hud_button_layout.is_focused = True
 
     def move_down_character_display_slightly(self, dt):
         self.character_display_transition_time += dt
@@ -538,9 +541,11 @@ class BattleHUDCharacterClamshell(UILayout):
         if self.character_display_transition_time > self.hud_raise_animation_time:
             self.battle_hud_character_data.center_y = self.hud_lowered_center_y
             self.character_display_transition_time = 0
-            pyglet.clock.unschedule(self.move_down_character_display_slightly)
+            self.is_character_display_lowering = False
 
     def move_down_character_data_display(self):
+        self.character_display_transition_time = 0
+
         if self.is_focused:
             self.hud_raised_center_y = self.battle_hud_character_data.center_y
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
@@ -548,13 +553,18 @@ class BattleHUDCharacterClamshell(UILayout):
             self.hud_lowered_center_y = self.battle_hud_character_data.center_y
             self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
 
-        pyglet.clock.schedule_interval(self.move_down_character_display_slightly, 1/60)
+        self.is_character_display_lowering = True
+        self.is_character_display_rising = False
 
     def unfocus(self):
         """ Moves the character data display up so the buttons can be shown. """
+        if not self.is_focused:
+            return
         self.move_down_character_data_display()
         self.is_focused = False
         self.battle_hud_character_data.with_border(width=0, color=self.player_character.battle_ui_color)
+        battle_hud_button_layout = self.children[0]
+        battle_hud_button_layout.is_focused = False
 
 
 class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
@@ -1107,3 +1117,241 @@ class EnemySelect(UIBoxLayout):
         self.height = int(settings.WINDOW_HEIGHT / 4)
 
         super().do_layout()
+
+
+"""
+class TPMeterGauge(UIImage):
+    def __init__(self):
+        super().__init__(
+            width=25,
+            height=196,
+            texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter.png")
+        )
+"""
+
+"""
+class TPMeterMeter(UIWidget):
+    
+    #Based on the example progress bar on arcade's website.
+    #Link: https://api.arcade.academy/en/stable/programming_guide/gui/own_widgets.html#example-progressbar
+    
+
+    value = Property(0.0)
+
+    def __init__(self):
+        super().__init__(
+            width=50,
+            height=392,
+            size_hint=None
+        )
+        self.focus_mode = FocusMode(0)
+
+        self.with_background(color=arcade.color.DARK_RED)
+
+        self.tp = 40
+        self.max_tp = 100
+
+        self.value = self.tp / self.max_tp
+        self.color = arcade.color.NEON_CARROT
+
+        # trigger a render when the value changes
+        bind(self, "value", self.trigger_render)
+
+    def do_render(self, surface: arcade.gui.Surface) -> None:
+        self.prepare_render(surface)
+
+        self.with_background(color=arcade.color.DARK_RED)
+
+        arcade.draw_lbwh_rectangle_filled(
+            0,
+            0,
+            self.content_width,
+            self.content_height * self.value,
+            self.color,
+        )
+
+
+class TPMeterFrame(UIImage):
+    def __init__(self):
+        super().__init__(
+            width=50,
+            height=392,
+            texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter_frame.png")
+        )
+
+
+class TPMeter(UILayout):
+    def __init__(self):
+        super().__init__(
+            x=settings.WINDOW_HEIGHT / 2,
+            y=40,
+            width=50,
+            height=392,
+            children=[
+                TPMeterMeter(),
+                TPMeterFrame()
+            ]
+        )
+
+    def do_layout(self):
+        super().do_layout()
+        for widget in self.children:
+            widget.center_x = 65
+            widget.center_y = settings.WINDOW_HEIGHT / 2 + 192
+"""
+
+
+class TPMeterImage:
+    """
+    Dynamically renders a TP meter texture based on a PIL image.
+    """
+
+    def __init__(self):
+        self.width = 50
+        self.height = 392
+
+        self.image = Image.new(
+            mode="RGBA",
+            size=(self.width, self.height)
+        )
+
+        self.tp = 0
+        self.max_tp = 100
+
+        # Used for animating the bar.
+        self.visual_tp = 0
+
+        self.tp_meter_height = int(self.height * (self.tp / self.max_tp))
+
+        self.tp_meter_spritesheet = arcade.load_spritesheet("assets/textures/gui_graphics/battle/tp_meter/tp_meter_spritesheet.png")
+
+        self.tp_meter_background = self.tp_meter_spritesheet.get_image(arcade.LRBT(left=0, right=48, bottom=0, top=392), y_up=True)
+        self.tp_meter = None
+
+        self.render()
+
+    def render(self):
+        self.tp_meter_height = int(self.height * (self.visual_tp / self.max_tp))
+        self.tp_meter = self.tp_meter_spritesheet.get_image(arcade.LRBT(left=100, right=147, bottom=0, top=self.tp_meter_height), y_up=True)
+
+        self.image.paste(self.tp_meter_background)
+        self.image.paste(self.tp_meter, (0, self.height - self.tp_meter_height), self.tp_meter)
+
+    def get_image(self):
+        return self.image
+
+
+class TPMeterLabel(UIImage):
+    def __init__(self):
+        super().__init__(
+            width=44,
+            height=88,
+            texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter_label.png"),
+        )
+
+
+class TPMeterNumber(UILabel):
+    def __init__(self):
+        super().__init__(
+            width=44,
+            height=40,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text="0"
+        )
+
+        arcade.enable_timings()
+
+    def do_render(self, surface: Surface):
+        super().do_render(surface)
+        self.text = str(int(arcade.get_fps()))
+
+
+class TPMeterPercentLabel(UILabel):
+    def __init__(self):
+        super().__init__(
+            width=44,
+            height=48,
+            font_name="8bitoperator JVE",
+            font_size=40,
+            text="%"
+        )
+
+
+class TPMeterTextContainer(UIBoxLayout):
+    def __init__(self):
+        super().__init__(
+            vertical=True,
+            width=60,
+            children=[
+                TPMeterLabel(),
+                TPMeterNumber(),
+                TPMeterPercentLabel()
+            ]
+        )
+
+
+class TPMeterGraphic(UIImage):
+    def __init__(self):
+        self.tp_meter_image = TPMeterImage()
+
+        super().__init__(
+            width=50,
+            height=392,
+            texture=arcade.Texture(self.tp_meter_image.get_image())
+        )
+
+        self.is_updating = False
+
+        self.elapsed_time = 0.0
+        self.starting_tp = 0.0
+        self.ending_tp = 0.0
+        self.animation_duration = 0.5
+
+    def get_image_object(self):
+        return self.tp_meter_image
+
+    def update(self, tp: float = 0.0):
+        self.elapsed_time = 0.0
+        if tp > 1.0 or tp < -1.0:
+            self.tp_meter_image.visual_tp = self.tp_meter_image.tp
+            self.tp_meter_image.tp = min(self.tp_meter_image.tp + tp, 100.0)
+            self.starting_tp = self.tp_meter_image.visual_tp
+            self.ending_tp = self.tp_meter_image.tp
+            self.is_updating = True
+        else:
+            self.tp_meter_image.tp = min(self.tp_meter_image.tp + tp, 100.0)
+            self.tp_meter_image.visual_tp = self.tp_meter_image.tp
+            self.tp_meter_image.render()
+
+    def on_update(self, delta_time):
+        if self.is_updating:
+            self.elapsed_time += delta_time
+            normalized_time = min(self.elapsed_time / self.animation_duration, 1.0)
+            eased_time = ease_out(normalized_time)
+            self.tp_meter_image.visual_tp = self.starting_tp + ((self.ending_tp - self.starting_tp) * eased_time)
+            self.tp_meter_image.render()
+            self.texture = arcade.Texture(self.tp_meter_image.get_image())
+            if self.elapsed_time >= self.animation_duration:
+                self.tp_meter_image.visual_tp = self.tp_meter_image.tp
+                self.is_updating = False
+                self.elapsed_time = 0
+
+
+class TPMeter(UIBoxLayout):
+    def __init__(self):
+        super().__init__(
+            x=40,
+            y=settings.WINDOW_HEIGHT / 2,
+            vertical=False,
+            space_between=4,
+            align="top",
+            children=[
+                TPMeterTextContainer(),
+                TPMeterGraphic()
+            ]
+        )
+
+    def update_tp_meter(self, tp: float = 0.0):
+        tp_meter = self.children[1]
+        tp_meter.update(tp)

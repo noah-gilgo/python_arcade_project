@@ -149,6 +149,7 @@ class Character(arcade.Sprite):
             )
             self.is_focused = True
             return self.focus_animation
+        return None
 
     def unfocus(self):
         """

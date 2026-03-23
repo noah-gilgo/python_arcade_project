@@ -21,6 +21,7 @@ class PlayerCharacter(character.Character):
         self.knows_magic = knows_magic
         self.magic = magic
         self.battle_ui_color = battle_ui_color
+        self.is_defending = False
 
         self._animations_by_state.update({
             "battle_idle": graphics_objects.SimpleLoopAnimation(
@@ -55,7 +56,7 @@ class PlayerCharacter(character.Character):
 
             "battle_defend": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_defend",
-                frame_duration=0.10,
+                frame_duration=0.06,
                 loop_animation=False
             ),
 
@@ -113,7 +114,7 @@ class PlayerCharacter(character.Character):
                 {
                     "battle_magic_ready": graphics_objects.SimpleLoopAnimation(
                         sprite_pack_path=self._sprite_pack_path + "/battle_magic_ready",
-                        frame_duration=0.10,
+                        frame_duration=0.15,
                         loop_animation=True
                     ),
 
@@ -126,3 +127,28 @@ class PlayerCharacter(character.Character):
             )
 
             self.spells = spells
+
+    def is_player_defending(self):
+        """
+        Returns whether or not the player is defending.
+        :return: A bool representing whether or not the player is defending.
+        """
+        return self.is_defending
+
+    def defend(self):
+        """
+        Sets the players state to a defending state.
+        :return: None
+        """
+        self.is_defending = True
+        if self._animations_by_state["battle_defend"]:
+            self.set_animation_state("battle_defend")
+
+    def undefend(self):
+        """
+        Returns the player from a defending state to an idle state.
+        :return: None
+        """
+        self.is_defending = False
+        if self._animations_by_state["battle_defend"]:
+            self.set_animation_state("battle_idle")

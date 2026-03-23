@@ -60,3 +60,9 @@ class SpellAction(Action):
         pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(self.targets, self.sprite_list, self.animation_list), 0.5)
         pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, self.targets, self.controller), 1.0)
         pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
+
+
+class ItemAction(Action):
+    def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
+        super().__init__(actor, targets, controller)
+        #TODO: build the rest of this out
