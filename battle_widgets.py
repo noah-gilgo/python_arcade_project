@@ -1102,103 +1102,12 @@ class EnemySelect(UIBoxLayout):
 
         self.with_background(color=arcade.color.BLACK)
 
-    """
-    def do_render(self, surface):
-        arcade.draw_rect_filled(
-            arcade.LBWH(0, 0, self.width, self.height + 32),
-            arcade.color.BLACK
-        )
-
-        super().do_render(surface)
-    """
 
     def do_layout(self):
         self.center_x = int(settings.WINDOW_WIDTH / 2)
         self.height = int(settings.WINDOW_HEIGHT / 4)
 
         super().do_layout()
-
-
-"""
-class TPMeterGauge(UIImage):
-    def __init__(self):
-        super().__init__(
-            width=25,
-            height=196,
-            texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter.png")
-        )
-"""
-
-"""
-class TPMeterMeter(UIWidget):
-    
-    #Based on the example progress bar on arcade's website.
-    #Link: https://api.arcade.academy/en/stable/programming_guide/gui/own_widgets.html#example-progressbar
-    
-
-    value = Property(0.0)
-
-    def __init__(self):
-        super().__init__(
-            width=50,
-            height=392,
-            size_hint=None
-        )
-        self.focus_mode = FocusMode(0)
-
-        self.with_background(color=arcade.color.DARK_RED)
-
-        self.tp = 40
-        self.max_tp = 100
-
-        self.value = self.tp / self.max_tp
-        self.color = arcade.color.NEON_CARROT
-
-        # trigger a render when the value changes
-        bind(self, "value", self.trigger_render)
-
-    def do_render(self, surface: arcade.gui.Surface) -> None:
-        self.prepare_render(surface)
-
-        self.with_background(color=arcade.color.DARK_RED)
-
-        arcade.draw_lbwh_rectangle_filled(
-            0,
-            0,
-            self.content_width,
-            self.content_height * self.value,
-            self.color,
-        )
-
-
-class TPMeterFrame(UIImage):
-    def __init__(self):
-        super().__init__(
-            width=50,
-            height=392,
-            texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter_frame.png")
-        )
-
-
-class TPMeter(UILayout):
-    def __init__(self):
-        super().__init__(
-            x=settings.WINDOW_HEIGHT / 2,
-            y=40,
-            width=50,
-            height=392,
-            children=[
-                TPMeterMeter(),
-                TPMeterFrame()
-            ]
-        )
-
-    def do_layout(self):
-        super().do_layout()
-        for widget in self.children:
-            widget.center_x = 65
-            widget.center_y = settings.WINDOW_HEIGHT / 2 + 192
-"""
 
 
 class TPMeterImage:

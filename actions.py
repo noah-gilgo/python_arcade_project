@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+import arcade.color
 import pyglet
 from arcade import SpriteList
 from arcade.gui import UIManager
@@ -7,6 +8,7 @@ from arcade.gui import UIManager
 import character
 import non_player_character
 import player_character
+from animations.common_animations import FadeInFadeOutColorAnimation
 from dialogue_box import TextBoxDialog
 from spells import Spell
 
@@ -21,9 +23,9 @@ class ActionType(Enum):
 
 
 class Action:
-    def __init__(self, actor: player_character.PlayerCharacter,
-                 targets: list[character.Character],
-                 controller):
+    def __init__(self, actor: player_character.PlayerCharacter = None,
+                 targets: list[character.Character] = None,
+                 controller = None):
         self.actor = actor
         self.targets = targets
         self.controller = controller
@@ -55,7 +57,7 @@ class SpellAction(Action):
         self.actor.set_animation_state("battle_magic")
         self.controller.battle_textbox.load_dialog(TextBoxDialog(
             text="* " + self.actor.name + " cast " + self.spell.name + "!",
-            rate_of_text=0.04
+            rate_of_text=0.03
         ))
         pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(self.targets, self.sprite_list, self.animation_list), 0.5)
         pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, self.targets, self.controller), 1.0)
@@ -66,3 +68,35 @@ class ItemAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
         super().__init__(actor, targets, controller)
         #TODO: build the rest of this out
+
+
+class SpareAction(Action):
+    def __init__(self, actor: player_character.PlayerCharacter, target: non_player_character.NonPlayerCharacter, controller):
+        super().__init__(actor=actor, controller=controller)
+        self.target = target
+
+    def execute(self):
+        # Makes the provided actor attempt to spare the focused enemy.
+        self.actor.set_animation_state("battle_spare")
+        spare_message = "* " + self.actor.name + " spared " + self.target.name + "! "
+
+        if self.target.mercy < 100:
+            # Append a message telling the user that the enemy wasn't spared to the spare message.
+            spare_message += "\nBut it's name wasn't YELLOW..."
+            fade_in_out_animation = FadeInFadeOutColorAnimation(sprite=self.actor,
+                                                                color=arcade.color.YELLOW,
+                                                                max_alpha=128,
+                                                                total_duration=0.4)
+            pyglet.clock.schedule_once(
+                lambda dt: self.controller.effects_list.append(fade_in_out_animation), 0.5)
+            pyglet.clock.schedule_once(
+                lambda dt: self.controller.effects_sprite_list.append(fade_in_out_animation.filter_sprite), 0.5)
+        else:
+            pass
+
+        self.controller.battle_textbox.load_dialog(TextBoxDialog(
+            text=spare_message,
+            rate_of_text=0.03
+        ))
+
+        pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)

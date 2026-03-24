@@ -21,7 +21,7 @@ class Spell:
                  is_pacifying_spell: bool = False, is_aoe_spell: bool = False, animation: MultiSpriteAnimation = None,
                  magic_color: Color = arcade.color.WHITE):
         self.name = name  # Name of the spell
-        self.description = description
+        self.description = description  # Description of the spell
         self.tp_cost = tp_cost  # TP cost of the spell
         self.element_id = element_id  # elemental pair associated with the spell, if any
         self.base_health_change = base_health_change  # amount health changed by spell
@@ -29,12 +29,13 @@ class Spell:
         self.is_healing_spell = is_healing_spell  # True if the spell is healing
         self.is_pacifying_spell = is_pacifying_spell  # True if the spell is meant to pacify the target
         self.is_aoe_spell = is_aoe_spell  # True if the spell affects all targets on the targeted side
-        self.animation = animation
-        self.magic_color = magic_color
+        self.animation = animation  # The animation that plays when casting the spell.
+        self.magic_color = magic_color  # The color that the enemy flashes when hit with the spell.
 
     def affect_targets_with_spell(self, caster, targets, controller):
         """ Perform the calculations required after a spell is cast on a character. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
+        # TODO: Move all of the spell functions to the battle controller instead of using all these parameters, maybe
         for target in targets:
             damage_dealt = 0
             if self.is_friendly_spell:
