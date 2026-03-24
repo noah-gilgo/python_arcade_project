@@ -12,7 +12,7 @@ import items
 import non_player_character
 import player_character
 from actions import SpellAction
-from animations.battle_animations import DamageDealtAnimation
+from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from focus_stack import FocusStackMember, FocusStack
@@ -352,8 +352,8 @@ class BattleController:
                 arcade.play_sound(self.hurt_sound)
 
 
-            damage_healed_animation = DamageDealtAnimation(
-                damage_amount=damage_healt,
+            damage_healed_animation = NumberBounceAnimation(
+                text=damage_healt,
                 color=damage_healed_color,
                 target=target
             )

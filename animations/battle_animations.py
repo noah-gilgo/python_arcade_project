@@ -6,10 +6,15 @@ from character import Character
 from graphics_objects import MultiSpriteAnimation, SingleSpriteAnimation
 
 
-class DamageDealtAnimation(SingleSpriteAnimation):
-    def __init__(self, damage_amount: int = 0, color: Color = arcade.color.WHITE, target: Character = None):
+class NumberBounceAnimation(SingleSpriteAnimation):
+    def __init__(self, text = "", color: Color = arcade.color.WHITE, target: Character = None):
+        if type(text) == str:
+            text_string = text
+        else:
+            text_string = str(text)
+
         text_sprite = arcade.create_text_sprite(
-            text=str(damage_amount),
+            text=text_string,
             color=color,
             font_size=24,
             font_name="Greater Determination DR Damage"

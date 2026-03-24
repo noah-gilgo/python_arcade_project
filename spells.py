@@ -7,7 +7,7 @@ from arcade.types import Color
 import character
 import default_data
 import non_player_character
-from animations.battle_animations import DamageDealtAnimation
+from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from character import Character
 from elemental_pairs import ElementalPair
@@ -63,8 +63,8 @@ class Spell:
                 int(caster.battle_ui_color.a)
             ])
 
-            damage_dealt_animation = DamageDealtAnimation(
-                damage_amount=damage_dealt,
+            damage_dealt_animation = NumberBounceAnimation(
+                text=damage_dealt,
                 color=damage_dealt_color,
                 target=target
             )

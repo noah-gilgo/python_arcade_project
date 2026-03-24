@@ -8,6 +8,7 @@ from arcade.gui import UIManager
 import character
 import non_player_character
 import player_character
+from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation
 from dialogue_box import TextBoxDialog
 from spells import Spell
@@ -79,19 +80,34 @@ class SpareAction(Action):
         # Makes the provided actor attempt to spare the focused enemy.
         self.actor.set_animation_state("battle_spare")
         spare_message = "* " + self.actor.name + " spared " + self.target.name + "! "
+        self.target.mercy = min(self.target.mercy + 10, 100)
 
         if self.target.mercy < 100:
             # Append a message telling the user that the enemy wasn't spared to the spare message.
             spare_message += "\nBut it's name wasn't YELLOW..."
-            fade_in_out_animation = FadeInFadeOutColorAnimation(sprite=self.actor,
-                                                                color=arcade.color.YELLOW,
-                                                                max_alpha=128,
-                                                                total_duration=0.4)
+            fade_in_out_animation = FadeInFadeOutColorAnimation(
+                sprite=self.actor,
+                color=arcade.color.YELLOW,
+                max_alpha=128,
+                total_duration=0.4
+            )
+
+            spare_percent_number_animation = NumberBounceAnimation(
+                text="+10%",
+                color=arcade.color.GOLD
+            )
+
+            pyglet.clock.schedule_once(
+                lambda dt: self.controller.effects_list.append(spare_percent_number_animation), 0.5)
+            pyglet.clock.schedule_once(
+                lambda dt: self.controller.effects_sprite_list.append(spare_percent_number_animation.sprite), 0.5)
+
             pyglet.clock.schedule_once(
                 lambda dt: self.controller.effects_list.append(fade_in_out_animation), 0.5)
             pyglet.clock.schedule_once(
                 lambda dt: self.controller.effects_sprite_list.append(fade_in_out_animation.filter_sprite), 0.5)
         else:
+            # TODO: Add the animations for sparing the enemy and removing them from the battle.
             pass
 
         self.controller.battle_textbox.load_dialog(TextBoxDialog(
