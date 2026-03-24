@@ -11,7 +11,7 @@ import character
 import items
 import non_player_character
 import player_character
-from actions import SpellAction
+from actions import SpellAction, SpareAction
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
@@ -359,6 +359,31 @@ class BattleController:
             )
             self.effects_list.append(damage_healed_animation)
 
+    def open_enemy_select_menu(self):
+        """
+        Opens the enemy select menu.
+        :return: None
+        """
+        enemy_list_full_layout = EnemySelect(self.enemies)
+        enemy_list_interactive_layout = enemy_list_full_layout.children[1]
+        self.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
+                                         self.state, 1)
+        new_focus_animation = self.focus_stack.get_highest_member().get_focused_widget().enemy.focus()
+        self.effects_list.append(new_focus_animation)
+        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+
+    def move_focus_between_enemies_in_enemy_select(self, previously_focused_widget, currently_focused_widget):
+        """
+        Used to animate the enemies being targeted in the enemy select screen.
+        :param previously_focused_widget: The previously focused enemy's row in the enemy select.
+        :param currently_focused_widget: The newly focused enemy's row in the enemy select.
+        :return:
+        """
+        new_focus_animation = currently_focused_widget.enemy.focus()
+        self.effects_list.append(new_focus_animation)
+        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        previously_focused_widget.enemy.unfocus()
+
 
 class Command:
     """ The default command object. Represents the Command design pattern. """
@@ -400,7 +425,7 @@ class SelectCommand(Command):
                         return
                     case 3:  # user selects the SPARE button
                         self.controller.state = BattleState.PLAYER_SPARE_SELECT
-                        # TODO: include code to open the SPARE menu
+                        self.controller.open_enemy_select_menu()
                         return
                     case 4:  # user selects the DEFEND button
                         self.controller.add_tp_to_meter(16.0)
@@ -424,17 +449,10 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_MAGIC_SELECT:
-                # TODO: animate the player character, queue the act
                 self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
                 spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 self.controller.tp_meter.update_tp_meter(-spell.tp_cost)
-                enemy_list_full_layout = EnemySelect(self.controller.enemies)
-                enemy_list_interactive_layout = enemy_list_full_layout.children[1]
-                self.controller.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
-                                                 self.controller.state, 1)
-                new_focus_animation = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy.focus()
-                self.controller.effects_list.append(new_focus_animation)
-                self.controller.effects_sprite_list.append(new_focus_animation.filter_sprite)
+                self.controller.open_enemy_select_menu()
                 self.controller.menu_select_sound.play()
                 return
 
@@ -464,7 +482,24 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_SPARE_SELECT:
-                # TODO: select the focused enemy, animate the player character, queue the act
+                # animate the player character, queue the act
+                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                selected_target_enemy.unfocus()
+
+                self.controller.focus_stack.pop()
+
+                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                current_player_character.set_animation_state("battle_spare_ready")
+
+                self.controller.actions_queue.append(
+                    SpareAction(
+                        actor=current_player_character,
+                        target=selected_target_enemy,
+                        controller=self.controller
+                    )
+                )
+
+                self.controller.move_to_next_player_card()
                 return
 
 
@@ -488,6 +523,10 @@ class CancelCommand(Command):
                 self.backup_out_of_focus_stack()
                 spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 self.controller.tp_meter.update_tp_meter(spell.tp_cost)
+            case BattleState.PLAYER_SPARE_SELECT:
+                focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                focused_enemy.unfocus()
+                self.backup_out_of_focus_stack()
 
     def backup_out_of_focus_stack(self):
         """
@@ -539,10 +578,11 @@ class UpCommand(Command):
                         self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                     )
                 case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
-                    new_focus_animation = currently_focused_widget.enemy.focus()
-                    self.controller.effects_list.append(new_focus_animation)
-                    self.controller.effects_sprite_list.append(new_focus_animation.filter_sprite)
-                    previously_focused_widget.enemy.unfocus()
+                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
+                                                                               currently_focused_widget)
+                case BattleState.PLAYER_SPARE_SELECT:
+                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
+                                                                               currently_focused_widget)
 
 
 class DownCommand(Command):
@@ -561,7 +601,8 @@ class DownCommand(Command):
                         self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                     )
                 case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
-                    new_focus_animation = currently_focused_widget.enemy.focus()
-                    self.controller.effects_list.append(new_focus_animation)
-                    self.controller.effects_sprite_list.append(new_focus_animation.filter_sprite)
-                    previously_focused_widget.enemy.unfocus()
+                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
+                                                                               currently_focused_widget)
+                case BattleState.PLAYER_SPARE_SELECT:
+                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
+                                                                               currently_focused_widget)

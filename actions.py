@@ -84,15 +84,16 @@ class SpareAction(Action):
 
         if self.target.mercy < 100:
             # Append a message telling the user that the enemy wasn't spared to the spare message.
-            spare_message += "\nBut it's name wasn't YELLOW..."
+            spare_message += "\n    But it's name wasn't YELLOW..."
             fade_in_out_animation = FadeInFadeOutColorAnimation(
-                sprite=self.actor,
+                sprite=self.target,
                 color=arcade.color.YELLOW,
                 max_alpha=128,
-                total_duration=0.4
+                total_duration=0.6
             )
 
             spare_percent_number_animation = NumberBounceAnimation(
+                target=self.target,
                 text="+10%",
                 color=arcade.color.GOLD
             )
