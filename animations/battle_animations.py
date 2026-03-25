@@ -1,3 +1,5 @@
+import random
+
 import arcade
 from arcade import Sprite
 from arcade.types import Color
@@ -89,6 +91,33 @@ class EnemySparedAnimation(SingleSpriteAnimation):
             total_duration=total_duration
         )
 
+        self.spare_particle_textures = [
+            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img.png"),
+            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_1.png"),
+            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_2.png"),
+            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_3.png"),
+            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_4.png"),
+            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_5.png")
+        ]
+
+        self.spare_particle_sprite_list = []
+
+        self.spare_particle_min_x = int(self.sprite.center_x - 60)
+        self.spare_particle_max_x = int(self.sprite.center_x + 60)
+
+        self.spare_particle_min_y = int(self.sprite.center_y - 60)
+        self.spare_particle_max_y = int(self.sprite.center_y + 60)
+
+        for i in range(10):
+            sprite = arcade.Sprite()
+            sprite.textures = self.spare_particle_textures
+            sprite.set_texture(0)
+            sprite.center_x = random.randint(self.spare_particle_min_x, self.spare_particle_max_x)
+            sprite.center_y = random.randint(self.spare_particle_min_y, self.spare_particle_max_y)
+            sprite.scale = random.randint(3, 6)
+            sprite.visible = False
+            self.spare_particle_sprite_list.append(sprite)
+
         self.fading_sprite = arcade.Sprite()
         self.fading_sprite.texture = make_texture_solid_color(self.sprite.texture, arcade.color.WHITE)
         self.fading_sprite.scale = self.sprite.scale
@@ -139,6 +168,10 @@ class EnemySparedAnimation(SingleSpriteAnimation):
                 # Set the extra fading sprite to be visible
                 self.extra_fading_sprite.visible = True
 
+                # Set the particles to be visible
+                for particle_sprite in self.spare_particle_sprite_list:
+                    particle_sprite.visible = True
+
             # Animate both the fading sprites to fade away
             self.time_after_inflection_point += delta_time
 
@@ -147,10 +180,21 @@ class EnemySparedAnimation(SingleSpriteAnimation):
 
             self.fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 255)
             self.extra_fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 128)
+
+            # Animate the particle sprites to rotate, drift to the right, and change textures
+            texture_index = int(self.time_after_inflection_point * 5) % len(self.spare_particle_sprite_list)
+            for particle_sprite in self.spare_particle_sprite_list:
+                particle_sprite.set_texture(texture_index)
+                particle_sprite.turn_right(delta_time * 100)
+                particle_sprite.center_x += self.time_after_inflection_point * (settings.WINDOW_WIDTH / 84)
+
+                particle_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 255)
         else:
             self.sprite.kill()
             self.fading_sprite.kill()
             self.extra_fading_sprite.kill()
+            for particle_sprite in self.spare_particle_sprite_list:
+                particle_sprite.kill()
             self.terminate_animation()
 
     def get_sprites(self):
@@ -158,4 +202,4 @@ class EnemySparedAnimation(SingleSpriteAnimation):
         Get the sprites used by this animation.
         :return: Both of the fading out sprites used by this animation.
         """
-        return [self.fading_sprite, self.extra_fading_sprite]
+        return [self.fading_sprite, self.extra_fading_sprite] + self.spare_particle_sprite_list
