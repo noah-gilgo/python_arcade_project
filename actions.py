@@ -123,14 +123,14 @@ class SpareAction(Action):
             spare_animation_sprites = spare_animation.get_sprites()
 
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.effects_list.append(spare_animation), 0.2)
+                lambda dt: self.controller.effects_list.append(spare_animation), 0.5)
             for spare_animation_sprite in spare_animation_sprites:
                 pyglet.clock.schedule_once(
-                    lambda dt, sprite=spare_animation_sprite: self.controller.effects_sprite_list.append(sprite), 0.2)
+                    lambda dt, sprite=spare_animation_sprite: self.controller.effects_sprite_list.append(sprite), 0.5)
 
             # Play the spare sound.
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.spare_sound.play(), 0.3)
+                lambda dt: self.controller.spare_sound.play(), 0.5)
 
             # Remove the enemy from the battle.
             self.controller.enemies.remove(self.target)

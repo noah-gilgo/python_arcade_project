@@ -142,8 +142,8 @@ class EnemySparedAnimation(SingleSpriteAnimation):
             # Animate both the fading sprites to fade away
             self.time_after_inflection_point += delta_time
 
-            self.fading_sprite.center_x += delta_time * 128
-            self.extra_fading_sprite.center_x += delta_time * 256
+            self.fading_sprite.center_x += delta_time * (settings.WINDOW_WIDTH / 12)
+            self.extra_fading_sprite.center_x += delta_time * (settings.WINDOW_WIDTH / 6)
 
             self.fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 255)
             self.extra_fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 128)
