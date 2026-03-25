@@ -102,11 +102,13 @@ class EnemySparedAnimation(SingleSpriteAnimation):
 
         self.spare_particle_sprite_list = []
 
-        self.spare_particle_min_x = int(self.sprite.center_x - (self.sprite.width / 1.8))
-        self.spare_particle_max_x = int(self.sprite.center_x + (self.sprite.width / 1.8))
+        self.spare_particle_distribution = self.sprite.width if self.sprite.width > self.sprite.height else self.sprite.height
 
-        self.spare_particle_min_y = int(self.sprite.center_y - (self.sprite.height / 1.8))
-        self.spare_particle_max_y = int(self.sprite.center_y + (self.sprite.height / 1.8))
+        self.spare_particle_min_x = int(self.sprite.center_x - (self.spare_particle_distribution / 1.8))
+        self.spare_particle_max_x = int(self.sprite.center_x + (self.spare_particle_distribution / 1.8))
+
+        self.spare_particle_min_y = int(self.sprite.center_y - (self.spare_particle_distribution / 1.8))
+        self.spare_particle_max_y = int(self.sprite.center_y + (self.spare_particle_distribution / 1.8))
 
         for i in range(10):
             sprite = arcade.Sprite()
