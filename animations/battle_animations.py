@@ -48,31 +48,33 @@ class NumberBounceAnimation(SingleSpriteAnimation):
                 self.sprite.scale_x = max(2.0 - (self.time * 25), 0.9)
             if self.sprite.scale_y < 0.9:
                 self.sprite.scale_y = min(self.time * 9, 0.9)
-                self.sprite.center_x += 5
+                self.sprite.center_x += 5 * (delta_time * settings.FRAMES_PER_SECOND)
                 return
 
         # Translate the sprite based on provided coordinates.
         if self.sprite.scale_y == 0.9 and self.time < 2.0:
-            self.sprite.center_x += max(7 - (self.time_after_initial_slide * 30), 0)
+            horizontal_velocity = max(420 - (self.time_after_initial_slide * 30 * settings.FRAMES_PER_SECOND), 0)
+            self.sprite.center_x += horizontal_velocity * delta_time
             if self.number_has_not_bounced:
                 if self.sprite.center_y > self.floor and self.number_has_not_bounced:
-                    self.sprite.center_y += (10 - (self.time * 50))
+                    vertical_velocity = (10 - (self.time * 50)) * settings.FRAMES_PER_SECOND
+                    self.sprite.center_y += vertical_velocity * delta_time
                 else:
                     self.number_has_not_bounced = False
             else:
                 if self.number_has_not_bounced_again:
                     self.time_after_bounce += delta_time
-                    vertical_velocity = (5 - (self.time_after_bounce * 40))
-                    self.sprite.center_y += vertical_velocity
+                    vertical_velocity = (5 - (self.time_after_bounce * 40)) * settings.FRAMES_PER_SECOND
+                    self.sprite.center_y += vertical_velocity * delta_time
                     if self.sprite.center_y < self.floor and vertical_velocity < 0:
                         self.number_has_not_bounced_again = False
             self.time_after_initial_slide += delta_time
 
         if self.time >= 1.3:
             if self.sprite.alpha > 0:
-                self.sprite.scale_y += 0.03
-                self.sprite.alpha -= 12
-                self.sprite.center_y += 3
+                self.sprite.scale_y += 1.8 * delta_time
+                self.sprite.alpha -= 720 * delta_time
+                self.sprite.center_y += 180 * delta_time
 
         if self.time > self.total_duration:
             self.sprite.kill()

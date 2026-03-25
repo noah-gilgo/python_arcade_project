@@ -99,9 +99,9 @@ class SpareAction(Action):
             )
 
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.effects_list.append(spare_percent_number_animation), 0.5)
+                lambda dt: self.controller.effects_list.append(spare_percent_number_animation), 0.55)
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.effects_sprite_list.append(spare_percent_number_animation.sprite), 0.5)
+                lambda dt: self.controller.effects_sprite_list.append(spare_percent_number_animation.sprite), 0.55)
 
             pyglet.clock.schedule_once(
                 lambda dt: self.controller.effects_list.append(fade_in_out_animation), 0.5)
