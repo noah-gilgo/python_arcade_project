@@ -102,11 +102,11 @@ class EnemySparedAnimation(SingleSpriteAnimation):
 
         self.spare_particle_sprite_list = []
 
-        self.spare_particle_min_x = int(self.sprite.center_x - 60)
-        self.spare_particle_max_x = int(self.sprite.center_x + 60)
+        self.spare_particle_min_x = int(self.sprite.center_x - (self.sprite.width / 1.8))
+        self.spare_particle_max_x = int(self.sprite.center_x + (self.sprite.width / 1.8))
 
-        self.spare_particle_min_y = int(self.sprite.center_y - 60)
-        self.spare_particle_max_y = int(self.sprite.center_y + 60)
+        self.spare_particle_min_y = int(self.sprite.center_y - (self.sprite.height / 1.8))
+        self.spare_particle_max_y = int(self.sprite.center_y + (self.sprite.height / 1.8))
 
         for i in range(10):
             sprite = arcade.Sprite()
@@ -114,7 +114,7 @@ class EnemySparedAnimation(SingleSpriteAnimation):
             sprite.set_texture(0)
             sprite.center_x = random.randint(self.spare_particle_min_x, self.spare_particle_max_x)
             sprite.center_y = random.randint(self.spare_particle_min_y, self.spare_particle_max_y)
-            sprite.scale = random.randint(3, 6)
+            sprite.scale = random.randint(3, 5)
             sprite.visible = False
             self.spare_particle_sprite_list.append(sprite)
 
@@ -136,6 +136,11 @@ class EnemySparedAnimation(SingleSpriteAnimation):
 
         # Used to track whether or not the base enemy texture has changed.
         self._cached_base_texture = self.sprite.texture
+
+        # Miscellaneous variables so that on_update isn't repeating redundant calculations
+        self.fading_sprite_translation_factor = settings.WINDOW_WIDTH / 12
+        self.extra_fading_sprite_translation_factor = settings.WINDOW_WIDTH / 12
+        self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 84
 
     def update_animation(self, delta_time):
         # This is probably not the most optimal way to do this.
@@ -175,8 +180,8 @@ class EnemySparedAnimation(SingleSpriteAnimation):
             # Animate both the fading sprites to fade away
             self.time_after_inflection_point += delta_time
 
-            self.fading_sprite.center_x += delta_time * (settings.WINDOW_WIDTH / 12)
-            self.extra_fading_sprite.center_x += delta_time * (settings.WINDOW_WIDTH / 6)
+            self.fading_sprite.center_x += delta_time * self.fading_sprite_translation_factor
+            self.extra_fading_sprite.center_x += delta_time * self.extra_fading_sprite_translation_factor
 
             self.fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 255)
             self.extra_fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 128)
@@ -186,7 +191,7 @@ class EnemySparedAnimation(SingleSpriteAnimation):
             for particle_sprite in self.spare_particle_sprite_list:
                 particle_sprite.set_texture(texture_index)
                 particle_sprite.turn_right(delta_time * 100)
-                particle_sprite.center_x += self.time_after_inflection_point * (settings.WINDOW_WIDTH / 84)
+                particle_sprite.center_x += self.time_after_inflection_point * self.particle_sprite_translation_factor
 
                 particle_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 255)
         else:
