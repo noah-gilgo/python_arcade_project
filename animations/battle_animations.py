@@ -139,7 +139,7 @@ class EnemySparedAnimation(SingleSpriteAnimation):
 
         # Miscellaneous variables so that on_update isn't repeating redundant calculations
         self.fading_sprite_translation_factor = settings.WINDOW_WIDTH / 12
-        self.extra_fading_sprite_translation_factor = settings.WINDOW_WIDTH / 12
+        self.extra_fading_sprite_translation_factor = settings.WINDOW_WIDTH / 6
         self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 84
 
     def update_animation(self, delta_time):
@@ -187,7 +187,7 @@ class EnemySparedAnimation(SingleSpriteAnimation):
             self.extra_fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 128)
 
             # Animate the particle sprites to rotate, drift to the right, and change textures
-            texture_index = int(self.time_after_inflection_point * 5) % len(self.spare_particle_sprite_list)
+            texture_index = int(self.time_after_inflection_point * 6) % len(self.spare_particle_sprite_list)
             for particle_sprite in self.spare_particle_sprite_list:
                 particle_sprite.set_texture(texture_index)
                 particle_sprite.turn_right(delta_time * 100)
