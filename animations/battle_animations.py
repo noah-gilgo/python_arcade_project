@@ -1,8 +1,10 @@
 import arcade
+from arcade import Sprite
 from arcade.types import Color
 
 import settings
 from character import Character
+from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, SingleSpriteAnimation
 
 
@@ -78,3 +80,82 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         if self.time > self.total_duration:
             self.sprite.kill()
+
+
+class EnemySparedAnimation(SingleSpriteAnimation):
+    def __init__(self, target: Sprite, total_duration: float = 1.0):
+        super().__init__(
+            sprite=target,
+            total_duration=total_duration
+        )
+
+        self.fading_sprite = arcade.Sprite()
+        self.fading_sprite.texture = make_texture_solid_color(self.sprite.texture, arcade.color.WHITE)
+        self.fading_sprite.scale = self.sprite.scale
+        self.fading_sprite.color = arcade.color.WHITE
+        self.fading_sprite.alpha = 0
+        self.fading_sprite.center_x = self.sprite.center_x
+        self.fading_sprite.center_y = self.sprite.center_y
+
+        self.extra_fading_sprite = arcade.Sprite()
+        self.extra_fading_sprite.visible = False
+
+        self.inflection_point = self.total_duration / 4
+        self.inflection_point_reached = False
+        self.time_after_inflection_point = 0.0
+        self.duration_after_inflection_point = self.total_duration - self.inflection_point
+
+        # Used to track whether or not the base enemy texture has changed.
+        self._cached_base_texture = self.sprite.texture
+
+    def update_animation(self, delta_time):
+        # This is probably not the most optimal way to do this.
+        if self.sprite.texture != self._cached_base_texture:
+            # Since most characters have an animated "spared" state, change the animation sprite textures every time the
+            # character sprite changes.
+            self.fading_sprite.texture = make_texture_solid_color(self.sprite.texture)
+            self.extra_fading_sprite.texture = make_texture_solid_color(self.sprite.texture, arcade.color.WHITE)
+            self._cached_base_texture = self.sprite.texture
+        self.time += delta_time
+
+        if self.time < self.inflection_point:
+            self.fading_sprite.alpha = int((self.time / self.inflection_point) * 255)
+        elif self.inflection_point <= self.time < self.total_duration:
+            if not self.inflection_point_reached:
+                # Intialize self.extra_fading_sprite
+                self.extra_fading_sprite.texture = make_texture_solid_color(self.sprite.texture, arcade.color.WHITE)
+                self.extra_fading_sprite.scale = self.sprite.scale
+                self.extra_fading_sprite.color = arcade.color.WHITE
+                self.extra_fading_sprite.alpha = 128
+                self.extra_fading_sprite.center_x = self.sprite.center_x
+                self.extra_fading_sprite.center_y = self.sprite.center_y
+
+                # Flag inflection point reached
+                self.inflection_point_reached = True
+
+                # Set the character sprite to be invisible
+                self.sprite.visible = False
+
+                # Set the extra fading sprite to be visible
+                self.extra_fading_sprite.visible = True
+
+            # Animate both the fading sprites to fade away
+            self.time_after_inflection_point += delta_time
+
+            self.fading_sprite.center_x += delta_time * 128
+            self.extra_fading_sprite.center_x += delta_time * 256
+
+            self.fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 255)
+            self.extra_fading_sprite.alpha = int((1 - (self.time_after_inflection_point / self.duration_after_inflection_point)) * 128)
+        else:
+            self.sprite.kill()
+            self.fading_sprite.kill()
+            self.extra_fading_sprite.kill()
+            self.terminate_animation()
+
+    def get_sprites(self):
+        """
+        Get the sprites used by this animation.
+        :return: Both of the fading out sprites used by this animation.
+        """
+        return [self.fading_sprite, self.extra_fading_sprite]

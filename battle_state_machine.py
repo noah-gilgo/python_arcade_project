@@ -204,6 +204,8 @@ class BattleController:
         self.menu_select_sound = arcade.load_sound("assets/audio/gui/snd_select.wav", False)
         self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
         self.heal_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_power.wav", False)
+        self.mercy_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_mercyadd.wav", False)
+        self.spare_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_spare.wav")
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = []
