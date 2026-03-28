@@ -307,6 +307,9 @@ class BattleController:
             if len(self.actions_queue) > 0:
                 self.actions_queue.pop()
             self.menu_move_sound.play()
+            self.battle_player_character_cards.children[
+                self.current_player_index].change_icon()
+
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, targets: list[PlayerCharacter]):
         """
