@@ -13,7 +13,7 @@ from arcade.types.color import Color
 import non_player_character
 import player_character
 import settings
-from graphics_methods import ease_out
+from graphics_methods import ease_out, make_texture_solid_color
 from spells import Spell
 
 
@@ -565,6 +565,18 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_character_data.with_border(width=0, color=self.player_character.battle_ui_color)
         battle_hud_button_layout = self.children[0]
         battle_hud_button_layout.is_focused = False
+
+    def change_icon(self, icon_path: str):
+        """
+        Changes the icon on the current clamshell to the one with the provided path.
+        Icons located at assets/textures/gui_graphics/action_icons.
+        :return: None
+        """
+        self._character_icon_path = icon_path
+        icon_color = self.player_character.battle_ui_icon_color
+
+        icon_texture = make_texture_solid_color(arcade.load_texture(icon_path), icon_color)
+        self.children[1].children[0].children[0].texture = icon_texture
 
 
 class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
