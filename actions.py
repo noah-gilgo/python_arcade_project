@@ -123,14 +123,26 @@ class SpellAction(Action):
 
     def execute(self):
         # Casts the spell.
-        self.actor.set_animation_state("battle_magic")
-        self.controller.battle_textbox.load_dialog(TextBoxDialog(
-            text="* " + self.actor.name + " cast " + self.spell.name + "!",
-            rate_of_text=0.03
-        ))
-        pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(self.targets, self.sprite_list, self.animation_list), 0.5)
-        pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, self.targets, self.controller), 1.0)
-        pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
+        targeted_enemies = []
+        for target in self.targets:
+            if target in self.controller.enemies:
+                targeted_enemies.append(target)
+
+        # If the spellcasters initial target leaves the battle before they can cast the spell, target another enemy.
+        if len(self.targets) == 1 and len(targeted_enemies) == 0:
+            targeted_enemies.append(self.controller.enemies[0])
+
+        if len(targeted_enemies) > 0:
+            self.actor.set_animation_state("battle_magic")
+            self.controller.battle_textbox.load_dialog(TextBoxDialog(
+                text="* " + self.actor.name + " cast " + self.spell.name + "!",
+                rate_of_text=0.03
+            ))
+            pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(targeted_enemies, self.sprite_list, self.animation_list), 0.5)
+            pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, targeted_enemies, self.controller), 1.0)
+            pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
+        else:
+            self.actor.set_animation_state("battle_idle")
 
 
 class ImmediateAction(Action):
