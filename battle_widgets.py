@@ -14,6 +14,7 @@ import non_player_character
 import player_character
 import settings
 from graphics_methods import ease_out, make_texture_solid_color
+from items import Item, ConsumableItem
 from spells import Spell
 
 
@@ -1283,3 +1284,91 @@ class TPMeter(UIBoxLayout):
     def update_tp_meter(self, tp: float = 0.0):
         tp_meter = self.children[1]
         tp_meter.update(tp)
+
+
+class ItemOption(UILabel):
+    def __init__(self, item: ConsumableItem):
+        super().__init__(
+            height=60,
+            text="   " + item.name,
+            font_name="8bitoperator JVE",
+            font_size=48,
+        )
+
+        self.focus_mode = FocusMode(2)
+        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
+
+    def do_render_focus(self, surface: arcade.gui.Surface):
+        x = self.left - 20
+        y = self.center_y
+
+        arcade.draw_sprite_rect(
+            self.soul_sprite,
+            arcade.XYWH(
+                16,
+                28,
+                32,
+                32
+            ),
+            pixelated=True
+        )
+
+
+class ItemDescriptionLabel(UILabel):
+    def __init__(self, item_description: str = ""):
+        super().__init__(
+            size_hint=(None, None),
+            width=400,
+            height=140,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.GRAY,
+            text=item_description,
+            multiline=True
+        )
+
+    def update_item_data(self, item: ConsumableItem = None):
+        """ Updates the spell data shown in the layout. """
+        self.text = "" if not item or not item.battle_description else item.battle_description
+
+
+class ItemOptionsList(UIGridLayout):
+    """
+    Contains, at max, 6 item options in a 2x3 grid.
+    """
+    def __init__(self, items: list[ConsumableItem]):
+        super().__init__(
+            width=1000,
+            height=settings.WINDOW_HEIGHT / 4,
+            align_horizontal="left"
+        )
+
+        current_item_index = 0
+
+        for item in items:
+            self.add(
+                ItemOption(item),
+                column=current_item_index % 2,
+                row=current_item_index // 2
+            )
+            current_item_index += 1
+
+
+class ItemSelectContainer(UIBoxLayout):
+    """
+    The item select container allowing the user to select an item in battle.
+    """
+    def __init__(self, items: list[ConsumableItem]):
+        super().__init__(
+            x=0,
+            y=0,
+            width=settings.WINDOW_WIDTH,
+            height=settings.WINDOW_HEIGHT / 4,
+            vertical=False,
+            children=[ItemOptionsList(items), ItemDescriptionLabel()]
+        )
+
+    def update_item_data(self, item: ConsumableItem = None):
+        """ Updates the spell data shown in the layout. """
+        self.children[1].update_item_data(item)
+

@@ -310,6 +310,7 @@ class GameView(arcade.View):
         self.background_music_player = self.background_music.play()
         self.background_music_player.pitch = 0.0
         self.background_music_player.loop = True
+        self.background_music_player.volume = 0.7
 
         sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
 
