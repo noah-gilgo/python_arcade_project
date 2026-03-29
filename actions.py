@@ -61,10 +61,10 @@ class ActionsQueue:
         """
         return self.actions.pop()
 
-    def get_sorted_actions_queue(self) -> list[Action]:
+    def sort_actions_queue(self) -> dict[str, list[Action]]:
         """
         Returns the actions queue sorted in order of action priority.
-        The returned list is passed into the BattleController, which will iterate through every action.
+        The returned list dict is passed into the BattleController, which will iterate through every action.
         :return: None
         """
         immediate_actions = []
@@ -85,7 +85,12 @@ class ActionsQueue:
             else:
                 unknown_type_actions.append(action)
 
-        return immediate_actions + act_actions + magic_spare_item_actions + fight_actions + unknown_type_actions
+        return {
+            "act_actions": act_actions,
+            "magic_spare_item_actions": magic_spare_item_actions,
+            "fight_actions": fight_actions,
+            "unknown_type_actions": unknown_type_actions
+        }
 
 class FightAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter,

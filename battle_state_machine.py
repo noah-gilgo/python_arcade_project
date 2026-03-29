@@ -211,6 +211,7 @@ class BattleController:
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = ActionsQueue()
+        self.sorted_actions_queue = {}
 
         # Sprite lists that need to be accessed for animations.
         self.effects_sprite_list = effects_sprite_list
@@ -219,8 +220,17 @@ class BattleController:
         self.items = items.initialize_default_items()
 
     def execute_actions_queue(self):
-        for action in self.actions_queue.get_sorted_actions_queue():
-            action.execute()
+        actions = self.actions_queue.sort_actions_queue()
+        for action in actions["immediate_actions"]:
+            continue
+        for action in actions["act_actions"]:
+            continue
+        for action in actions["act_actions"]:
+            continue
+        for action in actions["act_actions"]:
+            continue
+        for action in actions["act_actions"]:
+            continue
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -415,6 +425,26 @@ class BattleController:
         self.effects_list.append(new_focus_animation)
         self.effects_sprite_list.append(new_focus_animation.filter_sprite)
         previously_focused_widget.player.unfocus()
+
+    def execute_queued_player_action(self) -> bool:
+        """
+        Executes the highest priority player action.
+        :return: A bool representing whether there are any player actions left to execute.
+        """
+        if len(self.sorted_actions_queue["act_actions"]) > 0:
+            self.sorted_actions_queue["act_actions"].pop().execute()
+            return True
+        elif len(self.sorted_actions_queue["magic_spare_item_actions"]) > 0:
+            self.sorted_actions_queue["magic_spare_item_actions"].pop().execute()
+            return True
+        elif len(self.sorted_actions_queue["fight_actions"]) > 0:
+            self.sorted_actions_queue["fight_actions"].pop().execute()
+            return True
+        elif len(self.sorted_actions_queue["unknown_type_actions"]) > 0:
+            self.sorted_actions_queue["unknown_type_actions"].pop().execute()
+            return True
+        else:
+            return False
 
 
 class Command:
