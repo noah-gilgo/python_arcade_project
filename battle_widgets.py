@@ -13,7 +13,7 @@ from arcade.types.color import Color
 import non_player_character
 import player_character
 import settings
-from graphics_methods import ease_out
+from graphics_methods import ease_out, make_texture_solid_color
 from spells import Spell
 
 
@@ -439,7 +439,7 @@ class BattleHUDCharacterClamshell(UILayout):
         # will read from this data and render themselves in accordance with it.
         self.player_character = character
         self._color = character.battle_ui_color
-        self._character_icon_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
+        self.character_icon_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
         self._character_name = character.name
         self._hp = character.hp
         self._max_hp = character.max_hp
@@ -565,6 +565,25 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_character_data.with_border(width=0, color=self.player_character.battle_ui_color)
         battle_hud_button_layout = self.children[0]
         battle_hud_button_layout.is_focused = False
+
+    def change_icon(self, icon_path: str = ""):
+        """
+        Changes the icon on the current clamshell to the one with the provided path.
+        Icons located at assets/textures/gui_graphics/action_icons.
+        If no path is provided, resets the icon to the character's default icon.
+        :return: None
+        """
+        icon_color = self.player_character.battle_ui_icon_color
+
+        if icon_path:
+            icon_texture_path = icon_path
+            icon_texture = make_texture_solid_color(arcade.load_texture(icon_texture_path), icon_color)
+        else:
+            # Since Ralsei has a multicolor icon, the default icons are loaded without making them solid color
+            icon_texture_path = self.character_icon_path
+            icon_texture = arcade.load_texture(icon_texture_path)
+
+        self.children[1].children[0].children[0].texture = icon_texture
 
 
 class BattleHUDCharacterClamshellDisplay(UIBoxLayout):

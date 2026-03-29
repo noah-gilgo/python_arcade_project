@@ -140,8 +140,8 @@ class EnemySparedAnimation(SingleSpriteAnimation):
         self._cached_base_texture = self.sprite.texture
 
         # Miscellaneous variables so that on_update isn't repeating redundant calculations
-        self.fading_sprite_translation_factor = settings.WINDOW_WIDTH / 12
-        self.extra_fading_sprite_translation_factor = settings.WINDOW_WIDTH / 6
+        self.fading_sprite_translation_factor = settings.WINDOW_WIDTH / 10
+        self.extra_fading_sprite_translation_factor = settings.WINDOW_WIDTH / 5
         self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 84
 
     def update_animation(self, delta_time):

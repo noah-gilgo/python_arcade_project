@@ -307,6 +307,9 @@ class BattleController:
             if len(self.actions_queue) > 0:
                 self.actions_queue.pop()
             self.menu_move_sound.play()
+            self.battle_player_character_cards.children[
+                self.current_player_index].change_icon()
+
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, targets: list[PlayerCharacter]):
         """
@@ -433,6 +436,8 @@ class SelectCommand(Command):
                         self.controller.add_tp_to_meter(16.0)
                         defending_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                         defending_player_character.defend()
+                        self.controller.battle_player_character_cards.children[self.controller.current_player_index].change_icon(
+                            "assets/textures/gui_graphics/action_icons/defend_icon.png")
                         self.controller.move_to_next_player_card()
                         return
 
@@ -467,6 +472,10 @@ class SelectCommand(Command):
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                 current_player_character.set_animation_state("battle_magic_ready")
 
+                self.controller.battle_player_character_cards.children[
+                    self.controller.current_player_index].change_icon(
+                    "assets/textures/gui_graphics/action_icons/magic_icon.png")
+
                 self.controller.actions_queue.append(
                     SpellAction(
                         actor=current_player_character,
@@ -492,6 +501,10 @@ class SelectCommand(Command):
 
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                 current_player_character.set_animation_state("battle_spare_ready")
+
+                self.controller.battle_player_character_cards.children[
+                    self.controller.current_player_index].change_icon(
+                    "assets/textures/gui_graphics/action_icons/spare_icon.png")
 
                 self.controller.actions_queue.append(
                     SpareAction(

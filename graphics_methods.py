@@ -129,9 +129,8 @@ def instantly_terminate_depths_animation(sprite_list: list[arcade.Sprite]):
     depths_frame_array.clear()
 
 
-# Makes a texture of a solid color in the shape of an existing texture.
 def make_texture_solid_color(texture: arcade.Texture, color: Color = None) -> Texture:
-
+    # Makes a texture of a solid color in the shape of an existing texture.
     image = texture.image.convert("RGBA")
     data = image.getdata()
 
