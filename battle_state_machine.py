@@ -11,7 +11,7 @@ import character
 import items
 import non_player_character
 import player_character
-from actions import SpellAction, SpareAction
+from actions import SpellAction, SpareAction, ActionsQueue
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
@@ -210,7 +210,7 @@ class BattleController:
         self.tp_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_cardrive.wav")
 
         # The queue of actions selected by the player for each character.
-        self.actions_queue = []
+        self.actions_queue = ActionsQueue()
 
         # Sprite lists that need to be accessed for animations.
         self.effects_sprite_list = effects_sprite_list
@@ -219,7 +219,7 @@ class BattleController:
         self.items = items.initialize_default_items()
 
     def execute_actions_queue(self):
-        for action in self.actions_queue:
+        for action in self.actions_queue.get_sorted_actions_queue():
             action.execute()
 
     def confirm_command(self):
@@ -510,7 +510,7 @@ class SelectCommand(Command):
                     self.controller.current_player_index].change_icon(
                     "assets/textures/gui_graphics/action_icons/magic_icon.png")
 
-                self.controller.actions_queue.append(
+                self.controller.actions_queue.push(
                     SpellAction(
                         actor=current_player_character,
                         targets=[selected_target_enemy],
@@ -558,7 +558,7 @@ class SelectCommand(Command):
                     self.controller.current_player_index].change_icon(
                     "assets/textures/gui_graphics/action_icons/spare_icon.png")
 
-                self.controller.actions_queue.append(
+                self.controller.actions_queue.push(
                     SpareAction(
                         actor=current_player_character,
                         target=selected_target_enemy,

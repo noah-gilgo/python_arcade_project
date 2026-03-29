@@ -1460,9 +1460,6 @@ class PlayerSelectInstance(UIBoxLayout):
         self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
 
     def do_render_focus(self, surface: arcade.gui.Surface):
-        x = self.left - 20
-        y = self.center_y
-
         arcade.draw_sprite_rect(
             self.soul_sprite,
             arcade.XYWH(

@@ -5,6 +5,7 @@ from arcade import Sprite
 from arcade.types import Color
 
 import settings
+import texture_methods
 from character import Character
 from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, SingleSpriteAnimation
@@ -91,14 +92,11 @@ class EnemySparedAnimation(SingleSpriteAnimation):
             total_duration=total_duration
         )
 
-        self.spare_particle_textures = [
-            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img.png"),
-            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_1.png"),
-            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_2.png"),
-            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_3.png"),
-            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_4.png"),
-            arcade.load_texture("assets/audio/battle/player_character/common/heal_spare_particles/img_5.png")
-        ]
+        self.sprite_pack_path = "assets/sprites/effects/heal_spare_particles"
+
+        self.spare_particle_textures = self._texture_array = texture_methods.load_textures_at_filepath_into_texture_array(
+            self.sprite_pack_path
+        )
 
         self.spare_particle_sprite_list = []
 

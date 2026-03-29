@@ -31,6 +31,61 @@ class Action:
         self.targets = targets
         self.controller = controller
 
+    def execute(self):
+        pass
+        # TODO: Add FIGHT action logic.
+
+
+class ActionsQueue:
+    """
+    When the player selects an action for a player character, it is added to this queue.
+    """
+    def __init__(self):
+        self.actions = []
+
+    def __len__(self):
+        return len(self.actions)
+
+    def push(self, action: Action):
+        """
+        Adds an action to the end of the actions queue.
+        :param action: The action to be added.
+        :return: None
+        """
+        self.actions.append(action)
+
+    def pop(self) -> Action:
+        """
+        Removes and returns the action at the end of the actions queue
+        :return: the last action in the actions queue
+        """
+        return self.actions.pop()
+
+    def get_sorted_actions_queue(self) -> list[Action]:
+        """
+        Returns the actions queue sorted in order of action priority.
+        The returned list is passed into the BattleController, which will iterate through every action.
+        :return: None
+        """
+        immediate_actions = []
+        act_actions = []
+        magic_spare_item_actions = []
+        fight_actions = []
+        unknown_type_actions = []
+
+        for action in self.actions:
+            if type(action) == ImmediateAction:
+                immediate_actions.append(action)
+            elif type(action) == ActAction:
+                act_actions.append(action)
+            elif type(action) == SpellAction or type(action) == SpareAction or type(action) == ItemAction:
+                magic_spare_item_actions.append(action)
+            elif type(action) == FightAction:
+                fight_actions.append(action)
+            else:
+                unknown_type_actions.append(action)
+
+        return immediate_actions + act_actions + magic_spare_item_actions + fight_actions + unknown_type_actions
 
 class FightAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter,
@@ -65,10 +120,37 @@ class SpellAction(Action):
         pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
 
 
+class ImmediateAction(Action):
+    """
+    This is a class for special actions that execute immediately when the player
+    """
+    def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
+        super().__init__(actor, targets, controller)
+        #TODO: build the rest of this out
+
+    def execute(self):
+        pass
+        # TODO: Add immediate action logic.
+
+
+class ActAction(Action):
+    def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
+        super().__init__(actor, targets, controller)
+        #TODO: build the rest of this out
+
+    def execute(self):
+        pass
+        # TODO: Add ACT action logic.
+
+
 class ItemAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
         super().__init__(actor, targets, controller)
         #TODO: build the rest of this out
+
+    def execute(self):
+        pass
+        # TODO: Add ITEM action logic.
 
 
 class SpareAction(Action):
