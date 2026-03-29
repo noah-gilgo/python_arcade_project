@@ -76,17 +76,17 @@ class ActionsQueue:
 
         for action in self.actions:
             #if type(action) == ImmediateAction:
-            #    immediate_actions.append(action)
+            #    immediate_actions.insert(0, action)
             if type(action) == ComplexActAction:
-                complex_act_actions.append(action)
+                complex_act_actions.insert(0, action)
             elif type(action) == SimpleActAction:
-                complex_act_actions.append(action)
+                complex_act_actions.insert(0, action)
             elif type(action) == SpellAction or type(action) == SpareAction or type(action) == ItemAction:
-                magic_spare_item_actions.append(action)
+                magic_spare_item_actions.insert(0, action)
             elif type(action) == FightAction:
-                fight_actions.append(action)
+                fight_actions.insert(0, action)
             else:
-                unknown_type_actions.append(action)
+                unknown_type_actions.insert(0, action)
 
         return {
             "complex_act_actions": complex_act_actions,
