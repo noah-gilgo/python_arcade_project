@@ -34,6 +34,7 @@ class BattleState(Enum):
     PLAYER_MAGIC_ENEMY_SELECT = auto()
     PLAYER_ACT_SELECT = auto()
     PLAYER_ITEM_SELECT = auto()
+    PLAYER_ITEM_PLAYER_SELECT = auto()
     PLAYER_MAGIC_SELECT = auto()
     PLAYER_SPARE_SELECT = auto()
     PLAYER_TARGET = auto()
@@ -206,6 +207,7 @@ class BattleController:
         self.heal_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_power.wav", False)
         self.mercy_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_mercyadd.wav", False)
         self.spare_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_spare.wav")
+        self.tp_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_cardrive.wav")
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = []
@@ -389,6 +391,31 @@ class BattleController:
         self.effects_sprite_list.append(new_focus_animation.filter_sprite)
         previously_focused_widget.enemy.unfocus()
 
+    def open_player_select_menu(self):
+        """
+        Opens the player select menu.
+        :return: None
+        """
+        player_list_full_layout = battle_widgets.PlayerSelect(self.player_characters)
+        player_list_interactive_layout = player_list_full_layout
+        self.focus_stack.push(player_list_full_layout, player_list_interactive_layout,
+                                         self.state, 1)
+        new_focus_animation = self.focus_stack.get_highest_member().get_focused_widget().player.focus()
+        self.effects_list.append(new_focus_animation)
+        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+
+    def move_focus_between_players_in_player_select(self, previously_focused_widget, currently_focused_widget):
+        """
+        Used to animate the enemies being targeted in the enemy select screen.
+        :param previously_focused_widget: The previously focused enemy's row in the enemy select.
+        :param currently_focused_widget: The newly focused enemy's row in the enemy select.
+        :return:
+        """
+        new_focus_animation = currently_focused_widget.player.focus()
+        self.effects_list.append(new_focus_animation)
+        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        previously_focused_widget.player.unfocus()
+
 
 class Command:
     """ The default command object. Represents the Command design pattern. """
@@ -496,7 +523,25 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_ITEM_SELECT:
-                # TODO: select the focused item, animate the player character, queue the act
+                self.controller.state = BattleState.PLAYER_ITEM_PLAYER_SELECT
+                item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                if item.tp_restored > 0 and item.hp_restored == 0:  # If item is TP item exclusively
+                    self.controller.tp_meter.update_tp_meter(item.tp_restored)
+                    self.controller.tp_add_sound.play()
+                    # TODO: add orange sparkles animation to indicate player received TP
+                    self.controller.focus_stack.pop()
+                    self.controller.move_to_next_player_card()
+                    self.controller.items.remove(item)
+                    return
+                if item.heals_all_party_members:  # If item affects all party members
+                    # TODO: queue an ItemAction with the item
+                    self.controller.focus_stack.pop()
+                    self.controller.move_to_next_player_card()
+                    self.controller.items.remove(item)
+                    return
+
+                self.controller.open_player_select_menu()
+                self.controller.menu_select_sound.play()
                 return
 
             case BattleState.PLAYER_SPARE_SELECT:
@@ -551,7 +596,14 @@ class CancelCommand(Command):
                 self.backup_out_of_focus_stack()
             case BattleState.PLAYER_ITEM_SELECT:
                 self.backup_out_of_focus_stack()
-
+            case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                focused_player = self.controller.focus_stack.get_highest_member().get_focused_widget().player
+                focused_player.unfocus()
+                self.backup_out_of_focus_stack()
+                # TODO: add logic to get the item from the ItemAction, re-add it to self.controller.items and
+                # subtract the TP gained from it from the TP bar.
+                item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                self.controller.tp_meter.update_tp_meter(-item.tp_restored)
 
     def backup_out_of_focus_stack(self):
         """
@@ -622,6 +674,9 @@ class UpCommand(Command):
                     self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                         self.controller.focus_stack.get_highest_member().get_focused_widget().item
                     )
+                case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                    self.controller.move_focus_between_players_in_player_select(previously_focused_widget,
+                                                                               currently_focused_widget)
 
 
 class DownCommand(Command):
@@ -649,3 +704,6 @@ class DownCommand(Command):
                     self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                         self.controller.focus_stack.get_highest_member().get_focused_widget().item
                     )
+                case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                    self.controller.move_focus_between_players_in_player_select(previously_focused_widget,
+                                                                                currently_focused_widget)

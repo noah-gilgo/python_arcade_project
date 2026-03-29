@@ -145,7 +145,8 @@ class Character(arcade.Sprite):
                 sprite=self,
                 color=arcade.color.WHITE,
                 total_duration=1,
-                is_continuous=True
+                is_continuous=True,
+                min_alpha=32,
             )
             self.is_focused = True
             return self.focus_animation

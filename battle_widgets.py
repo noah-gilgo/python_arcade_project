@@ -1383,3 +1383,118 @@ class ItemSelect(UIBoxLayout):
         """ Updates the spell data shown in the layout. """
         self.children[1].update_item_data(item)
 
+
+class PlayerSelectInstanceNameLabel(UILabel):
+    """
+    Contains the name of the player to be selected in the player select menu.
+    """
+    def __init__(self, player_name: str):
+        super().__init__(
+            text="    " + player_name,
+            width=400,
+            height=64,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.WHITE,
+            size_hint=None
+        )
+
+
+class PlayerSelectInstanceHPMeter(UIWidget):
+    value = Property(0.0)
+
+    def __init__(self, hp: int, max_hp: int):
+        super().__init__(
+            width=220,
+            height=36,
+            size_hint=None
+        )
+        self.focus_mode = FocusMode(0)
+
+        self.with_background(color=arcade.color.DARK_RED)
+
+        self.hp = hp
+        self.max_hp = max_hp
+
+        self.value = self.hp / self.max_hp
+        self.color = arcade.color.NEON_GREEN
+
+        # trigger a render when the value changes
+        bind(self, "value", self.trigger_render)
+
+    def do_render(self, surface: arcade.gui.Surface) -> None:
+        self.prepare_render(surface)
+
+        arcade.draw_lbwh_rectangle_filled(
+            0,
+            0,
+            self.content_width * self.value,
+            self.content_height,
+            self.color,
+        )
+
+        super().do_render(surface)
+
+
+class PlayerSelectInstance(UIBoxLayout):
+    def __init__(self, player: player_character.PlayerCharacter):
+        self.player = player
+
+
+        player_label = PlayerSelectInstanceNameLabel(self.player.name)
+        player_hp_meter = PlayerSelectInstanceHPMeter(self.player.hp, self.player.max_hp)
+
+        self.space_between = settings.WINDOW_WIDTH - (player_label.width + player_hp_meter.width) - 400
+        super().__init__(
+            width=int(settings.WINDOW_WIDTH - 40),
+            height=40,
+            vertical=False,
+            children=[
+                player_label,
+                player_hp_meter
+            ],
+            space_between=self.space_between
+        )
+
+        self.focus_mode = FocusMode(2)
+        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
+
+    def do_render_focus(self, surface: arcade.gui.Surface):
+        x = self.left - 20
+        y = self.center_y
+
+        arcade.draw_sprite_rect(
+            self.soul_sprite,
+            arcade.XYWH(
+                16,
+                28,
+                32,
+                32
+            ),
+            pixelated=True
+        )
+
+
+class PlayerSelect(UIBoxLayout):
+    def __init__(self, players: list[player_character.PlayerCharacter]):
+
+        super().__init__(
+            x=0,
+            y=0,
+            width=settings.WINDOW_WIDTH,
+            height=settings.WINDOW_HEIGHT / 4.2,
+            vertical=True,
+            align="center",
+            size_hint=None
+        )
+
+        for player in players:
+            self.add(PlayerSelectInstance(player))
+
+        self.with_background(color=arcade.color.BLACK)
+
+    def do_layout(self):
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
+        self.height = int(settings.WINDOW_HEIGHT / 4.2)
+
+        super().do_layout()
