@@ -664,11 +664,6 @@ class SpellListOption(UILabel):
         self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
 
     def do_render_focus(self, surface: arcade.gui.Surface):
-        x = self.left - 20
-        y = self.center_y
-
-        self.prepare_render(surface)
-
         arcade.draw_sprite_rect(
             self.soul_sprite,
             arcade.XYWH(
@@ -1289,24 +1284,26 @@ class TPMeter(UIBoxLayout):
 class ItemOption(UILabel):
     def __init__(self, item: ConsumableItem):
         super().__init__(
-            height=60,
-            text="   " + item.name,
+            text="     " + item.name,
+            width=400,
+            height=64,
             font_name="8bitoperator JVE",
             font_size=48,
+            text_color=arcade.color.WHITE,
+            size_hint=None
         )
+
+        self.item = item
 
         self.focus_mode = FocusMode(2)
         self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
 
     def do_render_focus(self, surface: arcade.gui.Surface):
-        x = self.left - 20
-        y = self.center_y
-
         arcade.draw_sprite_rect(
             self.soul_sprite,
             arcade.XYWH(
-                16,
-                28,
+                32,
+                32,
                 32,
                 32
             ),
@@ -1338,9 +1335,16 @@ class ItemOptionsList(UIGridLayout):
     """
     def __init__(self, items: list[ConsumableItem]):
         super().__init__(
-            width=1000,
-            height=settings.WINDOW_HEIGHT / 4,
-            align_horizontal="left"
+            x=36,
+            y=0,
+            width=(2 * settings.WINDOW_WIDTH) / 3,
+            height=int(settings.WINDOW_HEIGHT / 4) - 30,
+            row_count=3,
+            column_count=2,
+            align_horizontal="left",
+            alight_vertical="center",
+            horizontal_spacing=100,
+            size_hint=None
         )
 
         current_item_index = 0
@@ -1354,18 +1358,25 @@ class ItemOptionsList(UIGridLayout):
             current_item_index += 1
 
 
-class ItemSelectContainer(UIBoxLayout):
+class ItemSelect(UIBoxLayout):
     """
     The item select container allowing the user to select an item in battle.
     """
     def __init__(self, items: list[ConsumableItem]):
+        item_options_list = ItemOptionsList(items)
+        item_description_label = ItemDescriptionLabel()
+
+        self.space_between = settings.WINDOW_WIDTH - (item_options_list.width + item_description_label.width)
+
         super().__init__(
             x=0,
             y=0,
             width=settings.WINDOW_WIDTH,
-            height=settings.WINDOW_HEIGHT / 4,
+            height=settings.WINDOW_HEIGHT / 4.4,
             vertical=False,
-            children=[ItemOptionsList(items), ItemDescriptionLabel()]
+            children=[ItemOptionsList(items), ItemDescriptionLabel()],
+            align="top",
+            space_between=self.space_between
         )
 
     def update_item_data(self, item: ConsumableItem = None):

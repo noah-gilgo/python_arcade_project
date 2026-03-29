@@ -422,11 +422,18 @@ class SelectCommand(Command):
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
                             spell_list_full_layout = SpellSelect(self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character)
                             spell_list_interactive_layout = spell_list_full_layout.children[0]
-                            self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout, self.controller.state, 2)
+                            self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout,
+                                                             self.controller.state, 2)
                             return
                     case 2:  # user selects the ITEM button
                         self.controller.state = BattleState.PLAYER_ITEM_SELECT
-                        # TODO: include code to open the ITEM menu
+                        item_list_full_layout = battle_widgets.ItemSelect(self.controller.items)
+                        item_list_interactive_layout = item_list_full_layout.children[0]
+                        self.controller.focus_stack.push(item_list_full_layout, item_list_interactive_layout,
+                                                         self.controller.state, 2)
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                        )
                         return
                     case 3:  # user selects the SPARE button
                         self.controller.state = BattleState.PLAYER_SPARE_SELECT
@@ -542,6 +549,9 @@ class CancelCommand(Command):
                 focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 focused_enemy.unfocus()
                 self.backup_out_of_focus_stack()
+            case BattleState.PLAYER_ITEM_SELECT:
+                self.backup_out_of_focus_stack()
+
 
     def backup_out_of_focus_stack(self):
         """
@@ -561,10 +571,15 @@ class RightCommand(Command):
     def execute(self):
         if self.controller.focus_stack.get_highest_member().move_right():
             self.controller.menu_move_sound.play()
-            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
-                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                )
+            match self.controller.state:
+                case BattleState.PLAYER_MAGIC_SELECT:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                    )
+                case BattleState.PLAYER_ITEM_SELECT:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                    )
 
 
 class LeftCommand(Command):
@@ -573,10 +588,15 @@ class LeftCommand(Command):
     def execute(self):
         if self.controller.focus_stack.get_highest_member().move_left():
             self.controller.menu_move_sound.play()
-            if self.controller.state == BattleState.PLAYER_MAGIC_SELECT:
-                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                )
+            match self.controller.state:
+                case BattleState.PLAYER_MAGIC_SELECT:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                    )
+                case BattleState.PLAYER_ITEM_SELECT:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                    )
 
 
 class UpCommand(Command):
@@ -598,6 +618,10 @@ class UpCommand(Command):
                 case BattleState.PLAYER_SPARE_SELECT:
                     self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
                                                                                currently_focused_widget)
+                case BattleState.PLAYER_ITEM_SELECT:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                    )
 
 
 class DownCommand(Command):
@@ -621,3 +645,7 @@ class DownCommand(Command):
                 case BattleState.PLAYER_SPARE_SELECT:
                     self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
                                                                                currently_focused_widget)
+                case BattleState.PLAYER_ITEM_SELECT:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                    )
