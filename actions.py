@@ -67,17 +67,20 @@ class ActionsQueue:
         The returned list dict is passed into the BattleController, which will iterate through every action.
         :return: None
         """
-        immediate_actions = []
-        act_actions = []
+        #immediate_actions = []
+        complex_act_actions = []
+        simple_act_actions = []
         magic_spare_item_actions = []
         fight_actions = []
         unknown_type_actions = []
 
         for action in self.actions:
-            if type(action) == ImmediateAction:
-                immediate_actions.append(action)
-            elif type(action) == ActAction:
-                act_actions.append(action)
+            #if type(action) == ImmediateAction:
+            #    immediate_actions.append(action)
+            if type(action) == ComplexActAction:
+                complex_act_actions.append(action)
+            elif type(action) == SimpleActAction:
+                complex_act_actions.append(action)
             elif type(action) == SpellAction or type(action) == SpareAction or type(action) == ItemAction:
                 magic_spare_item_actions.append(action)
             elif type(action) == FightAction:
@@ -86,11 +89,16 @@ class ActionsQueue:
                 unknown_type_actions.append(action)
 
         return {
-            "act_actions": act_actions,
+            "complex_act_actions": complex_act_actions,
+            "simple_act_actions": simple_act_actions,
             "magic_spare_item_actions": magic_spare_item_actions,
             "fight_actions": fight_actions,
             "unknown_type_actions": unknown_type_actions
         }
+
+    def clear(self):
+        """ Empties the actions queue. """
+        self.actions.clear()
 
 class FightAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter,
@@ -138,7 +146,24 @@ class ImmediateAction(Action):
         # TODO: Add immediate action logic.
 
 
-class ActAction(Action):
+class SimpleActAction(Action):
+    def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller,
+                 flavor_text: str = "", spare_percentage: int = 10):
+        super().__init__(actor, targets, controller)
+        #TODO: build the rest of this out
+        self.spare_percentage = spare_percentage
+        self.flavor_text = ""
+        if flavor_text:
+            self.flavor_text = flavor_text
+        else:
+            self.flavor_text = actor.name + " did something to " + targets[0].name + "!"
+
+    def execute(self):
+        # TODO: Add ACT action logic.
+        return self.flavor_text
+
+
+class ComplexActAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
         super().__init__(actor, targets, controller)
         #TODO: build the rest of this out

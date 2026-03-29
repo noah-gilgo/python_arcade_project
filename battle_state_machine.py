@@ -15,6 +15,7 @@ from actions import SpellAction, SpareAction, ActionsQueue
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
+from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
 from graphics_objects import MultiSpriteAnimation
 from items import Item, ConsumableItem
@@ -38,7 +39,7 @@ class BattleState(Enum):
     PLAYER_MAGIC_SELECT = auto()
     PLAYER_SPARE_SELECT = auto()
     PLAYER_TARGET = auto()
-    EXECUTE_QUEUED_PLAYER_COMMANDS = auto()
+    EXECUTING_QUEUED_PLAYER_COMMANDS = auto()
     DIALOGUE = auto()
     ENEMY_ATTACK = auto()
     VICTORY = auto()
@@ -219,19 +220,6 @@ class BattleController:
 
         self.items = items.initialize_default_items()
 
-    def execute_actions_queue(self):
-        actions = self.actions_queue.sort_actions_queue()
-        for action in actions["immediate_actions"]:
-            continue
-        for action in actions["act_actions"]:
-            continue
-        for action in actions["act_actions"]:
-            continue
-        for action in actions["act_actions"]:
-            continue
-        for action in actions["act_actions"]:
-            continue
-
     def confirm_command(self):
         SelectCommand(self).execute()
 
@@ -296,8 +284,9 @@ class BattleController:
         else:
             self.battle_player_character_cards.children[self.current_player_index].unfocus()
             self.focus_stack.pop()
-            self.state = BattleState.EXECUTE_QUEUED_PLAYER_COMMANDS
-            self.execute_actions_queue()
+            self.state = BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS
+            self.initialize_sorted_action_queue()
+            self.execute_queued_player_action()
 
     def move_to_previous_player_card(self):
         """
@@ -426,25 +415,43 @@ class BattleController:
         self.effects_sprite_list.append(new_focus_animation.filter_sprite)
         previously_focused_widget.player.unfocus()
 
-    def execute_queued_player_action(self) -> bool:
+    def initialize_sorted_action_queue(self):
+        """
+        Populates self.sorted_actions_queue with a sorted list of the queued player character actions.
+        Meant to be executed after the player selects the action of the last party member in the battle.
+        Clears the actions queue before the next round.
+        :return:
+        """
+        self.sorted_actions_queue = self.actions_queue.sort_actions_queue()
+        self.actions_queue.clear()
+
+    def execute_queued_player_action(self):
         """
         Executes the highest priority player action.
         :return: A bool representing whether there are any player actions left to execute.
         """
-        if len(self.sorted_actions_queue["act_actions"]) > 0:
+        if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
-            return True
+            return
+        if len(self.sorted_actions_queue["simple_act_actions"]) > 0:
+            act_texts = ""
+            for action in self.sorted_actions_queue["simple_act_actions"]:
+                act_text = self.sorted_actions_queue["simple_act_actions"].pop().execute()
+                act_texts += "* " + act_text + "\n"
+            self.battle_textbox.load_dialog(TextBoxDialog(act_texts))
+            return
         elif len(self.sorted_actions_queue["magic_spare_item_actions"]) > 0:
             self.sorted_actions_queue["magic_spare_item_actions"].pop().execute()
-            return True
+            return
         elif len(self.sorted_actions_queue["fight_actions"]) > 0:
             self.sorted_actions_queue["fight_actions"].pop().execute()
-            return True
+            return
         elif len(self.sorted_actions_queue["unknown_type_actions"]) > 0:
             self.sorted_actions_queue["unknown_type_actions"].pop().execute()
-            return True
+            return
         else:
-            return False
+            self.state = BattleState.ENEMY_ATTACK
+            # TODO: Add code here to initiate the enemy attack.
 
 
 class Command:
@@ -598,6 +605,9 @@ class SelectCommand(Command):
 
                 self.controller.move_to_next_player_card()
                 return
+
+            case BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS:
+                self.controller.execute_queued_player_action()
 
 
 class CancelCommand(Command):
