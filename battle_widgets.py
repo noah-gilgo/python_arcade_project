@@ -1316,7 +1316,7 @@ class ItemDescriptionLabel(UILabel):
         super().__init__(
             size_hint=(None, None),
             width=400,
-            height=140,
+            height=settings.WINDOW_HEIGHT / 4,
             font_name="8bitoperator JVE",
             font_size=48,
             text_color=arcade.color.GRAY,

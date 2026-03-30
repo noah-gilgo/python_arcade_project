@@ -9,7 +9,8 @@ class ConsumableItem(Item):
     def __init__(self, name: str = "default item name", description: str = "this is the default item description.",
                  battle_description: str = "", id: int = None, hp_restored: int = 0, tp_restored: int = 0,
                  is_revive_item: bool = False, is_relative_healing_item: bool = False,
-                 hp_percentage_restored: float = 1.0, heals_all_party_members: bool = False):
+                 hp_percentage_restored: float = 1.0, heals_all_party_members: bool = False,
+                 is_not_consumable: bool = False):
         super().__init__(name, description)
         self.id = id
         self.battle_description = battle_description
@@ -22,6 +23,7 @@ class ConsumableItem(Item):
         else:
             self.is_relative_healing_item = is_relative_healing_item  # If true, heals a percentage of max health
         self.hp_percentage_restored = hp_percentage_restored  # Percentage of max health healed with relative healing
+        self.is_not_consumable = is_not_consumable  # If true, item will not be consumed when used in battle
 
 
 class ArmorItem(Item):
@@ -51,9 +53,9 @@ def initialize_default_items():
 
     consumables = [
         ConsumableItem(
-            name="Dark Candy",
-            description="Heals 40 HP. A red-and-black star that tastes like marshmallows.",
-            battle_description="Heals 40HP",
+            name="Glowshard",
+            description="A shimmering shard. Its value increases each Chapter.",
+            battle_description="Sell at shops",
             hp_restored=40
         ),
         ConsumableItem(

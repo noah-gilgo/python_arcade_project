@@ -11,8 +11,14 @@ import player_character
 from animations.battle_animations import NumberBounceAnimation, EnemySparedAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation
 from dialogue_box import TextBoxDialog
+from items import ConsumableItem
 from spells import Spell
 
+"""
+This file contains the Action objects created when the user selects specific actions for player characters.
+These seem identical to me to Command objects, but I'm calling them "action" objects to differentiate them from the
+Command objects in battle_state_machine.py that are triggered by user inputs.
+"""
 
 class ActionType(Enum):
     FIGHT = auto()
@@ -32,8 +38,16 @@ class Action:
         self.controller = controller
 
     def execute(self):
+        # Stub for the execute method used by child classes.
         pass
-        # TODO: Add FIGHT action logic.
+
+    def ready_act(self):
+        # Performs code meant to be executed after selecting an act.
+        pass
+
+    def cancel_act(self):
+        # Performs code meant to be executed after canceling an act.
+        pass
 
 
 class ActionsQueue:
@@ -53,13 +67,16 @@ class ActionsQueue:
         :return: None
         """
         self.actions.append(action)
+        action.ready_act()
 
     def pop(self) -> Action:
         """
         Removes and returns the action at the end of the actions queue
         :return: the last action in the actions queue
         """
-        return self.actions.pop()
+        action = self.actions.pop()
+        action.cancel_act()
+        return action
 
     def sort_actions_queue(self) -> dict[str, list[Action]]:
         """
@@ -67,7 +84,6 @@ class ActionsQueue:
         The returned list dict is passed into the BattleController, which will iterate through every action.
         :return: None
         """
-        #immediate_actions = []
         complex_act_actions = []
         simple_act_actions = []
         magic_spare_item_actions = []
@@ -75,8 +91,6 @@ class ActionsQueue:
         unknown_type_actions = []
 
         for action in self.actions:
-            #if type(action) == ImmediateAction:
-            #    immediate_actions.insert(0, action)
             if type(action) == ComplexActAction:
                 complex_act_actions.insert(0, action)
             elif type(action) == SimpleActAction:
@@ -99,6 +113,7 @@ class ActionsQueue:
     def clear(self):
         """ Empties the actions queue. """
         self.actions.clear()
+
 
 class FightAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter,
@@ -186,13 +201,20 @@ class ComplexActAction(Action):
 
 
 class ItemAction(Action):
-    def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
+    def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller,
+                 item: ConsumableItem):
         super().__init__(actor, targets, controller)
+        self.item = item
         #TODO: build the rest of this out
 
     def execute(self):
         pass
         # TODO: Add ITEM action logic.
+
+    def cancel_act(self):
+        if self.item.tp_restored > 0 and self.item.hp_restored == 0:
+            # In the event that the item is a TP item exclusively, reduce the TP in the TP meter by the provided amount.
+            self.controller.tp_meter.update_tp_meter(-self.item.tp_restored)
 
 
 class SpareAction(Action):
@@ -265,3 +287,8 @@ class SpareAction(Action):
         ))
 
         pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
+
+
+class DefendAction(Action):
+    def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
+        super().__init__(actor, targets, controller)
