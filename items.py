@@ -10,7 +10,7 @@ class ConsumableItem(Item):
                  battle_description: str = "", id: int = None, hp_restored: int = 0, tp_restored: int = 0,
                  is_revive_item: bool = False, is_relative_healing_item: bool = False,
                  hp_percentage_restored: float = 1.0, heals_all_party_members: bool = False,
-                 is_not_consumable: bool = False):
+                 is_consumable: bool = True):
         super().__init__(name, description)
         self.id = id
         self.battle_description = battle_description
@@ -23,7 +23,7 @@ class ConsumableItem(Item):
         else:
             self.is_relative_healing_item = is_relative_healing_item  # If true, heals a percentage of max health
         self.hp_percentage_restored = hp_percentage_restored  # Percentage of max health healed with relative healing
-        self.is_not_consumable = is_not_consumable  # If true, item will not be consumed when used in battle
+        self.is_consumable = is_consumable  # If true, item will not be consumed when used in battle
 
 
 class ArmorItem(Item):

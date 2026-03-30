@@ -11,7 +11,7 @@ import character
 import items
 import non_player_character
 import player_character
-from actions import SpellAction, SpareAction, ActionsQueue
+from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
@@ -263,11 +263,12 @@ class BattleController:
         """
         self.tp_meter.update_tp_meter(amount)
 
-    def move_to_next_player_card(self):
+    def move_to_next_player_card(self, action: Action):
         """
         Moves to the next player card in the HUD.
         :return:
         """
+        self.actions_queue.push(action)
         if self.current_player_index + 1 < self.focus_stack.get_highest_member().get_full_layout_length():
             self.state = BattleState.PLAYER_COMMAND
             self.focus_stack.pop()
@@ -312,7 +313,7 @@ class BattleController:
                 self.current_player_index].change_icon()
 
 
-    def use_consumable_item_on_targets(self, item: ConsumableItem, targets: list[PlayerCharacter]):
+    def use_consumable_item_on_targets(self, item: ConsumableItem, targets: list[character.Character]):
         """
         Uses a consumable item on a list of targets. Probably going to be used by the action queue. Probably.
         :param item: the item being used.
@@ -446,9 +447,6 @@ class BattleController:
         elif len(self.sorted_actions_queue["fight_actions"]) > 0:
             self.sorted_actions_queue["fight_actions"].pop().execute()
             return
-        elif len(self.sorted_actions_queue["unknown_type_actions"]) > 0:
-            self.sorted_actions_queue["unknown_type_actions"].pop().execute()
-            return
         else:
             self.state = BattleState.ENEMY_ATTACK
             # TODO: Add code here to initiate the enemy attack.
@@ -504,17 +502,18 @@ class SelectCommand(Command):
                         self.controller.open_enemy_select_menu()
                         return
                     case 4:  # user selects the DEFEND button
-                        self.controller.add_tp_to_meter(16.0)
                         defending_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                        defending_player_character.defend()
-                        self.controller.battle_player_character_cards.children[self.controller.current_player_index].change_icon(
-                            "assets/textures/gui_graphics/action_icons/defend_icon.png")
-                        self.controller.move_to_next_player_card()
+                        defend_action = DefendAction(
+                            actor = defending_player_character,
+                            targets=[],
+                            controller=self.controller
+                        )
+                        self.controller.move_to_next_player_card(defend_action)
                         return
 
             case BattleState.PLAYER_ATTACK_SELECT:
                 # TODO: Make the current player character enter the attack state, queue the attack
-                self.controller.move_to_next_player_card()
+                # self.controller.move_to_next_player_card()
                 return
 
             case BattleState.PLAYER_ACT_ENEMY_SELECT:
@@ -523,7 +522,7 @@ class SelectCommand(Command):
 
             case BattleState.PLAYER_ACT_SELECT:
                 # TODO: select the focused act, animate the player character, queue the act
-                self.controller.move_to_next_player_card()
+                # self.controller.move_to_next_player_card()
                 return
 
             case BattleState.PLAYER_MAGIC_SELECT:
@@ -547,39 +546,67 @@ class SelectCommand(Command):
                     self.controller.current_player_index].change_icon(
                     "assets/textures/gui_graphics/action_icons/magic_icon.png")
 
-                self.controller.actions_queue.push(
-                    SpellAction(
-                        actor=current_player_character,
-                        targets=[selected_target_enemy],
-                        spell=selected_spell,
-                        controller=self.controller
-                    )
+                spell_action = SpellAction(
+                    actor=current_player_character,
+                    targets=[selected_target_enemy],
+                    spell=selected_spell,
+                    controller=self.controller
                 )
 
-                self.controller.move_to_next_player_card()
+                self.controller.move_to_next_player_card(spell_action)
                 return
 
             case BattleState.PLAYER_ITEM_SELECT:
-                self.controller.state = BattleState.PLAYER_ITEM_PLAYER_SELECT
                 item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                item_index = self.controller.focus_stack.get_highest_member().get_focused_widget_index()
                 if item.tp_restored > 0 and item.hp_restored == 0:  # If item is TP item exclusively
-                    self.controller.tp_meter.update_tp_meter(item.tp_restored)
-                    self.controller.tp_add_sound.play()
-                    # TODO: add orange sparkles animation to indicate player received TP
                     self.controller.focus_stack.pop()
-                    self.controller.move_to_next_player_card()
-                    self.controller.items.remove(item)
+                    current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                    item_action = ItemAction(
+                        actor=current_player_character,
+                        targets=[],
+                        controller=self.controller,
+                        item=item,
+                        item_index=item_index
+                    )
+                    self.controller.move_to_next_player_card(item_action)
                     return
                 if item.heals_all_party_members:  # If item affects all party members
                     # TODO: queue an ItemAction with the item
                     self.controller.focus_stack.pop()
-                    self.controller.move_to_next_player_card()
-                    self.controller.items.remove(item)
+                    current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                    item_action = ItemAction(
+                        actor=current_player_character,
+                        targets=self.controller.player_characters,
+                        controller=self.controller,
+                        item=item,
+                        item_index=item_index
+                    )
+                    self.controller.move_to_next_player_card(item_action)
                     return
-
+                self.controller.state = BattleState.PLAYER_ITEM_PLAYER_SELECT
                 self.controller.open_player_select_menu()
                 self.controller.menu_select_sound.play()
                 return
+
+            case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                targeted_player_character = self.controller.focus_stack.get_highest_member().get_focused_widget().player
+                targeted_player_character.unfocus()
+                self.controller.focus_stack.pop()
+                item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                item_index = self.controller.focus_stack.get_highest_member().get_focused_widget_index()
+                self.controller.focus_stack.pop()
+                player_using_item = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                item_action = ItemAction(
+                    actor=player_using_item,
+                    targets=[targeted_player_character],
+                    controller=self.controller,
+                    item=item,
+                    item_index=item_index
+                )
+                self.controller.move_to_next_player_card(item_action)
+                self.controller.menu_select_sound.play()
+
 
             case BattleState.PLAYER_SPARE_SELECT:
                 # animate the player character, queue the act
@@ -589,21 +616,18 @@ class SelectCommand(Command):
                 self.controller.focus_stack.pop()
 
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                current_player_character.set_animation_state("battle_spare_ready")
 
                 self.controller.battle_player_character_cards.children[
                     self.controller.current_player_index].change_icon(
                     "assets/textures/gui_graphics/action_icons/spare_icon.png")
 
-                self.controller.actions_queue.push(
-                    SpareAction(
-                        actor=current_player_character,
-                        target=selected_target_enemy,
-                        controller=self.controller
-                    )
+                spare_action = SpareAction(
+                    actor=current_player_character,
+                    target=selected_target_enemy,
+                    controller=self.controller
                 )
 
-                self.controller.move_to_next_player_card()
+                self.controller.move_to_next_player_card(spare_action)
                 return
 
             case BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS:
@@ -618,9 +642,6 @@ class CancelCommand(Command):
             case BattleState.PLAYER_COMMAND:
                 self.controller.move_to_previous_player_card()
                 previous_player = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                if previous_player.is_player_defending():
-                    self.controller.add_tp_to_meter(-16.0)
-                    previous_player.undefend()
                 previous_player.set_animation_state("battle_idle")
             case BattleState.PLAYER_MAGIC_SELECT:
                 self.backup_out_of_focus_stack()
@@ -628,8 +649,6 @@ class CancelCommand(Command):
                 focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 focused_enemy.unfocus()
                 self.backup_out_of_focus_stack()
-                spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                self.controller.tp_meter.update_tp_meter(spell.tp_cost)
             case BattleState.PLAYER_SPARE_SELECT:
                 focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 focused_enemy.unfocus()
@@ -640,10 +659,6 @@ class CancelCommand(Command):
                 focused_player = self.controller.focus_stack.get_highest_member().get_focused_widget().player
                 focused_player.unfocus()
                 self.backup_out_of_focus_stack()
-                # TODO: add logic to get the item from the ItemAction, re-add it to self.controller.items and
-                # subtract the TP gained from it from the TP bar.
-                item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                self.controller.tp_meter.update_tp_meter(-item.tp_restored)
 
     def backup_out_of_focus_stack(self):
         """

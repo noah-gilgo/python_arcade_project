@@ -32,10 +32,12 @@ class ActionType(Enum):
 class Action:
     def __init__(self, actor: player_character.PlayerCharacter = None,
                  targets: list[character.Character] = None,
-                 controller = None):
+                 controller = None,
+                 is_immediate: bool = False):
         self.actor = actor
         self.targets = targets
         self.controller = controller
+        self.is_immediate = is_immediate  # If "action" done immediately when selected (ex. TensionBit consumed)
 
     def execute(self):
         # Stub for the execute method used by child classes.
@@ -88,26 +90,23 @@ class ActionsQueue:
         simple_act_actions = []
         magic_spare_item_actions = []
         fight_actions = []
-        unknown_type_actions = []
 
         for action in self.actions:
-            if type(action) == ComplexActAction:
-                complex_act_actions.insert(0, action)
-            elif type(action) == SimpleActAction:
-                complex_act_actions.insert(0, action)
-            elif type(action) == SpellAction or type(action) == SpareAction or type(action) == ItemAction:
-                magic_spare_item_actions.insert(0, action)
-            elif type(action) == FightAction:
-                fight_actions.insert(0, action)
-            else:
-                unknown_type_actions.insert(0, action)
+            if not action.is_immediate:
+                if type(action) == ComplexActAction:
+                    complex_act_actions.insert(0, action)
+                elif type(action) == SimpleActAction:
+                    complex_act_actions.insert(0, action)
+                elif type(action) == SpellAction or type(action) == SpareAction or type(action) == ItemAction:
+                    magic_spare_item_actions.insert(0, action)
+                elif type(action) == FightAction:
+                    fight_actions.insert(0, action)
 
         return {
             "complex_act_actions": complex_act_actions,
             "simple_act_actions": simple_act_actions,
             "magic_spare_item_actions": magic_spare_item_actions,
-            "fight_actions": fight_actions,
-            "unknown_type_actions": unknown_type_actions
+            "fight_actions": fight_actions
         }
 
     def clear(self):
@@ -159,11 +158,16 @@ class SpellAction(Action):
         else:
             self.actor.set_animation_state("battle_idle")
 
+    def ready_act(self):
+        self.actor.set_animation_state("battle_magic_ready")
 
+    def cancel_act(self):
+        self.controller.add_tp_to_meter(self.spell.tp_cost)
+
+"""
 class ImmediateAction(Action):
-    """
-    This is a class for special actions that execute immediately when the player
-    """
+    # This is a class for special actions that execute immediately when the player
+
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
         super().__init__(actor, targets, controller)
         #TODO: build the rest of this out
@@ -171,7 +175,7 @@ class ImmediateAction(Action):
     def execute(self):
         pass
         # TODO: Add immediate action logic.
-
+"""
 
 class SimpleActAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller,
@@ -202,25 +206,46 @@ class ComplexActAction(Action):
 
 class ItemAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller,
-                 item: ConsumableItem):
+                 item: ConsumableItem, item_index: int = 0):
         super().__init__(actor, targets, controller)
         self.item = item
-        #TODO: build the rest of this out
+        self.item_index = item_index
 
     def execute(self):
         pass
-        # TODO: Add ITEM action logic.
+        self.actor.set_animation_state("battle_item")
+        # TODO: Add ITEM use functionality here
+        # self.controller.use_consumable_item_on_targets(self.item, self.targets)
+
+    def ready_act(self):
+        if self.item.tp_restored > 0 and self.item.hp_restored == 0:  # If item is TP item exclusively
+            self.is_immediate = True
+            self.controller.tp_meter.update_tp_meter(self.item.tp_restored)
+            self.controller.tp_add_sound.play()
+            # TODO: add orange sparkles animation to indicate player received TP
+        else:
+            self.actor.set_animation_state("battle_item_ready")
+        if self.item.is_consumable:
+            self.controller.items.remove(self.item)
 
     def cancel_act(self):
-        if self.item.tp_restored > 0 and self.item.hp_restored == 0:
+        if self.item.tp_restored > 0 and self.item.hp_restored == 0:  # If item is TP item exclusively
             # In the event that the item is a TP item exclusively, reduce the TP in the TP meter by the provided amount.
             self.controller.tp_meter.update_tp_meter(-self.item.tp_restored)
+        if self.item.is_consumable:
+            self.controller.items.insert(self.item_index, self.item)
 
 
 class SpareAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, target: non_player_character.NonPlayerCharacter, controller):
         super().__init__(actor=actor, controller=controller)
         self.target = target
+
+    def ready_act(self):
+        self.actor.set_animation_state("battle_spare_ready")
+
+    def cancel_act(self):
+        self.actor.set_animation_state("battle_idle")
 
     def execute(self):
         # Makes the provided actor attempt to spare the focused enemy.
@@ -292,3 +317,16 @@ class SpareAction(Action):
 class DefendAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
         super().__init__(actor, targets, controller)
+        self.is_immediate = True
+
+    def ready_act(self):
+        self.controller.add_tp_to_meter(16.0)
+        self.actor.defend()
+        self.controller.battle_player_character_cards.children[self.controller.current_player_index].change_icon(
+            "assets/textures/gui_graphics/action_icons/defend_icon.png")
+
+    def cancel_act(self):
+        self.controller.add_tp_to_meter(-16.0)
+        self.actor.undefend()
+        self.controller.battle_player_character_cards.children[self.controller.current_player_index].change_icon(
+            "assets/textures/gui_graphics/action_icons/defend_icon.png")
