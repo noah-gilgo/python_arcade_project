@@ -325,6 +325,7 @@ class BattleController:
         """
 
         actor.set_animation_state("battle_idle")
+        arcade.play_sound(self.heal_sound)
 
         for target in targets:
             damage_healt = 0
@@ -370,8 +371,6 @@ class BattleController:
                 for sprite in sparkle_animation.get_sprites():
                     self.effects_sprite_list.append(sprite)
 
-                arcade.play_sound(self.heal_sound)
-                # TODO: add green sparkles animation
             elif damage_healt < 0:
                 target.set_animation_state("battle_hurt")
                 shake_animation = ShakeAnimation(

@@ -8,7 +8,7 @@ from arcade.gui import UIManager
 import character
 import non_player_character
 import player_character
-from animations.battle_animations import NumberBounceAnimation, EnemySparedAnimation
+from animations.battle_animations import NumberBounceAnimation, EnemySparedAnimation, TPGainAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation
 from dialogue_box import TextBoxDialog
 from items import ConsumableItem
@@ -226,7 +226,22 @@ class ItemAction(Action):
             self.is_immediate = True
             self.controller.tp_meter.update_tp_meter(self.item.tp_restored)
             self.controller.tp_add_sound.play()
-            # TODO: add orange sparkles animation to indicate player received TP
+            tp_gain_sparkles_animation = TPGainAnimation(
+                target=self.actor
+            )
+            color_filter_animation = FadeInFadeOutColorAnimation(
+                sprite=self.actor,
+                color=arcade.color.WHITE,
+                total_duration=0.3
+            )
+
+            self.controller.effects_list.append(tp_gain_sparkles_animation)
+            for sprite in tp_gain_sparkles_animation.get_sprites():
+                self.controller.effects_sprite_list.append(sprite)
+
+            self.controller.effects_list.append(color_filter_animation)
+            self.controller.effects_sprite_list.append(color_filter_animation.filter_sprite)
+
         else:
             self.actor.set_animation_state("battle_item_ready")
         if self.item.is_consumable:

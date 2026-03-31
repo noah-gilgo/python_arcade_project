@@ -223,3 +223,17 @@ class HealAnimation(SparkleAnimation):
             particle_starting_rect=target.rect,
             number_of_particles=10
         )
+
+
+class TPGainAnimation(SparkleAnimation):
+    """
+    The default heal animation. (orange sparkles drifing up)
+    """
+    def __init__(self, target: Sprite):
+        super().__init__(
+            target=target,
+            total_duration=0.8,
+            color=Color(255, 160, 64, 255),
+            particle_starting_rect=target.rect,
+            number_of_particles=10
+        )

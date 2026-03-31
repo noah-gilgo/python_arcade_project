@@ -157,7 +157,7 @@ class SparkleAnimation(SingleSpriteAnimation):
                 self.current_initial_particle_y = self.initial_particle_positions[self.current_initial_particle_position_index][1]
                 particle_sprite.center_x = self.current_initial_particle_x + (ease_out(self.time) * self.particle_sprite_translation_factor * 2)
                 particle_sprite.center_y = self.current_initial_particle_y + (ease_out(self.time) * self.particle_sprite_translation_factor * 8)
-                particle_sprite.alpha = int((1 - (self.time / self.total_duration)) * 255)
+                particle_sprite.alpha = ease_out((self.total_duration - self.time) / self.total_duration) * 255
             self.particle_movement_function = default_movement_function
         else:
             self.particle_movement_function = particle_movement_function
