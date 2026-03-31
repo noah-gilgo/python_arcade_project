@@ -161,6 +161,8 @@ class SpellAction(Action):
     def ready_act(self):
         self.actor.set_animation_state("battle_magic_ready")
 
+        self.controller.change_player_icon("assets/textures/gui_graphics/action_icons/magic_icon.png")
+
     def cancel_act(self):
         self.controller.add_tp_to_meter(self.spell.tp_cost)
 
@@ -228,6 +230,8 @@ class ItemAction(Action):
         if self.item.is_consumable:
             self.controller.items.remove(self.item)
 
+        self.controller.change_player_icon("assets/textures/gui_graphics/action_icons/item_icon.png")
+
     def cancel_act(self):
         if self.item.tp_restored > 0 and self.item.hp_restored == 0:  # If item is TP item exclusively
             # In the event that the item is a TP item exclusively, reduce the TP in the TP meter by the provided amount.
@@ -243,6 +247,8 @@ class SpareAction(Action):
 
     def ready_act(self):
         self.actor.set_animation_state("battle_spare_ready")
+
+        self.controller.change_player_icon("assets/textures/gui_graphics/action_icons/spare_icon.png")
 
     def cancel_act(self):
         self.actor.set_animation_state("battle_idle")
@@ -322,11 +328,8 @@ class DefendAction(Action):
     def ready_act(self):
         self.controller.add_tp_to_meter(16.0)
         self.actor.defend()
-        self.controller.battle_player_character_cards.children[self.controller.current_player_index].change_icon(
-            "assets/textures/gui_graphics/action_icons/defend_icon.png")
+        self.controller.change_player_icon("assets/textures/gui_graphics/action_icons/defend_icon.png")
 
     def cancel_act(self):
         self.controller.add_tp_to_meter(-16.0)
         self.actor.undefend()
-        self.controller.battle_player_character_cards.children[self.controller.current_player_index].change_icon(
-            "assets/textures/gui_graphics/action_icons/defend_icon.png")

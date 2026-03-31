@@ -451,6 +451,10 @@ class BattleController:
             self.state = BattleState.ENEMY_ATTACK
             # TODO: Add code here to initiate the enemy attack.
 
+    def change_player_icon(self, icon_path: str = ""):
+        """ Changes the icon of the current player to the icon at the given path. """
+        self.battle_player_character_cards.children[self.current_player_index].change_icon(icon_path)
+
 
 class Command:
     """ The default command object. Represents the Command design pattern. """
@@ -540,11 +544,6 @@ class SelectCommand(Command):
                 selected_spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 self.controller.focus_stack.pop()
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                current_player_character.set_animation_state("battle_magic_ready")
-
-                self.controller.battle_player_character_cards.children[
-                    self.controller.current_player_index].change_icon(
-                    "assets/textures/gui_graphics/action_icons/magic_icon.png")
 
                 spell_action = SpellAction(
                     actor=current_player_character,
