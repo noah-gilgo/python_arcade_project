@@ -216,6 +216,8 @@ class ItemAction(Action):
     def execute(self):
         pass
         self.actor.set_animation_state("battle_item")
+        item_text = "* " + self.actor.name + " used the " + self.item.name.upper() + "!"
+        self.controller.battle_textbox.load_dialog(TextBoxDialog(text=item_text))
         pyglet.clock.schedule_once(
             lambda dt: self.controller.use_consumable_item_on_targets(self.item, self.actor, self.targets), 0.5)
 
