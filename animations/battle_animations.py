@@ -6,6 +6,7 @@ from arcade.types import Color
 
 import settings
 import texture_methods
+from animations.common_animations import SparkleAnimation
 from character import Character
 from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, SingleSpriteAnimation
@@ -210,3 +211,15 @@ class EnemySparedAnimation(SingleSpriteAnimation):
         return [self.fading_sprite, self.extra_fading_sprite] + self.spare_particle_sprite_list
 
 
+class HealAnimation(SparkleAnimation):
+    """
+    The default heal animation. (green sparkles drifing up)
+    """
+    def __init__(self, target: Sprite):
+        super().__init__(
+            target=target,
+            total_duration=0.8,
+            color=Color(0, 214, 0, 255),
+            particle_starting_rect=target.rect,
+            number_of_particles=10
+        )

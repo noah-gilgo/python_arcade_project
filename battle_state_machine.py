@@ -5,6 +5,7 @@ import arcade.key
 import pyglet
 from arcade import SpriteList
 from arcade.gui import UILayout, UIWidget, UIManager
+from arcade.types import Color
 
 import battle_widgets
 import character
@@ -12,7 +13,7 @@ import items
 import non_player_character
 import player_character
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction
-from animations.battle_animations import NumberBounceAnimation
+from animations.battle_animations import NumberBounceAnimation, HealAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from dialogue_box import TextBoxDialog
@@ -350,12 +351,21 @@ class BattleController:
 
             damage_healed_color = arcade.color.WHITE
             if damage_healt > 0:
-                damage_healed_color = arcade.color.NEON_GREEN
+                damage_healed_color = Color(0, 214, 0, 255)
                 color_filter_animation = FadeInFadeOutColorAnimation(
                     sprite=target,
                     color=arcade.color.WHITE
                 )
                 self.effects_list.append(color_filter_animation)
+
+                sparkle_animation = HealAnimation(
+                    target=target
+                )
+
+                self.effects_list.append(sparkle_animation)
+                for sprite in sparkle_animation.get_sprites():
+                    self.effects_sprite_list.append(sprite)
+
                 arcade.play_sound(self.heal_sound)
                 # TODO: add green sparkles animation
             elif damage_healt < 0:
@@ -378,17 +388,10 @@ class BattleController:
                 target=target
             )
 
-            sparkle_animation = SparkleAnimation(
-                target=target,
-                color=arcade.color.NEON_GREEN
-            )
-
             self.effects_list.append(damage_healed_animation)
             self.effects_sprite_list.append(damage_healed_animation.sprite)
 
-            self.effects_list.append(sparkle_animation)
-            for sprite in sparkle_animation.get_sprites():
-                self.effects_sprite_list.append(sprite)
+
 
     def open_enemy_select_menu(self):
         """

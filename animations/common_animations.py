@@ -2,12 +2,13 @@ import math
 import random
 
 import arcade.color
-from arcade import Sprite
+from arcade import Sprite, Rect, LRBT
+from arcade.easing import ease_in_out
 from arcade.types import Color
 
 import settings
 import texture_methods
-from graphics_methods import make_texture_solid_color
+from graphics_methods import make_texture_solid_color, ease_out
 from graphics_objects import SingleSpriteAnimation
 
 import math
@@ -100,11 +101,27 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
 
 
 class SparkleAnimation(SingleSpriteAnimation):
-    def __init__(self, target: Sprite, total_duration: float = 1.0, color: Color = None):
+    def __init__(self, target: Sprite, total_duration: float = 1.0, color: Color = None,
+                 particle_starting_rect: Rect = None, particle_movement_function = None,
+                 number_of_particles: int = 10, rotations_per_second: float = 0.7,
+                 particle_scale: float = 1.0):
         super().__init__(
             sprite=target,
             total_duration=total_duration
         )
+
+        if particle_starting_rect:
+            self.spare_particle_min_x = particle_starting_rect.left
+            self.spare_particle_max_x = particle_starting_rect.right
+
+            self.spare_particle_min_y = particle_starting_rect.bottom
+            self.spare_particle_max_y = particle_starting_rect.top
+        else:
+            self.spare_particle_min_x = int(self.sprite.center_x - (self.sprite.width / 4))
+            self.spare_particle_max_x = int(self.sprite.center_x + (self.sprite.width / 4))
+
+            self.spare_particle_min_y = int(self.sprite.center_y - (self.sprite.height / 2))
+            self.spare_particle_max_y = int(self.sprite.center_y + (self.sprite.height / 2))
 
         self.sprite_pack_path = "assets/sprites/effects/heal_spare_particles"
 
@@ -121,39 +138,52 @@ class SparkleAnimation(SingleSpriteAnimation):
 
         self.spare_particle_sprite_list = []
 
-        self.spare_particle_distribution = self.sprite.width if self.sprite.width > self.sprite.height else self.sprite.height
+        self.number_of_particles = number_of_particles
 
-        self.spare_particle_min_x = int(self.sprite.center_x - (self.spare_particle_distribution / 1.8))
-        self.spare_particle_max_x = int(self.sprite.center_x + (self.spare_particle_distribution / 1.8))
+        self.initial_particle_positions = []
+        self.current_initial_particle_position_index = 0
+        self.current_initial_particle_x = 0
+        self.current_initial_particle_y = 0
 
-        self.spare_particle_min_y = int(self.sprite.center_y - (self.spare_particle_distribution / 1.8))
-        self.spare_particle_max_y = int(self.sprite.center_y + (self.spare_particle_distribution / 1.8))
-
-
-        for i in range(10):
+        for i in range(self.number_of_particles):
             sprite = arcade.Sprite()
             sprite.textures = self.spare_particle_textures
             sprite.set_texture(0)
             sprite.center_x = random.randint(self.spare_particle_min_x, self.spare_particle_max_x)
             sprite.center_y = random.randint(self.spare_particle_min_y, self.spare_particle_max_y)
-            sprite.scale = random.randint(3, 5)
+            self.initial_particle_positions.append((sprite.center_x, sprite.center_y))
+            sprite.scale = random.randint(3, 5) * particle_scale
             sprite.visible = True
             self.spare_particle_sprite_list.append(sprite)
 
+        # The function used to move the particles between 0 < self.time < self.total_duration
+        if particle_movement_function is None:
+            def default_movement_function(particle_sprite: Sprite):
+                self.current_initial_particle_x = self.initial_particle_positions[self.current_initial_particle_position_index][0]
+                self.current_initial_particle_y = self.initial_particle_positions[self.current_initial_particle_position_index][1]
+                particle_sprite.center_x = self.current_initial_particle_x + (ease_out(self.time) * self.particle_sprite_translation_factor * 2)
+                particle_sprite.center_y = self.current_initial_particle_y + (ease_out(self.time) * self.particle_sprite_translation_factor * 8)
+                particle_sprite.alpha = int((1 - (self.time / self.total_duration)) * 255)
+            self.particle_movement_function = default_movement_function
+        else:
+            self.particle_movement_function = particle_movement_function
+
+
         # Miscellaneous variables so that on_update isn't repeating redundant calculations
         self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 84
+        self.rotations_factor = rotations_per_second * 360
 
     def update_animation(self, delta_time):
         self.time += delta_time
+        self.current_initial_particle_position_index = 0
 
         # Animate the particle sprites to rotate, drift to the right, and change textures
         texture_index = int(self.time * 6) % len(self.spare_particle_textures)
         for particle_sprite in self.spare_particle_sprite_list:
             particle_sprite.set_texture(texture_index)
-            particle_sprite.turn_right(delta_time * 100)
-            particle_sprite.center_x += self.time * self.particle_sprite_translation_factor
-
-            particle_sprite.alpha = int((1 - (self.time / self.total_duration)) * 255)
+            particle_sprite.turn_right(delta_time * self.rotations_factor)
+            self.particle_movement_function(particle_sprite)
+            self.current_initial_particle_position_index += 1
         if self.time > self.total_duration:
             for particle_sprite in self.spare_particle_sprite_list:
                 particle_sprite.kill()
