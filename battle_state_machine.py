@@ -351,6 +351,9 @@ class BattleController:
                     target.hp += item.hp_restored
                     damage_healt += item.hp_restored
 
+            if target.hp > target.max_hp:
+                target.hp = target.max_hp
+
 
             damage_healed_color = arcade.color.WHITE
             if damage_healt > 0:
@@ -380,7 +383,7 @@ class BattleController:
                 pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
                 arcade.play_sound(self.hurt_sound)
 
-            damage_healt_text = str(damage_healt)
+            damage_healt_text = str(abs(damage_healt))
             if target.hp >= target.max_hp:
                 damage_healt_text = "MAX"
 

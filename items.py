@@ -53,10 +53,10 @@ def initialize_default_items():
 
     consumables = [
         ConsumableItem(
-            name="Glowshard",
-            description="A shimmering shard. Its value increases each Chapter.",
-            battle_description="Sell at shops",
-            hp_restored=40
+            name="S.POISON",
+            description="A strange concoction made of colorful squares. Will poison you.",
+            battle_description="Hurts party member",
+            hp_restored=-40
         ),
         ConsumableItem(
             name="Darker Candy",
