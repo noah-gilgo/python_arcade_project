@@ -325,7 +325,8 @@ class BattleController:
         """
 
         actor.set_animation_state("battle_idle")
-        arcade.play_sound(self.heal_sound)
+        player_healed = False
+        player_damaged = False
 
         for target in targets:
             damage_healt = 0
@@ -357,6 +358,7 @@ class BattleController:
 
             damage_healed_color = arcade.color.WHITE
             if damage_healt > 0:
+                player_healed = True
                 damage_healed_color = Color(0, 214, 0, 255)
                 color_filter_animation = FadeInFadeOutColorAnimation(
                     sprite=target,
@@ -375,6 +377,7 @@ class BattleController:
                     self.effects_sprite_list.append(sprite)
 
             elif damage_healt < 0:
+                player_damaged = True
                 target.set_animation_state("battle_hurt")
                 shake_animation = ShakeAnimation(
                     sprite=target
@@ -396,6 +399,11 @@ class BattleController:
 
             self.effects_list.append(damage_healed_animation)
             self.effects_sprite_list.append(damage_healed_animation.sprite)
+
+        if player_healed:
+            arcade.play_sound(self.heal_sound)
+        if player_damaged:
+            arcade.play_sound(self.hurt_sound)
 
     def open_enemy_select_menu(self):
         """
