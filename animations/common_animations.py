@@ -1,9 +1,12 @@
 import math
+import random
 
 import arcade.color
 from arcade import Sprite
 from arcade.types import Color
 
+import settings
+import texture_methods
 from graphics_methods import make_texture_solid_color
 from graphics_objects import SingleSpriteAnimation
 
@@ -94,3 +97,71 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
             else:
                 self.filter_sprite.kill()
                 self.terminate_animation()
+
+
+class SparkleAnimation(SingleSpriteAnimation):
+    def __init__(self, target: Sprite, total_duration: float = 1.0, color: Color = None):
+        super().__init__(
+            sprite=target,
+            total_duration=total_duration
+        )
+
+        self.sprite_pack_path = "assets/sprites/effects/heal_spare_particles"
+
+        spare_particle_textures = texture_methods.load_textures_at_filepath_into_texture_array(
+            self.sprite_pack_path
+        )
+        if color is not None:
+            colored_spare_particle_textures = []
+            for texture in spare_particle_textures:
+                colored_spare_particle_textures.append(make_texture_solid_color(texture, color))
+            self.spare_particle_textures = colored_spare_particle_textures
+        else:
+            self.spare_particle_textures = spare_particle_textures
+
+        self.spare_particle_sprite_list = []
+
+        self.spare_particle_distribution = self.sprite.width if self.sprite.width > self.sprite.height else self.sprite.height
+
+        self.spare_particle_min_x = int(self.sprite.center_x - (self.spare_particle_distribution / 1.8))
+        self.spare_particle_max_x = int(self.sprite.center_x + (self.spare_particle_distribution / 1.8))
+
+        self.spare_particle_min_y = int(self.sprite.center_y - (self.spare_particle_distribution / 1.8))
+        self.spare_particle_max_y = int(self.sprite.center_y + (self.spare_particle_distribution / 1.8))
+
+
+        for i in range(10):
+            sprite = arcade.Sprite()
+            sprite.textures = self.spare_particle_textures
+            sprite.set_texture(0)
+            sprite.center_x = random.randint(self.spare_particle_min_x, self.spare_particle_max_x)
+            sprite.center_y = random.randint(self.spare_particle_min_y, self.spare_particle_max_y)
+            sprite.scale = random.randint(3, 5)
+            sprite.visible = True
+            self.spare_particle_sprite_list.append(sprite)
+
+        # Miscellaneous variables so that on_update isn't repeating redundant calculations
+        self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 84
+
+    def update_animation(self, delta_time):
+        self.time += delta_time
+
+        # Animate the particle sprites to rotate, drift to the right, and change textures
+        texture_index = int(self.time * 6) % len(self.spare_particle_textures)
+        for particle_sprite in self.spare_particle_sprite_list:
+            particle_sprite.set_texture(texture_index)
+            particle_sprite.turn_right(delta_time * 100)
+            particle_sprite.center_x += self.time * self.particle_sprite_translation_factor
+
+            particle_sprite.alpha = int((1 - (self.time / self.total_duration)) * 255)
+        if self.time > self.total_duration:
+            for particle_sprite in self.spare_particle_sprite_list:
+                particle_sprite.kill()
+            self.terminate_animation()
+
+    def get_sprites(self):
+        """
+        Get the sprites used by this animation.
+        :return: Both of the fading out sprites used by this animation.
+        """
+        return self.spare_particle_sprite_list

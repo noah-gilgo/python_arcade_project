@@ -13,7 +13,7 @@ import non_player_character
 import player_character
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction
 from animations.battle_animations import NumberBounceAnimation
-from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation
+from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
@@ -329,15 +329,24 @@ class BattleController:
                 if target.hp < 0:
                     previous_target_hp = target.hp
                     target.hp = 1
-                    damage_healt = target.hp - previous_target_hp
-            if item.is_relative_healing_item:
-                amount_healed_by_percent = min(target.hp + (target.max_hp * item.hp_percentage_restored), target.max_hp)
-                target.hp = amount_healed_by_percent
-                damage_healt += amount_healed_by_percent
+                    damage_healt += target.hp - previous_target_hp
+                if item.is_relative_healing_item:
+                    amount_healed_by_percent = min(target.hp + (target.max_hp * item.hp_percentage_restored), target.max_hp)
+                    target.hp = amount_healed_by_percent
+                    damage_healt += amount_healed_by_percent
+                else:
+                    amount_healed_by_absolute = min(target.hp + item.hp_restored, target.max_hp)
+                    target.hp += amount_healed_by_absolute
+                    damage_healt += amount_healed_by_absolute
             else:
-                amount_healed_by_absolute = min(target.hp + item.hp_restored, target.max_hp)
-                target.hp = amount_healed_by_absolute
-                damage_healt += amount_healed_by_absolute
+                if item.is_relative_healing_item:
+                    amount_healed_by_percent = min(target.hp + (target.max_hp * item.hp_percentage_restored), target.max_hp)
+                    target.hp += amount_healed_by_percent
+                    damage_healt += amount_healed_by_percent
+                else:
+                    target.hp += item.hp_restored
+                    damage_healt += item.hp_restored
+
 
             damage_healed_color = arcade.color.WHITE
             if damage_healt > 0:
@@ -358,13 +367,28 @@ class BattleController:
                 pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
                 arcade.play_sound(self.hurt_sound)
 
+            damage_healt_text = str(damage_healt)
+            if target.hp >= target.max_hp:
+                damage_healt_text = "MAX"
+
 
             damage_healed_animation = NumberBounceAnimation(
-                text=damage_healt,
+                text=damage_healt_text,
                 color=damage_healed_color,
                 target=target
             )
+
+            sparkle_animation = SparkleAnimation(
+                target=target,
+                color=arcade.color.NEON_GREEN
+            )
+
             self.effects_list.append(damage_healed_animation)
+            self.effects_sprite_list.append(damage_healed_animation.sprite)
+
+            self.effects_list.append(sparkle_animation)
+            for sprite in sparkle_animation.get_sprites():
+                self.effects_sprite_list.append(sprite)
 
     def open_enemy_select_menu(self):
         """

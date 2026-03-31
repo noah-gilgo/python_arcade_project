@@ -208,3 +208,5 @@ class EnemySparedAnimation(SingleSpriteAnimation):
         :return: Both of the fading out sprites used by this animation.
         """
         return [self.fading_sprite, self.extra_fading_sprite] + self.spare_particle_sprite_list
+
+
