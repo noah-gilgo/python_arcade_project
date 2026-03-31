@@ -314,15 +314,17 @@ class BattleController:
                 self.current_player_index].change_icon()
 
 
-    def use_consumable_item_on_targets(self, item: ConsumableItem, targets: list[character.Character]):
+    def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
+                                       targets: list[character.Character]):
         """
         Uses a consumable item on a list of targets. Probably going to be used by the action queue. Probably.
         :param item: the item being used.
-        :param targets: the targets of the item.
+        :param actor: the actor using the item.
+        :param targets: the targets that the actor is giving the item to.
         :return: None
         """
 
-        #TODO: Add particle animation, fade in, and number animations for healing, add corner case for TP items.
+        actor.set_animation_state("battle_idle")
 
         for target in targets:
             damage_healt = 0
@@ -354,9 +356,11 @@ class BattleController:
                 damage_healed_color = Color(0, 214, 0, 255)
                 color_filter_animation = FadeInFadeOutColorAnimation(
                     sprite=target,
-                    color=arcade.color.WHITE
+                    color=arcade.color.WHITE,
+                    total_duration=0.3
                 )
                 self.effects_list.append(color_filter_animation)
+                self.effects_sprite_list.append(color_filter_animation.filter_sprite)
 
                 sparkle_animation = HealAnimation(
                     target=target
@@ -390,8 +394,6 @@ class BattleController:
 
             self.effects_list.append(damage_healed_animation)
             self.effects_sprite_list.append(damage_healed_animation.sprite)
-
-
 
     def open_enemy_select_menu(self):
         """

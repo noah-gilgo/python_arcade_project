@@ -217,7 +217,7 @@ class ItemAction(Action):
         pass
         self.actor.set_animation_state("battle_item")
         pyglet.clock.schedule_once(
-            lambda dt: self.controller.use_consumable_item_on_targets(self.item, self.targets), 0.5)
+            lambda dt: self.controller.use_consumable_item_on_targets(self.item, self.actor, self.targets), 0.5)
 
     def ready_act(self):
         if self.item.tp_restored > 0 and self.item.hp_restored == 0:  # If item is TP item exclusively

@@ -86,12 +86,6 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
         normalized_time = self.time / self.total_duration
 
         self.filter_sprite.alpha = self.min_alpha + (self.alpha_amplitude * (-abs((2*normalized_time) - 1) + 1))
-        """
-        if self.time < self.inflection_point:
-            self.filter_sprite.alpha = (self.time * ((2 / self.total_duration) * self.max_alpha)) * self.alpha_ratio
-        elif self.inflection_point <= self.time < self.total_duration:
-            self.filter_sprite.alpha = (self.time * ((2 / self.total_duration) * self.max_alpha)) * self.alpha_ratio
-        """
         if self.time > self.total_duration:
             if self.is_continuous:
                 self.time -= self.total_duration
