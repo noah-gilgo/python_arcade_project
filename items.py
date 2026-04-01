@@ -105,7 +105,7 @@ def initialize_default_items():
             hp_percentage_restored=1.0
         ),
         ConsumableItem(
-            name="Favorite Sandwich",
+            name="FavSandwich",
             description="You'd think it tastes perfect.",
             battle_description="Heals 500 HP",
             hp_restored=500
@@ -123,7 +123,7 @@ def initialize_default_items():
             tp_restored=100
         ),
         ConsumableItem(
-            name="B.Scotch Pie",
+            name="BScotch Pie",
             description="A pie made by mom. Recovers all HP for all party members.",
             battle_description="Heals all team HP",
             is_relative_healing_item=True,

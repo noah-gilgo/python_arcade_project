@@ -1322,7 +1322,7 @@ class ItemDescriptionLabel(UILabel):
         super().__init__(
             size_hint=(None, None),
             width=400,
-            height=settings.WINDOW_HEIGHT / 4,
+            height=settings.WINDOW_HEIGHT / 4.4,
             font_name="8bitoperator JVE",
             font_size=48,
             text_color=arcade.color.GRAY,
@@ -1390,6 +1390,78 @@ class ItemOptionsList(UIGridLayout):
                 else:
                     child.height = 0.01
                 current_item_index += 1
+        self.parent.make_arrow_invisible(make_first_six_items_invisible)
+
+
+class ItemArrow(UIImage):
+    """
+    The up and down arrows shown by the ITEM inventory.
+    """
+    def __init__(self, is_up: bool = True):
+        texture = arcade.load_texture("assets/textures/gui_graphics/battle/item_menu_down_arrow.png")
+        if is_up:
+            texture = texture.flip_vertically()
+
+        super().__init__(
+            texture=texture,
+            height=32,
+            width=26
+        )
+
+
+class ItemArrowContainer(UIBoxLayout):
+    """
+    The containers that the up and down arrows for the items menu are in.
+    """
+    def __init__(self):
+        super().__init__(
+            height=settings.WINDOW_HEIGHT / 5,
+            vertical=True,
+            children=[
+                ItemArrow(True),
+                ItemArrow(False)
+            ],
+            space_between=settings.WINDOW_HEIGHT / 8.0,
+            size_hint=None
+        )
+
+        self.time = 0
+        self.flag1 = True  # arrows are close
+        self.flag2 = True  # arrows are drifting apart
+        self.flag3 = True  # arrows are far apart
+        self.flag4 = True  # arrows are drifting closer
+
+
+    def on_update(self, dt):
+        self.time += dt
+
+        if self.time < 0.2 and self.flag1:
+            self._space_between += 6
+            self.height += 6
+            self.flag1 = False
+            self.do_layout()
+        elif 0.2 <= self.time < 1 and self.flag2:
+            self._space_between += 6
+            self.height += 6
+            self.flag2 = False
+            self.do_layout()
+        elif 1 <= self.time < 1.2 and self.flag3:
+            self._space_between -= 6
+            self.height -= 6
+            self.flag3 = False
+            self.do_layout()
+        elif 1.2 <= self.time < 2 and self.flag4:
+            self._space_between -= 6
+            self.height -= 6
+            self.flag4 = False
+            self.do_layout()
+        elif self.time >= 2:
+            self.time -= 2
+            self.flag1 = True
+            self.flag2 = True
+            self.flag3 = True
+            self.flag4 = True
+
 
 class ItemSelect(UIBoxLayout):
     """
@@ -1397,6 +1469,7 @@ class ItemSelect(UIBoxLayout):
     """
     def __init__(self, items: list[ConsumableItem]):
         item_options_list = ItemOptionsList(items)
+        item_arrow_container = ItemArrowContainer()
         item_description_label = ItemDescriptionLabel()
 
         self.space_between = settings.WINDOW_WIDTH - (item_options_list.width + item_description_label.width)
@@ -1405,16 +1478,26 @@ class ItemSelect(UIBoxLayout):
             x=0,
             y=0,
             width=settings.WINDOW_WIDTH,
-            height=settings.WINDOW_HEIGHT / 4.4,
+            height=settings.WINDOW_HEIGHT / 4,
             vertical=False,
-            children=[ItemOptionsList(items), ItemDescriptionLabel()],
-            align="top",
-            space_between=self.space_between
+            children=[item_options_list, item_arrow_container, item_description_label],
+            align="center",
+            space_between=(self.space_between / 2) - item_arrow_container.width
         )
+
+    def make_arrow_invisible(self, make_down_arrow_invisible: bool):
+        """ Make one of the arrows invisible depending on the focused item. """
+        if make_down_arrow_invisible:
+            self.children[1].children[0].visible = True
+            self.children[1].children[1].visible = False
+        else:
+            self.children[1].children[0].visible = False
+            self.children[1].children[1].visible = True
+
 
     def update_item_data(self, item: ConsumableItem = None):
         """ Updates the spell data shown in the layout. """
-        self.children[1].update_item_data(item)
+        self.children[2].update_item_data(item)
 
 
 class PlayerSelectInstanceNameLabel(UILabel):
