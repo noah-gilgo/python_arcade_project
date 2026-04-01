@@ -1282,7 +1282,7 @@ class TPMeter(UIBoxLayout):
 
 
 class ItemOption(UILabel):
-    def __init__(self, item: ConsumableItem):
+    def __init__(self, item: ConsumableItem, index: int):
         super().__init__(
             text="     " + item.name,
             width=400,
@@ -1294,6 +1294,7 @@ class ItemOption(UILabel):
         )
 
         self.item = item
+        self.index = index
 
         self.focus_mode = FocusMode(2)
         self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
@@ -1309,6 +1310,11 @@ class ItemOption(UILabel):
             ),
             pixelated=True
         )
+
+        if self.index > 5:
+            self.parent.make_six_items_invisible(True)
+        else:
+            self.parent.make_six_items_invisible(False)
 
 
 class ItemDescriptionLabel(UILabel):
@@ -1334,13 +1340,16 @@ class ItemOptionsList(UIGridLayout):
     Contains, at max, 6 item options in a 2x3 grid.
     """
     def __init__(self, items: list[ConsumableItem]):
+        row_count = (len(items) // 2) + 1
+        column_count = 2 if len(items) > 1 else 1
+
         super().__init__(
             x=36,
             y=0,
             width=(2 * settings.WINDOW_WIDTH) / 3,
             height=int(settings.WINDOW_HEIGHT / 4) - 30,
-            row_count=3,
-            column_count=2,
+            row_count=row_count,
+            column_count=column_count,
             align_horizontal="left",
             alight_vertical="center",
             horizontal_spacing=100,
@@ -1350,13 +1359,37 @@ class ItemOptionsList(UIGridLayout):
         current_item_index = 0
 
         for item in items:
+            item_option = ItemOption(item, current_item_index)
+            if current_item_index > 5:
+                item_option.height = 1
             self.add(
-                ItemOption(item),
+                item_option,
                 column=current_item_index % 2,
                 row=current_item_index // 2
             )
             current_item_index += 1
 
+    def make_six_items_invisible(self, make_first_six_items_invisible: bool = True):
+        """
+        Makes 6 of the items invisible to create the illusion that the user is scrolling down the item list.
+        :param make_first_six_items_invisible: whether or not to make the first six items invisible.
+        :return:
+        """
+        current_item_index = 0
+        if make_first_six_items_invisible:
+            for child in self.children:
+                if current_item_index <= 5:
+                    child.height = 0.01
+                else:
+                    child.height = 64
+                current_item_index += 1
+        else:
+            for child in self.children:
+                if current_item_index <= 5:
+                    child.height = 64
+                else:
+                    child.height = 0.01
+                current_item_index += 1
 
 class ItemSelect(UIBoxLayout):
     """

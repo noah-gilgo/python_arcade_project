@@ -359,7 +359,7 @@ class BattleController:
             damage_healed_color = arcade.color.WHITE
             if damage_healt > 0:
                 player_healed = True
-                damage_healed_color = Color(0, 214, 0, 255)
+                damage_healed_color = arcade.color.NEON_GREEN # Color(0, 214, 0, 255)
                 color_filter_animation = FadeInFadeOutColorAnimation(
                     sprite=target,
                     color=arcade.color.WHITE,

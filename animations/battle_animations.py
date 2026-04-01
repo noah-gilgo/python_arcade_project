@@ -219,7 +219,7 @@ class HealAnimation(SparkleAnimation):
         super().__init__(
             target=target,
             total_duration=0.8,
-            color=Color(0, 214, 0, 255),
+            color=arcade.color.NEON_GREEN, # Color(0, 214, 0, 255),
             particle_starting_rect=target.rect,
             number_of_particles=10
         )

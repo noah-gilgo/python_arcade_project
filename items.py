@@ -53,10 +53,11 @@ def initialize_default_items():
 
     consumables = [
         ConsumableItem(
-            name="S.POISON",
-            description="A strange concoction made of colorful squares. Will poison you.",
-            battle_description="Hurts party member",
-            hp_restored=-40
+            name="Glowshard",
+            description="A shimmering shard. Its value increases each Chapter.",
+            battle_description="Sell at shops",
+            hp_restored=40,
+            is_consumable=False
         ),
         ConsumableItem(
             name="Darker Candy",
@@ -89,7 +90,46 @@ def initialize_default_items():
             description="Raises TP by 32% in battle.",
             battle_description="Raises TP 32%",
             tp_restored=32
-        )
+        ),
+        ConsumableItem(
+            name="S.POISON",
+            description="A strange concoction made of colorful squares. Will poison you.",
+            battle_description="Hurts party member",
+            hp_restored=-40
+        ),
+        ConsumableItem(
+            name="Bitter Tear",
+            description="Bitter water that fell in droplets from the sky. Recovers all HP.",
+            battle_description="Heals all HP",
+            is_relative_healing_item=True,
+            hp_percentage_restored=1.0
+        ),
+        ConsumableItem(
+            name="Favorite Sandwich",
+            description="You'd think it tastes perfect.",
+            battle_description="Heals 500 HP",
+            hp_restored=500
+        ),
+        ConsumableItem(
+            name="CD Bagel",
+            description="A bagel with a reflective inside. Makes music with each bite. +80HP",
+            battle_description="Heals 80 HP",
+            hp_restored=80
+        ),
+        ConsumableItem(
+            name="Tension Max",
+            description="Raises TP to full in battle.",
+            battle_description="Raises TP MAX",
+            tp_restored=100
+        ),
+        ConsumableItem(
+            name="B.Scotch Pie",
+            description="A pie made by mom. Recovers all HP for all party members.",
+            battle_description="Heals all team HP",
+            is_relative_healing_item=True,
+            hp_percentage_restored=1.0,
+            heals_all_party_members=True
+        ),
     ]
 
     consumable_id = 1
