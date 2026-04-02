@@ -3,7 +3,7 @@ import random
 
 import arcade.color
 from arcade import Sprite, Rect, LRBT
-from arcade.easing import ease_in_out
+from arcade.easing import ease_in_out, ease_in
 from arcade.types import Color
 
 import settings

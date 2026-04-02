@@ -355,6 +355,7 @@ class BattleController:
             if target.hp > target.max_hp:
                 target.hp = target.max_hp
 
+            self.update_hp_on_player_card(target, damage_healt)
 
             damage_healed_color = arcade.color.WHITE
             if damage_healt > 0:
@@ -404,6 +405,20 @@ class BattleController:
             arcade.play_sound(self.heal_sound)
         if player_damaged:
             arcade.play_sound(self.hurt_sound)
+
+    def update_hp_on_player_card(self, character: player_character.PlayerCharacter, hp_affected: float):
+        """
+        Updates the hp of the provided player.
+        :param character: the player to have their HP modified
+        :return:
+        """
+
+        for character_card in self.battle_player_character_cards.children:
+            if character_card.player_character == character:
+                character_card.children[1].children[1].children[0].children[0].update_hp_on_character_card()
+                character_card.children[1].children[1].children[1].children[1].update_hp()
+                if hp_affected < 0:
+                    character_card.children[1].children[0].children[0].change_to_hurt_icon()
 
     def open_enemy_select_menu(self):
         """
