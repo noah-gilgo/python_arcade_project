@@ -207,6 +207,12 @@ class BattleHUDCharacterHPText(UILabel):
 
     def update_hp_on_character_card(self):
         self.text = str(self.character.hp)
+        if 0 < self.character.hp < self.character.max_hp / 4:
+            self.update_font(font_color=arcade.color.YELLOW)
+        elif self.character.hp < 0:
+            self.update_font(font_color=arcade.color.RED)
+        else:
+            self.update_font(font_color=arcade.color.WHITE)
 
 
 class BattleHUDCharacterSlashText(UIImage):
@@ -234,6 +240,15 @@ class BattleHUDCharacterMaxHPText(UILabel):
             multiline=False
         )
         self.focus_mode = FocusMode(0)
+
+    def update_max_hp_on_character_card(self):
+        self.text = str(self.character.max_hp)
+        if 0 < self.character.hp < self.character.max_hp / 4:
+            self.update_font(font_color=arcade.color.YELLOW)
+        elif self.character.hp < 0:
+            self.update_font(font_color=arcade.color.RED)
+        else:
+            self.update_font(font_color=arcade.color.WHITE)
 
 
 class BattleHUDCharacterHP(UIBoxLayout):

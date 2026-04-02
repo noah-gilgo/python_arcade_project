@@ -329,10 +329,10 @@ class BattleController:
         player_damaged = False
 
         for target in targets:
+            previous_target_hp = target.hp
             damage_healt = 0
             if item.is_revive_item:
                 if target.hp < 0:
-                    previous_target_hp = target.hp
                     target.hp = 1
                     damage_healt += target.hp - previous_target_hp
                 if item.is_relative_healing_item:
@@ -355,8 +355,7 @@ class BattleController:
             if target.hp > target.max_hp:
                 target.hp = target.max_hp
 
-            self.update_hp_on_player_card(target, damage_healt)
-
+            damage_healt_text = str(abs(damage_healt))
             damage_healed_color = arcade.color.WHITE
             if damage_healt > 0:
                 player_healed = True
@@ -378,25 +377,37 @@ class BattleController:
                     self.effects_sprite_list.append(sprite)
 
             elif damage_healt < 0:
-                player_damaged = True
-                target.set_animation_state("battle_hurt")
+                if target.hp <= 0 and previous_target_hp > 0:
+                    damage_healt_text = "DOWN"
+                    damage_healed_color = arcade.color.RED
+                    target.set_animation_state("battle_downed")
+                    target.hp = -80
+                else:
+                    player_damaged = True
+                    if not target.is_player_defending():
+                        target.set_animation_state("battle_hurt")
+                        pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
                 shake_animation = ShakeAnimation(
                     sprite=target
                 )
                 self.effects_list.append(shake_animation)
-                pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
                 arcade.play_sound(self.hurt_sound)
 
-            damage_healt_text = str(abs(damage_healt))
             if target.hp >= target.max_hp:
                 damage_healt_text = "MAX"
 
+            if target.hp > 0 and previous_target_hp <= 0:
+                damage_healt_text = "UP"
+                damage_healed_color = arcade.color.NEON_GREEN
+                target.set_animation_state("battle_idle")
 
             damage_healed_animation = NumberBounceAnimation(
                 text=damage_healt_text,
                 color=damage_healed_color,
                 target=target
             )
+
+            self.update_hp_on_player_card(target, damage_healt)
 
             self.effects_list.append(damage_healed_animation)
             self.effects_sprite_list.append(damage_healed_animation.sprite)
@@ -416,6 +427,7 @@ class BattleController:
         for character_card in self.battle_player_character_cards.children:
             if character_card.player_character == character:
                 character_card.children[1].children[1].children[0].children[0].update_hp_on_character_card()
+                character_card.children[1].children[1].children[0].children[2].update_max_hp_on_character_card()
                 character_card.children[1].children[1].children[1].children[1].update_hp()
                 if hp_affected < 0:
                     character_card.children[1].children[0].children[0].change_to_hurt_icon()
