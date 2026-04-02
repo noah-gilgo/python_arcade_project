@@ -1,6 +1,7 @@
 import math
 
 import arcade
+import pyglet.clock
 from PIL import Image, ImageChops
 from PIL.Image import Resampling
 from arcade import LBWH, Rect
@@ -14,6 +15,7 @@ import non_player_character
 import player_character
 import settings
 from graphics_methods import ease_out, make_texture_solid_color
+from items import Item, ConsumableItem
 from spells import Spell
 
 
@@ -192,18 +194,26 @@ class BattleHUDButtonLayout(UIBoxLayout):
 
 class BattleHUDCharacterHPText(UILabel):
     def __init__(self, character: player_character.PlayerCharacter):
+        self.character = character
         super().__init__(
             width=180,
             height=21,
-            text=str(character.hp),
+            text=str(self.character.hp),
             font_name="3x5 font",
             font_size=21,
             multiline=False
         )
         self.focus_mode = FocusMode(0)
+        self.update_hp_on_character_card()
 
-    def set_hp_on_character_card(self, hp: int):
-        self.text = str(hp)
+    def update_hp_on_character_card(self):
+        self.text = str(self.character.hp)
+        if 0 < self.character.hp < self.character.max_hp / 4:
+            self.update_font(font_color=arcade.color.YELLOW)
+        elif self.character.hp < 0:
+            self.update_font(font_color=arcade.color.RED)
+        else:
+            self.update_font(font_color=arcade.color.WHITE)
 
 
 class BattleHUDCharacterSlashText(UIImage):
@@ -221,18 +231,26 @@ class BattleHUDCharacterSlashText(UIImage):
 
 class BattleHUDCharacterMaxHPText(UILabel):
     def __init__(self, character: player_character.PlayerCharacter):
+        self.character = character
         super().__init__(
             width=180,
             height=21,
-            text=str(character.max_hp),
+            text=str(self.character.max_hp),
             font_name="3x5 font",
             font_size=21,
             multiline=False
         )
         self.focus_mode = FocusMode(0)
+        self.update_max_hp_on_character_card()
 
-    def set_max_hp_on_character_card(self, hp: int):
-        self.text = str(hp)
+    def update_max_hp_on_character_card(self):
+        self.text = str(self.character.max_hp)
+        if 0 < self.character.hp < self.character.max_hp / 4:
+            self.update_font(font_color=arcade.color.YELLOW)
+        elif self.character.hp < 0:
+            self.update_font(font_color=arcade.color.RED)
+        else:
+            self.update_font(font_color=arcade.color.WHITE)
 
 
 class BattleHUDCharacterHP(UIBoxLayout):
@@ -275,6 +293,8 @@ class BattleHUDHPMeter(UIWidget):
     value = Property(0.0)
 
     def __init__(self, character: player_character.PlayerCharacter):
+        self.player_character = character
+
         super().__init__(
             width=140,
             height=18,
@@ -284,10 +304,10 @@ class BattleHUDHPMeter(UIWidget):
 
         self.with_background(color=arcade.color.DARK_RED)
 
-        self.hp = character.hp
-        self.max_hp = character.max_hp
+        self.hp = self.player_character.hp
+        self.max_hp = self.player_character.max_hp
 
-        self.value = self.hp / self.max_hp
+        self.value = self.player_character.hp / self.player_character.max_hp
         self.color = character.battle_ui_color
 
         # trigger a render when the value changes
@@ -303,6 +323,10 @@ class BattleHUDHPMeter(UIWidget):
             self.content_height,
             self.color,
         )
+
+    def update_hp(self):
+        """ Updates the HP meter to accurately reflect the current HP of the player character. """
+        self.value = self.player_character.hp / self.player_character.max_hp
 
 
 class BattleHUDHPMeterLayout(UIBoxLayout):
@@ -355,16 +379,35 @@ class BattleHUDCharacterIcon(UIImage):
         """
 
         texture_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
+        hurt_texture_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_hurt_icon.png"
 
         image = Image.open(texture_path)
-        texture = arcade.Texture(arcade.load_image(texture_path).resize(image.size, Image.Resampling.NEAREST))
+        hurt_image = Image.open(hurt_texture_path)
+        self.normal_texture = arcade.Texture(arcade.load_image(texture_path).resize(image.size, Image.Resampling.NEAREST))
+        self.hurt_texture = arcade.Texture(arcade.load_image(hurt_texture_path).resize(hurt_image.size, Image.Resampling.NEAREST))
 
         super().__init__(
-            texture=texture,
+            texture=self.normal_texture,
             width=64,
             height=48
         )
         self.focus_mode = FocusMode(0)
+
+    def set_texture_to_normal(self, dt):
+        """
+        Sets the icon texture back to normal.
+        :return:
+        """
+        self.texture = self.normal_texture
+
+    def change_to_hurt_icon(self):
+        """
+        Temporarily changes the icon to the character's hurt icon.
+        :return: None
+        """
+        if self.texture == self.normal_texture:
+            self.texture = self.hurt_texture
+            pyglet.clock.schedule_once(self.set_texture_to_normal, 1.0)
 
 
 class BattleHUDCharacterName(UILabel):
@@ -627,24 +670,6 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
         self.center_x = int(settings.WINDOW_WIDTH / 2)
         super().do_layout()
 
-    """
-    def draw(self):
-        for character in self.player_characters:
-            line = create_line(
-                start_x=self.x,
-                start_y=self.y,
-                end_x=self.x,
-                end_y=self.y + self.height,
-                color=(character.battle_ui_color.r,
-                       character.battle_ui_color.g,
-                       character.battle_ui_color.b,
-                       character.battle_ui_color.a),
-                line_width=3
-            )
-
-            line.draw()
-    """
-
 
 class SpellListOption(UILabel):
     def __init__(self, spell: Spell, color: Color = arcade.color.WHITE):
@@ -663,11 +688,6 @@ class SpellListOption(UILabel):
         self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
 
     def do_render_focus(self, surface: arcade.gui.Surface):
-        x = self.left - 20
-        y = self.center_y
-
-        self.prepare_render(surface)
-
         arcade.draw_sprite_rect(
             self.soul_sprite,
             arcade.XYWH(
@@ -1011,38 +1031,6 @@ class EnemySelectInstance(UIBoxLayout):
             pixelated=True
         )
 
-"""
-class EnemySelectInstanceWidget(UIWidget):
-    def __init__(self, enemy: non_player_character.NonPlayerCharacter):
-        super().__init__(
-            width=int(settings.WINDOW_WIDTH * .9),
-            height=40
-        )
-
-        self.enemy_select_instance = EnemySelectInstance(enemy)
-
-        self.focus_mode = FocusMode(2)
-        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
-
-    def do_render(self, surface):
-        self.enemy_select_instance.do_render(surface)
-
-    def do_render_focus(self, surface: arcade.gui.Surface):
-        x = self.left - 20
-        y = self.center_y
-
-        arcade.draw_sprite_rect(
-            self.soul_sprite,
-            arcade.XYWH(
-                16,
-                32,
-                32,
-                32
-            ),
-            pixelated=True
-        )
-"""
-
 
 class EnemySelectMeterColumnLabel(UIWidget):
     def __init__(self, text: str):
@@ -1283,3 +1271,335 @@ class TPMeter(UIBoxLayout):
     def update_tp_meter(self, tp: float = 0.0):
         tp_meter = self.children[1]
         tp_meter.update(tp)
+
+
+class ItemOption(UILabel):
+    def __init__(self, item: ConsumableItem, index: int):
+        super().__init__(
+            text="     " + item.name,
+            width=400,
+            height=64,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.WHITE,
+            size_hint=None
+        )
+
+        self.item = item
+        self.index = index
+
+        self.focus_mode = FocusMode(2)
+        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
+
+    def do_render_focus(self, surface: arcade.gui.Surface):
+        arcade.draw_sprite_rect(
+            self.soul_sprite,
+            arcade.XYWH(
+                32,
+                32,
+                32,
+                32
+            ),
+            pixelated=True
+        )
+
+        if self.index > 5:
+            self.parent.make_six_items_invisible(True)
+        else:
+            self.parent.make_six_items_invisible(False)
+
+
+class ItemDescriptionLabel(UILabel):
+    def __init__(self, item_description: str = ""):
+        super().__init__(
+            size_hint=(None, None),
+            width=400,
+            height=settings.WINDOW_HEIGHT / 4.4,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.GRAY,
+            text=item_description,
+            multiline=True
+        )
+
+    def update_item_data(self, item: ConsumableItem = None):
+        """ Updates the spell data shown in the layout. """
+        self.text = "" if not item or not item.battle_description else item.battle_description
+
+
+class ItemOptionsList(UIGridLayout):
+    """
+    Contains, at max, 6 item options in a 2x3 grid.
+    """
+    def __init__(self, items: list[ConsumableItem]):
+        row_count = (len(items) // 2) + 1
+        column_count = 2 if len(items) > 1 else 1
+
+        super().__init__(
+            x=36,
+            y=0,
+            width=(2 * settings.WINDOW_WIDTH) / 3,
+            height=196, # int(settings.WINDOW_HEIGHT / 4) - 30,
+            row_count=row_count,
+            column_count=column_count,
+            align_horizontal="left",
+            alight_vertical="center",
+            horizontal_spacing=100,
+            size_hint=None
+        )
+
+        current_item_index = 0
+
+        for item in items:
+            item_option = ItemOption(item, current_item_index)
+            if current_item_index > 5:
+                item_option.height = 1
+            self.add(
+                item_option,
+                column=current_item_index % 2,
+                row=current_item_index // 2
+            )
+            current_item_index += 1
+
+    def make_six_items_invisible(self, make_first_six_items_invisible: bool = True):
+        """
+        Makes 6 of the items invisible to create the illusion that the user is scrolling down the item list.
+        :param make_first_six_items_invisible: whether or not to make the first six items invisible.
+        :return:
+        """
+        current_item_index = 0
+        if make_first_six_items_invisible:
+            for child in self.children:
+                if current_item_index <= 5:
+                    child.height = 0.01
+                else:
+                    child.height = 64
+                current_item_index += 1
+        else:
+            for child in self.children:
+                if current_item_index <= 5:
+                    child.height = 64
+                else:
+                    child.height = 0.01
+                current_item_index += 1
+        self.parent.make_arrow_invisible(make_first_six_items_invisible)
+
+
+class ItemArrow(UIImage):
+    """
+    The up and down arrows shown by the ITEM inventory.
+    """
+    def __init__(self, is_up: bool = True):
+        texture = arcade.load_texture("assets/textures/gui_graphics/battle/item_menu_down_arrow.png")
+        if is_up:
+            texture = texture.flip_vertically()
+
+        super().__init__(
+            texture=texture,
+            height=32,
+            width=26
+        )
+
+
+class ItemArrowContainer(UIBoxLayout):
+    """
+    The containers that the up and down arrows for the items menu are in.
+    """
+    def __init__(self):
+        super().__init__(
+            height=settings.WINDOW_HEIGHT / 5,
+            vertical=True,
+            children=[
+                ItemArrow(True),
+                ItemArrow(False)
+            ],
+            space_between=settings.WINDOW_HEIGHT / 8.0,
+            size_hint=None
+        )
+
+        self.time = 0
+        self.flag1 = True  # arrows are close
+        self.flag2 = True  # arrows are drifting apart
+        self.flag3 = True  # arrows are far apart
+        self.flag4 = True  # arrows are drifting closer
+
+
+    def on_update(self, dt):
+        self.time += dt
+
+        if self.time < 0.2 and self.flag1:
+            self._space_between += 6
+            self.height += 6
+            self.flag1 = False
+            self.do_layout()
+        elif 0.2 <= self.time < 1 and self.flag2:
+            self._space_between += 6
+            self.height += 6
+            self.flag2 = False
+            self.do_layout()
+        elif 1 <= self.time < 1.2 and self.flag3:
+            self._space_between -= 6
+            self.height -= 6
+            self.flag3 = False
+            self.do_layout()
+        elif 1.2 <= self.time < 2 and self.flag4:
+            self._space_between -= 6
+            self.height -= 6
+            self.flag4 = False
+            self.do_layout()
+        elif self.time >= 2:
+            self.time -= 2
+            self.flag1 = True
+            self.flag2 = True
+            self.flag3 = True
+            self.flag4 = True
+
+
+class ItemSelect(UIBoxLayout):
+    """
+    The item select container allowing the user to select an item in battle.
+    """
+    def __init__(self, items: list[ConsumableItem]):
+        item_options_list = ItemOptionsList(items)
+        item_arrow_container = ItemArrowContainer()
+        item_description_label = ItemDescriptionLabel()
+
+        self.space_between = settings.WINDOW_WIDTH - (item_options_list.width + item_description_label.width)
+
+        super().__init__(
+            x=0,
+            y=0,
+            width=settings.WINDOW_WIDTH,
+            height=settings.WINDOW_HEIGHT / 4,
+            vertical=False,
+            children=[item_options_list, item_arrow_container, item_description_label],
+            align="center",
+            space_between=(self.space_between / 2) - item_arrow_container.width
+        )
+
+    def make_arrow_invisible(self, make_down_arrow_invisible: bool):
+        """ Make one of the arrows invisible depending on the focused item. """
+        if make_down_arrow_invisible:
+            self.children[1].children[0].visible = True
+            self.children[1].children[1].visible = False
+        else:
+            self.children[1].children[0].visible = False
+            self.children[1].children[1].visible = True
+
+
+    def update_item_data(self, item: ConsumableItem = None):
+        """ Updates the spell data shown in the layout. """
+        self.children[2].update_item_data(item)
+
+
+class PlayerSelectInstanceNameLabel(UILabel):
+    """
+    Contains the name of the player to be selected in the player select menu.
+    """
+    def __init__(self, player_name: str):
+        super().__init__(
+            text="    " + player_name,
+            width=400,
+            height=64,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.WHITE,
+            size_hint=None
+        )
+
+
+class PlayerSelectInstanceHPMeter(UIWidget):
+    value = Property(0.0)
+
+    def __init__(self, hp: int, max_hp: int):
+        super().__init__(
+            width=220,
+            height=36,
+            size_hint=None
+        )
+        self.focus_mode = FocusMode(0)
+
+        self.with_background(color=arcade.color.DARK_RED)
+
+        self.hp = hp
+        self.max_hp = max_hp
+
+        self.value = self.hp / self.max_hp
+        self.color = arcade.color.NEON_GREEN
+
+        # trigger a render when the value changes
+        bind(self, "value", self.trigger_render)
+
+    def do_render(self, surface: arcade.gui.Surface) -> None:
+        self.prepare_render(surface)
+
+        arcade.draw_lbwh_rectangle_filled(
+            0,
+            0,
+            self.content_width * self.value,
+            self.content_height,
+            self.color,
+        )
+
+        super().do_render(surface)
+
+
+class PlayerSelectInstance(UIBoxLayout):
+    def __init__(self, player: player_character.PlayerCharacter):
+        self.player = player
+
+
+        player_label = PlayerSelectInstanceNameLabel(self.player.name)
+        player_hp_meter = PlayerSelectInstanceHPMeter(self.player.hp, self.player.max_hp)
+
+        self.space_between = settings.WINDOW_WIDTH - (player_label.width + player_hp_meter.width) - 400
+        super().__init__(
+            width=int(settings.WINDOW_WIDTH - 40),
+            height=40,
+            vertical=False,
+            children=[
+                player_label,
+                player_hp_meter
+            ],
+            space_between=self.space_between
+        )
+
+        self.focus_mode = FocusMode(2)
+        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
+
+    def do_render_focus(self, surface: arcade.gui.Surface):
+        arcade.draw_sprite_rect(
+            self.soul_sprite,
+            arcade.XYWH(
+                16,
+                28,
+                32,
+                32
+            ),
+            pixelated=True
+        )
+
+
+class PlayerSelect(UIBoxLayout):
+    def __init__(self, players: list[player_character.PlayerCharacter]):
+
+        super().__init__(
+            x=0,
+            y=0,
+            width=settings.WINDOW_WIDTH,
+            height=settings.WINDOW_HEIGHT / 4.2,
+            vertical=True,
+            align="center",
+            size_hint=None
+        )
+
+        for player in players:
+            self.add(PlayerSelectInstance(player))
+
+        self.with_background(color=arcade.color.BLACK)
+
+    def do_layout(self):
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
+        self.height = int(settings.WINDOW_HEIGHT / 4.2)
+
+        super().do_layout()
