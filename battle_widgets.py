@@ -204,6 +204,7 @@ class BattleHUDCharacterHPText(UILabel):
             multiline=False
         )
         self.focus_mode = FocusMode(0)
+        self.update_hp_on_character_card()
 
     def update_hp_on_character_card(self):
         self.text = str(self.character.hp)
@@ -240,6 +241,7 @@ class BattleHUDCharacterMaxHPText(UILabel):
             multiline=False
         )
         self.focus_mode = FocusMode(0)
+        self.update_max_hp_on_character_card()
 
     def update_max_hp_on_character_card(self):
         self.text = str(self.character.max_hp)

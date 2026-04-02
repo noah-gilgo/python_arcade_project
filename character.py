@@ -42,7 +42,7 @@ class Character(arcade.Sprite):
         self.sprite_folder_name = sprite_folder_name
         self.name = name
         self.max_hp = max_hp
-        self.hp = 1
+        self.hp = max_hp
         self.attack = attack
         self.defense = defense
         self.element_id = element_id
