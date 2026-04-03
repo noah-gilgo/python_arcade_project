@@ -3,7 +3,8 @@ import command
 
 import arcade.key
 import pyglet
-from arcade import SpriteList
+from PIL import Image, ImageDraw
+from arcade import SpriteList, Sprite, Texture
 from arcade.gui import UILayout, UIWidget, UIManager
 from arcade.types import Color
 
@@ -12,6 +13,7 @@ import character
 import items
 import non_player_character
 import player_character
+import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
@@ -221,6 +223,13 @@ class BattleController:
 
         self.items = items.initialize_default_items()
 
+        self.fight_box_sprites_array = []
+        self.fight_crit_box_sprites_array = []
+        self.icon_and_press_sprites_array = []
+        self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
+
+        # self.spawn_fight_bars(self.player_characters)
+
     def confirm_command(self):
         SelectCommand(self).execute()
 
@@ -313,6 +322,86 @@ class BattleController:
             self.battle_player_character_cards.children[
                 self.current_player_index].change_icon()
 
+    def spawn_fight_bars(self, players_fighting: list[PlayerCharacter]):
+        """
+        Creates a FIGHT graphic for the fighting players.
+        :param players_fighting:
+        :return: None
+        """
+        if len(self.fight_box_sprites_array) > 0:
+            for sprite in self.fight_box_sprites_array:
+                sprite.kill()
+        if len(self.fight_crit_box_sprites_array) > 0:
+            for sprite in self.fight_crit_box_sprites_array:
+                sprite.kill()
+        if len(self.icon_and_press_sprites_array) > 0:
+            for sprite in self.icon_and_press_sprites_array:
+                sprite.kill()
+
+        height_of_fight_ui = int(settings.WINDOW_HEIGHT / 4)
+        height_of_fight_bar = int(height_of_fight_ui / (len(players_fighting) if len(players_fighting) > 3 else 3))
+        width_of_fight_bar = 236
+        width_of_fight_crit_bar = 20
+        fight_box = Image.new("RGBA", (width_of_fight_bar, height_of_fight_bar), (0, 0, 0, 255))
+        fight_crit_box = Image.new("RGBA", (width_of_fight_crit_bar, height_of_fight_bar), (0, 0, 0, 255))
+        draw_fight_box = ImageDraw.Draw(fight_box)
+        draw_fight_crit_box = ImageDraw.Draw(fight_crit_box)
+
+        player_index = 0
+        icon_center_x = 48
+        press_center_x = 128
+        fight_box_center_x = settings.WINDOW_WIDTH / 5
+        fight_crit_box_center_x = fight_box_center_x - ((width_of_fight_bar / 2) - 16)
+
+        icon_scale = 2.0 if len(players_fighting) < 4 else 2.0 / (len(players_fighting) / 3)
+
+        for player in players_fighting:
+            fight_box_center_y = height_of_fight_ui - ((height_of_fight_bar / 2) + (height_of_fight_bar * player_index))
+
+            draw_fight_box.rectangle(
+                [
+                    (0, 0),
+                    (width_of_fight_bar, height_of_fight_bar)
+                ],
+                outline=player.fight_box_color.swizzle("rgba"),
+                width=4
+            )
+            fight_box_sprite = Sprite(Texture(fight_box), center_x=fight_box_center_x, center_y=fight_box_center_y)
+
+            self.fight_box_sprites_array.append(fight_box_sprite)
+            self.effects_sprite_list.append(fight_box_sprite)
+
+            draw_fight_crit_box.rectangle(
+                [
+                    (0, 0),
+                    (width_of_fight_crit_bar, height_of_fight_bar)
+                ],
+                outline=player.fight_crit_box_color.swizzle("rgba"),
+                width=4
+            )
+            fight_crit_box_sprite = Sprite(Texture(fight_crit_box), center_x=fight_crit_box_center_x, center_y=fight_box_center_y)
+
+            self.fight_crit_box_sprites_array.append(fight_crit_box_sprite)
+            self.effects_sprite_list.append(fight_crit_box_sprite)
+
+
+            icon_sprite = Sprite(player.normal_icon_texture, scale=icon_scale, center_x=icon_center_x, center_y=fight_box_center_y)
+            press_sprite = Sprite(self.press_texture, scale=2.0, center_x=press_center_x, center_y=fight_box_center_y + ((height_of_fight_bar / 2) - 20))
+            self.icon_and_press_sprites_array.append(icon_sprite)
+            self.icon_and_press_sprites_array.append(press_sprite)
+            self.effects_sprite_list.append(icon_sprite)
+            self.effects_sprite_list.append(press_sprite)
+
+            player_index += 1
+
+    def despawn_fight_bars(self):
+        """ Cleans up the fight bars after they've spawned. """
+        for sprite in self.fight_box_sprites_array:
+            sprite.kill()
+        for sprite in self.fight_crit_box_sprites_array:
+            sprite.kill()
+        for sprite in self.icon_and_press_sprites_array:
+            sprite.kill()
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):

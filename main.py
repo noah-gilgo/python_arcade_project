@@ -148,6 +148,8 @@ class GameView(arcade.View):
                                                            magic=0,
                                                            battle_ui_color=Color(0, 255, 255, 255),
                                                            battle_ui_icon_color=Color(0, 162, 232, 255),
+                                                           fight_box_color=Color(0, 0, 255, 255),
+                                                           fight_crit_box_color=Color(0, 162, 232, 255),
                                                            knows_magic=False)
         self.player_one.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_one)  # Append the instance to the SpriteList
@@ -167,12 +169,14 @@ class GameView(arcade.View):
                                                            defense=2,
                                                            magic=1,
                                                            battle_ui_color=Color(255, 0, 255, 255),
-                                                           battle_ui_icon_color=Color(234, 121, 200, 255))  # Sprite initialization
+                                                           battle_ui_icon_color=Color(234, 121, 200, 255),  # Sprite initialization
+                                                           fight_box_color = Color(128, 0, 128, 255),
+                                                           fight_crit_box_color=Color(234, 121, 200, 255))
         self.player_two.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_two)
 
-        """
+
         self.player_three = player_character.PlayerCharacter(scale=4.0,
                                                              center_x=self._holy_arc[2][0],
                                                              center_y=self._holy_arc[2][1],
@@ -184,11 +188,13 @@ class GameView(arcade.View):
                                                              defense=2,
                                                              magic=7,
                                                              battle_ui_color=Color(0, 255, 0, 255),
-                                                             battle_ui_icon_color=Color(181, 230, 29, 255))  # Sprite initialization
+                                                             battle_ui_icon_color=Color(181, 230, 29, 255), # Sprite initialization
+                                                             fight_box_color=Color(255, 255, 0, 255),
+                                                             fight_crit_box_color=Color(181, 230, 29, 255))
         self.player_three.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_three)
-        """
+
 
         self.player_four = player_character.PlayerCharacter(scale=4.0,
                                                             center_x=self._holy_arc[2][0],
@@ -202,6 +208,8 @@ class GameView(arcade.View):
                                                             magic=0,
                                                             battle_ui_color=Color(255, 255, 0, 255),
                                                             battle_ui_icon_color=Color(255, 255, 0, 255),
+                                                            fight_box_color=Color(255, 255, 0, 255),
+                                                            fight_crit_box_color=Color(254, 254, 255, 255),
                                                             spells=[
                                                                 Spell(
                                                                     name="Heal Prayer",
@@ -344,11 +352,11 @@ class GameView(arcade.View):
         with self.camera.activate():
             self.background_sprites.draw(pixelated=True)
             self.character_sprites.draw(pixelated=True)
+            self.manager.draw(pixelated=True)
             self.effects_sprites.draw(pixelated=True)
             for effect in self.effects:
                 if hasattr(effect, "draw") and callable(effect.draw):
                     effect.draw()
-            self.manager.draw(pixelated=True)
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
