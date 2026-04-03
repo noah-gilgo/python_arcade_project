@@ -121,6 +121,10 @@ class FightAction(Action):
         super().__init__(actor=actor, controller=controller)
         self.target = target
 
+    def ready_act(self):
+        self.actor.set_animation_state("battle_attack_ready")
+        self.controller.change_player_icon("assets/textures/gui_graphics/action_icons/fight_icon.png")
+
 
 class SpellAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter,

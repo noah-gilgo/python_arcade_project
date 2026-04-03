@@ -274,7 +274,7 @@ class FightHitBar(SingleSpriteAnimation):
         self.trailing_bars_respawn_distance = 30
         self.trailing_bar_center_x = self.initial_center_x
 
-        for i in range(6):
+        for i in range(7):
             trailing_bar_sprite = Sprite(
                 path_or_texture=self.bar_texture,
                 center_x=self.trailing_bar_center_x,
@@ -316,12 +316,12 @@ class FightHitBar(SingleSpriteAnimation):
         if self.hit_registered:
             self.time_since_hit_registered += delta_time
             if self.critical_hit_registered:
-                self.sprite.scale = 1.0 + (self.time_since_hit_registered * 2)
+                self.sprite.scale = 1.0 + (self.time_since_hit_registered * 6)
                 self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 8)
             else:
-                self.sprite.scale = 1.0 + self.time_since_hit_registered
-                self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 4)
-            self.sprite.alpha = max(255 - (self.time_since_hit_registered * 10), 0)
+                self.sprite.scale = 1.0 + (self.time_since_hit_registered * 12)
+                self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 16)
+            self.sprite.alpha = max(255 - (self.time_since_hit_registered * 1000), 0)
             if self.time_since_hit_registered > 1:
                 self.terminate_animation()
 
@@ -353,9 +353,10 @@ class FightHitBar(SingleSpriteAnimation):
         self.bar_is_moving = False
 
     def register_critical_hit(self):
-        self.sprite.texture_index = 1
+        self.sprite.set_texture(1)
         self.critical_hit_registered = True
-        self.bar_is_moving = False
+
+        self.register_hit()
 
     def terminate_animation(self):
         super().terminate_animation()

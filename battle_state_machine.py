@@ -10,11 +10,12 @@ from arcade.types import Color
 
 import battle_widgets
 import character
+import default_data
 import items
 import non_player_character
 import player_character
 import settings
-from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction
+from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
@@ -213,6 +214,8 @@ class BattleController:
         self.mercy_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_mercyadd.wav", False)
         self.spare_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_spare.wav")
         self.tp_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_cardrive.wav")
+        self.player_attack_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_laz_c.wav")
+        self.enemy_hit_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_damage.wav")
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = ActionsQueue()
@@ -228,9 +231,9 @@ class BattleController:
         self.fight_crit_box_sprites_array = []
         self.icon_and_press_sprites_array = []
         self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
-        self.fight_hit_bars = []
+        self.fight_hit_markers = []
 
-        self.spawn_fight_bars(self.player_characters, self.enemies)
+        # self.spawn_fight_bars(self.player_characters, self.enemies)
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -401,7 +404,7 @@ class BattleController:
                 bar_height=height_of_fight_bar,
                 bar_center_y=int(fight_box_center_y)
             )
-            self.fight_hit_bars.append(fight_hit_bar_effect)
+            self.fight_hit_markers.append(fight_hit_bar_effect)
 
             self.effects_list.append(fight_hit_bar_effect)
             for sprite in fight_hit_bar_effect.get_sprites():
@@ -417,6 +420,85 @@ class BattleController:
             sprite.kill()
         for sprite in self.icon_and_press_sprites_array:
             sprite.kill()
+
+    def attempt_to_hit_enemy(self):
+        """
+        Goes through the hit markers, finds the positions of the hit markers closest to the left and checks if they
+        are within the bounding box of the fight box sprite.
+        :return: A ratio representing the attack multiplier for the attack.
+        """
+
+        fight_box_max_x = self.fight_box_sprites_array[0].right
+        fight_box_min_x = self.fight_box_sprites_array[0].left
+
+        fight_crit_box_max_x = self.fight_crit_box_sprites_array[0].right
+        fight_crit_box_min_x = self.fight_crit_box_sprites_array[0].left
+
+        min_hit_marker_center_x = settings.WINDOW_WIDTH
+        for hit_marker in self.fight_hit_markers:
+            if hit_marker.sprite.center_x <= min_hit_marker_center_x:
+                min_hit_marker_center_x = hit_marker.sprite.center_x
+
+        attack_multiplier = 0.0
+        for hit_marker in self.fight_hit_markers:
+            if min_hit_marker_center_x - 10 < hit_marker.sprite.center_x < min_hit_marker_center_x + 10:
+                hit_marker.actor.set_animation_state("battle_attack")
+                pyglet.clock.schedule_once(lambda dt: hit_marker.actor.set_animation_state("battle_idle"), 1.0)
+                if fight_box_min_x <= hit_marker.sprite.center_x <= fight_box_max_x:
+                    if fight_crit_box_min_x <= hit_marker.sprite.center_x <= fight_crit_box_max_x:
+                        hit_marker.register_critical_hit()
+                        attack_multiplier = 1.25
+                        # TODO: add crit particle animation
+                    else:
+                        hit_marker.register_hit()
+                        attack_multiplier = fight_box_min_x / hit_marker.sprite.center_x
+                    self.player_attack_sound.play()
+                    pyglet.clock.schedule_once(
+                        lambda dt: self.attack_target(hit_marker.actor, hit_marker.target, attack_multiplier),
+                        0.4
+                    )
+                self.fight_hit_markers.remove(hit_marker)
+
+    def attack_target(self, actor: player_character.PlayerCharacter, target: character.Character,
+                      attack_damage_multiplier: float = 1.0):
+        """ Decreases the targets health by a calculated amount and animates the target taking damage. """
+        # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
+        damage_dealt = actor.attack * 20 * attack_damage_multiplier
+        if actor.element_id:
+            for element in default_data.ELEMENTAL_PAIRS:
+                if element.element_id == actor.element_id:
+                    if target.element_id in element.resistant_to:
+                        damage_dealt *= 0.66
+                    if target.element_id in element.weak_to:
+                        damage_dealt *= 1.5
+
+        damage_dealt = int(damage_dealt)
+
+        target.hp -= damage_dealt
+
+        damage_dealt_color = Color.from_iterable([
+            int((actor.battle_ui_color.r + 255) / 2),
+            int((actor.battle_ui_color.g + 255) / 2),
+            int((actor.battle_ui_color.b + 255) / 2),
+            int(actor.battle_ui_color.a)
+        ])
+
+        damage_dealt_animation = NumberBounceAnimation(
+            text=damage_dealt,
+            color=damage_dealt_color,
+            target=target
+        )
+
+        shake_animation = ShakeAnimation(
+            sprite=target
+        )
+
+        target.set_animation_state("battle_hurt")
+        self.enemy_hit_sound.play()
+        self.effects_sprite_list.append(damage_dealt_animation.sprite)
+        self.effects_list.append(damage_dealt_animation)
+        self.effects_list.append(shake_animation)
+        pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):
@@ -615,11 +697,13 @@ class BattleController:
             self.sorted_actions_queue["magic_spare_item_actions"].pop().execute()
             return
         elif len(self.sorted_actions_queue["fight_actions"]) > 0:
+            self.state = BattleState.PLAYER_ATTACKING
             fighting_players = []
+            enemy_targets = []
             for fight_action in self.sorted_actions_queue["fight_actions"]:
-                fighting_players.append(fight_action.actor)
-                self.state = BattleState.PLAYER_ATTACKING
-                self.controller.spawn_fight_bars(fighting_players)
+                fighting_players.insert(0, fight_action.actor)
+                enemy_targets.insert(0, fight_action.target)
+            self.spawn_fight_bars(fighting_players, enemy_targets)
             return
         else:
             self.state = BattleState.ENEMY_ATTACK
@@ -651,7 +735,7 @@ class SelectCommand(Command):
                 match self.controller.focus_stack.get_highest_member().focused_widget_index:
                     case 0:  # user selects ATTACK button
                         self.controller.state = BattleState.PLAYER_ATTACK_SELECT
-                        # TODO: include code to open an enemy select UI
+                        self.controller.open_enemy_select_menu()
                         return
                     case 1:  # user selects ACT/MAGIC button
                         if self.controller.focus_stack.get_highest_member().get_focused_widget().name == "ACT":  # ACT button
@@ -691,7 +775,24 @@ class SelectCommand(Command):
 
             case BattleState.PLAYER_ATTACK_SELECT:
                 # TODO: Make the current player character enter the attack state, queue the attack
-                # self.controller.move_to_next_player_card()
+                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                selected_target_enemy.unfocus()
+
+                self.controller.focus_stack.pop()
+
+                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+
+                self.controller.battle_player_character_cards.children[
+                    self.controller.current_player_index].change_icon(
+                    "assets/textures/gui_graphics/action_icons/fight_icon.png")
+
+                fight_action = FightAction(
+                    actor=current_player_character,
+                    target=selected_target_enemy,
+                    controller=self.controller
+                )
+
+                self.controller.move_to_next_player_card(fight_action)
                 return
 
             case BattleState.PLAYER_ACT_ENEMY_SELECT:
@@ -803,6 +904,9 @@ class SelectCommand(Command):
                 self.controller.move_to_next_player_card(spare_action)
                 return
 
+            case BattleState.PLAYER_ATTACKING:
+                self.controller.attempt_to_hit_enemy()
+
             case BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS:
                 self.controller.execute_queued_player_action()
 
@@ -895,6 +999,9 @@ class UpCommand(Command):
                 case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
                     self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
                                                                                currently_focused_widget)
+                case BattleState.PLAYER_ATTACK_SELECT:
+                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
+                                                                               currently_focused_widget)
                 case BattleState.PLAYER_SPARE_SELECT:
                     self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
                                                                                currently_focused_widget)
@@ -923,6 +1030,9 @@ class DownCommand(Command):
                         self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                     )
                 case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
+                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
+                                                                               currently_focused_widget)
+                case BattleState.PLAYER_ATTACK_SELECT:
                     self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
                                                                                currently_focused_widget)
                 case BattleState.PLAYER_SPARE_SELECT:
