@@ -176,7 +176,7 @@ class GameView(arcade.View):
         self.character_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_two)
 
-
+        """
         self.player_three = player_character.PlayerCharacter(scale=4.0,
                                                              center_x=self._holy_arc[2][0],
                                                              center_y=self._holy_arc[2][1],
@@ -194,7 +194,7 @@ class GameView(arcade.View):
         self.player_three.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_three)
-
+        """
 
         self.player_four = player_character.PlayerCharacter(scale=4.0,
                                                             center_x=self._holy_arc[2][0],

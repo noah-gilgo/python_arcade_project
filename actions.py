@@ -116,13 +116,10 @@ class ActionsQueue:
 
 class FightAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter,
-                 targets: list[character.Character],
+                 target: character.Character,
                  controller):
-        super().__init__(actor, targets, controller)
-
-    def execute(self):
-        pass
-        # TODO: Add FIGHT action logic.
+        super().__init__(actor=actor, controller=controller)
+        self.target = target
 
 
 class SpellAction(Action):
@@ -165,19 +162,6 @@ class SpellAction(Action):
 
     def cancel_act(self):
         self.controller.add_tp_to_meter(self.spell.tp_cost)
-
-"""
-class ImmediateAction(Action):
-    # This is a class for special actions that execute immediately when the player
-
-    def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller):
-        super().__init__(actor, targets, controller)
-        #TODO: build the rest of this out
-
-    def execute(self):
-        pass
-        # TODO: Add immediate action logic.
-"""
 
 class SimpleActAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller,

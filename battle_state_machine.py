@@ -15,7 +15,7 @@ import non_player_character
 import player_character
 import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction
-from animations.battle_animations import NumberBounceAnimation, HealAnimation
+from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from dialogue_box import TextBoxDialog
@@ -32,6 +32,7 @@ https://gameprogrammingpatterns.com/state.html
 
 
 class BattleState(Enum):
+    PLAYER_ATTACKING = auto()
     PLAYER_COMMAND = auto()
     PLAYER_ATTACK_SELECT = auto()
     PLAYER_ACT_ENEMY_SELECT = auto()
@@ -227,8 +228,9 @@ class BattleController:
         self.fight_crit_box_sprites_array = []
         self.icon_and_press_sprites_array = []
         self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
+        self.fight_hit_bars = []
 
-        # self.spawn_fight_bars(self.player_characters)
+        self.spawn_fight_bars(self.player_characters, self.enemies)
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -322,10 +324,11 @@ class BattleController:
             self.battle_player_character_cards.children[
                 self.current_player_index].change_icon()
 
-    def spawn_fight_bars(self, players_fighting: list[PlayerCharacter]):
+    def spawn_fight_bars(self, players_fighting: list[PlayerCharacter], enemy_targets: list[character.Character]):
         """
         Creates a FIGHT graphic for the fighting players.
-        :param players_fighting:
+        :param players_fighting: The player characters attacking.
+        :param enemy_targets: The respective targets of the player characters.
         :return: None
         """
         if len(self.fight_box_sprites_array) > 0:
@@ -361,7 +364,7 @@ class BattleController:
             draw_fight_box.rectangle(
                 [
                     (0, 0),
-                    (width_of_fight_bar, height_of_fight_bar)
+                    (width_of_fight_bar - 1, height_of_fight_bar)
                 ],
                 outline=player.fight_box_color.swizzle("rgba"),
                 width=4
@@ -391,6 +394,18 @@ class BattleController:
             self.icon_and_press_sprites_array.append(press_sprite)
             self.effects_sprite_list.append(icon_sprite)
             self.effects_sprite_list.append(press_sprite)
+
+            fight_hit_bar_effect = FightHitBar(
+                players_fighting[player_index],
+                enemy_targets[player_index],
+                bar_height=height_of_fight_bar,
+                bar_center_y=int(fight_box_center_y)
+            )
+            self.fight_hit_bars.append(fight_hit_bar_effect)
+
+            self.effects_list.append(fight_hit_bar_effect)
+            for sprite in fight_hit_bar_effect.get_sprites():
+                self.effects_sprite_list.append(sprite)
 
             player_index += 1
 
@@ -584,7 +599,7 @@ class BattleController:
     def execute_queued_player_action(self):
         """
         Executes the highest priority player action.
-        :return: A bool representing whether there are any player actions left to execute.
+        :return: None
         """
         if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
@@ -600,7 +615,11 @@ class BattleController:
             self.sorted_actions_queue["magic_spare_item_actions"].pop().execute()
             return
         elif len(self.sorted_actions_queue["fight_actions"]) > 0:
-            self.sorted_actions_queue["fight_actions"].pop().execute()
+            fighting_players = []
+            for fight_action in self.sorted_actions_queue["fight_actions"]:
+                fighting_players.append(fight_action.actor)
+                self.state = BattleState.PLAYER_ATTACKING
+                self.controller.spawn_fight_bars(fighting_players)
             return
         else:
             self.state = BattleState.ENEMY_ATTACK
