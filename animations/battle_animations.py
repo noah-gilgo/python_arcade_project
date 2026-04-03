@@ -274,7 +274,7 @@ class FightHitBar(SingleSpriteAnimation):
         self.trailing_bars_respawn_distance = 30
         self.trailing_bar_center_x = self.initial_center_x
 
-        for i in range(7):
+        for i in range(6):
             trailing_bar_sprite = Sprite(
                 path_or_texture=self.bar_texture,
                 center_x=self.trailing_bar_center_x,
@@ -305,10 +305,13 @@ class FightHitBar(SingleSpriteAnimation):
                     bar.center_x = self.sprite.center_x
                     bar.alpha = 128
                     self.trailing_bar_center_x = self.sprite.center_x
-                else:
-                    bar.alpha = max(bar.alpha - 24, 0)
-        if self.sprite.center_x < -200:
-            self.terminate_animation()
+        for bar in self.trailing_bars:
+            if bar.visible:
+                bar.alpha = max(bar.alpha - 5, 0)
+        if self.sprite.center_x < 150:
+            self.sprite.visible = False
+            self.bar_is_moving = False
+            pyglet.clock.schedule_once(lambda dt: self.terminate_animation, 1.0)
 
         if self.hit_registered:
             self.time_since_hit_registered += delta_time
@@ -319,9 +322,15 @@ class FightHitBar(SingleSpriteAnimation):
                 self.sprite.scale = 1.0 + self.time_since_hit_registered
                 self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 4)
             self.sprite.alpha = max(255 - (self.time_since_hit_registered * 10), 0)
-            if self.sprite.alpha == 0:
+            if self.time_since_hit_registered > 1:
                 self.terminate_animation()
 
+    def get_bar_sprite(self) -> Sprite:
+        """
+        Returns the main bar sprite of the animation (the one the player lines up with the hit box).
+        :return: self.sprite (the bar sprite the player lines up with the hit box in the FIGHT widget)
+        """
+        return self.sprite
 
     def get_sprites(self):
         """
