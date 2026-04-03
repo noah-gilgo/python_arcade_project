@@ -316,11 +316,11 @@ class FightHitBar(SingleSpriteAnimation):
         if self.hit_registered:
             self.time_since_hit_registered += delta_time
             if self.critical_hit_registered:
-                self.sprite.scale = 1.0 + (self.time_since_hit_registered * 6)
-                self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 8)
-            else:
                 self.sprite.scale = 1.0 + (self.time_since_hit_registered * 12)
                 self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 16)
+            else:
+                self.sprite.scale = 1.0 + (self.time_since_hit_registered * 6)
+                self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 8)
             self.sprite.alpha = max(255 - (self.time_since_hit_registered * 1000), 0)
             if self.time_since_hit_registered > 1:
                 self.terminate_animation()

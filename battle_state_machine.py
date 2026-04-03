@@ -698,6 +698,7 @@ class BattleController:
             return
         elif len(self.sorted_actions_queue["fight_actions"]) > 0:
             self.state = BattleState.PLAYER_ATTACKING
+            self.battle_textbox.load_dialog(TextBoxDialog(text=""))
             fighting_players = []
             enemy_targets = []
             for fight_action in self.sorted_actions_queue["fight_actions"]:
