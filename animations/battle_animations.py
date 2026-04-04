@@ -36,7 +36,7 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         self.target = target
 
-        self.sprite.center_x = self.target.center_x + 24
+        self.sprite.right = self.target.right + 24
         self.sprite.center_y = self.target.center_y - 24 + (self.target.times_struck_this_turn * 40)
         self.sprite.scale_x = 2.0
         self.sprite.scale_y = 0.1
