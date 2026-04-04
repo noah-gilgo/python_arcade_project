@@ -59,10 +59,6 @@ class GameView(arcade.View):
         # Setup camera stuff
         self.camera = arcade.Camera2D()
 
-        # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(3)
-        self._unholy_arc = math_methods.initialize_unholy_arc(3)
-
         # Temporary, for testing player animations.
         self._global_timer = 0.0
         self._animation_states = []
@@ -133,6 +129,10 @@ class GameView(arcade.View):
         self.effects_sprites = SpriteList()
         self.effects = []
 
+        # Initializes the starting positions of the player characters and enemy characters.
+        self._holy_arc = math_methods.initialize_holy_arc(4)
+        self._unholy_arc = math_methods.initialize_unholy_arc(3)
+
     def setup(self):
         # Create and append the players to the SpriteList.
 
@@ -176,29 +176,29 @@ class GameView(arcade.View):
         self.character_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_two)
 
-        """
+
         self.player_three = player_character.PlayerCharacter(scale=4.0,
                                                              center_x=self._holy_arc[2][0],
                                                              center_y=self._holy_arc[2][1],
                                                              angle=0,
                                                              sprite_folder_name="ralsei",
-                                                             name="ralsei",
+                                                             name="Ralsei",
                                                              max_hp=70,
                                                              attack=8,
                                                              defense=2,
                                                              magic=7,
                                                              battle_ui_color=Color(0, 255, 0, 255),
                                                              battle_ui_icon_color=Color(181, 230, 29, 255), # Sprite initialization
-                                                             fight_box_color=Color(255, 255, 0, 255),
+                                                             fight_box_color=Color(0, 255, 0, 255),
                                                              fight_crit_box_color=Color(181, 230, 29, 255))
         self.player_three.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_three)
-        """
+
 
         self.player_four = player_character.PlayerCharacter(scale=4.0,
-                                                            center_x=self._holy_arc[2][0],
-                                                            center_y=self._holy_arc[2][1],
+                                                            center_x=self._holy_arc[3][0],
+                                                            center_y=self._holy_arc[3][1],
                                                             angle=0,
                                                             sprite_folder_name="noelle",
                                                             name="Noelle",
@@ -269,7 +269,7 @@ class GameView(arcade.View):
                                                                  center_y=self._unholy_arc[0][1],
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
-                                                                 name="Rudinn",
+                                                                 name="Rudinn 1",
                                                                  hp=90,
                                                                  max_hp=90,
                                                                  attack=10,
@@ -284,7 +284,7 @@ class GameView(arcade.View):
                                                                  center_y=self._unholy_arc[1][1],
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
-                                                                 name="Rudinn",
+                                                                 name="Rudinn 2",
                                                                  hp=50,
                                                                  max_hp=90,
                                                                  attack=10,
@@ -300,7 +300,7 @@ class GameView(arcade.View):
                                                                  center_y=self._unholy_arc[2][1],
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
-                                                                 name="Rudinn",
+                                                                 name="Rudinn 3",
                                                                  hp=10,
                                                                  max_hp=90,
                                                                  attack=10,
@@ -402,7 +402,7 @@ class GameView(arcade.View):
 
         if key == arcade.key.F11:
             self.window.set_fullscreen(not self.window.fullscreen)
-            settings.WINDOW_SCALE = math.sqrt((self.width / self._initial_width) * (self.height / self._initial_height))
+            settings.WINDOW_SCALE = self.height / self._initial_height
             self.camera.zoom = settings.WINDOW_SCALE
             # self.manager.trigger_render()
             # self.manager.execute_layout()

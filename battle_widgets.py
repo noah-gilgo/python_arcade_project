@@ -636,7 +636,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
         super().__init__(
             children=[],
             x=x_offset,
-            y=int(settings.WINDOW_HEIGHT / 5.1) - 2,
+            y=int(settings.WINDOW_HEIGHT / 5.1),
             width=width,
             align="center",
             space_between=self._horizontal_spacing,
@@ -661,6 +661,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
 
     def do_layout(self):
         self.center_x = int(settings.WINDOW_WIDTH / 2)
+        self.y = int(settings.WINDOW_HEIGHT / 5.1)
         super().do_layout()
 
 

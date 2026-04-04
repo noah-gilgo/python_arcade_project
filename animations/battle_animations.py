@@ -62,7 +62,7 @@ class NumberBounceAnimation(SingleSpriteAnimation):
                 return
 
         # Translate the sprite based on provided coordinates.
-        if self.sprite.scale_y == 0.9 and self.time < 2.0:
+        if self.sprite.scale_y >= 0.9 and self.time < 2.0:
             horizontal_velocity = max(420 - (self.time_after_initial_slide * 30 * settings.FRAMES_PER_SECOND), 0)
             self.sprite.center_x += horizontal_velocity * delta_time
             if self.number_has_not_bounced:
@@ -247,7 +247,7 @@ class FightHitBar(SingleSpriteAnimation):
     """
     The little bar that you have to time with the fight sprite thingy.
     """
-    def __init__(self, actor, target, bar_height: int = 30, bar_center_y: int = 100):
+    def __init__(self, controller, actor, target, bar_height: int = 30, bar_center_y: int = 100):
         self.bar_width = 12
         self.bar_height = bar_height
         self.bar_center_y = bar_center_y
@@ -268,6 +268,7 @@ class FightHitBar(SingleSpriteAnimation):
 
         self.actor = actor
         self.target = target
+        self.controller = controller
 
         self.trailing_bars = []
         self.trailing_bars_spawn_rate = 0.2
@@ -288,6 +289,7 @@ class FightHitBar(SingleSpriteAnimation):
         self.critical_hit_registered = False
         self.time_since_hit_registered = 0.0
         self.bar_is_moving = True
+        self.bar_is_not_removed = True
 
     def update_animation(self, delta_time: float):
         """ Updates the bar animation. """
@@ -311,7 +313,11 @@ class FightHitBar(SingleSpriteAnimation):
         if self.sprite.center_x < 150:
             self.sprite.visible = False
             self.bar_is_moving = False
-            pyglet.clock.schedule_once(lambda dt: self.terminate_animation, 1.0)
+            if self.bar_is_not_removed:
+                self.controller.attack_target(self.actor, self.target, 0.0)
+                self.controller.fight_hit_markers.remove(self)
+                self.bar_is_not_removed = False
+            pyglet.clock.schedule_once(lambda dt: self.terminate_animation(), 1.0)
 
         if self.hit_registered:
             self.time_since_hit_registered += delta_time

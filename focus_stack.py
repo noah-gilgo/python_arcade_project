@@ -53,30 +53,36 @@ class FocusStackMember:
     def get_full_layout_length(self):
         return len(self.full_ui_layout.children)
 
-    def move(self, direction: Direction):
+    def move(self, direction: Direction, wrap: bool = False) -> bool:
+        """
+        Default function for shifting focus between widgets.
+        :param direction: the direction to move in.
+        :param wrap: if True, allows the user to wrap around to one end of the widget from the other with one input.
+        :return: A bool reflecting whether the move operation succeeded.
+        """
         old_focused_widget = self.focused_widget
         match direction:
             case Direction.RIGHT:
                 new_index = self.focused_widget_index + 1
-                if 0 <= new_index < len(self.widgets) and new_index % self.column_count != 0:
+                if 0 <= new_index < len(self.widgets) and (new_index % self.column_count != 0) or wrap:
                     self.focused_widget_index = new_index % len(self.widgets)
                 else:
                     return False
             case Direction.LEFT:
                 new_index = self.focused_widget_index - 1
-                if 0 <= new_index < len(self.widgets) and self.focused_widget_index % self.column_count != 0:
+                if 0 <= new_index < len(self.widgets) and (self.focused_widget_index % self.column_count != 0) or wrap:
                     self.focused_widget_index = new_index % len(self.widgets)
                 else:
                     return False
             case Direction.UP:
                 if self.row_count > 1:
                     new_index = self.focused_widget_index - self.column_count
-                    if new_index >= 0:
+                    if new_index >= 0 or wrap:
                         self.focused_widget_index = new_index
                     else:
                         return False
             case Direction.DOWN:
-                if self.row_count > 1:
+                if self.row_count > 1 or wrap:
                     new_index = self.focused_widget_index + self.column_count
                     if new_index < len(self.widgets):
                         self.focused_widget_index = new_index
@@ -88,17 +94,17 @@ class FocusStackMember:
         return True
 
     # Focus the next widget in the layout.
-    def move_right(self):
-        return self.move(Direction.RIGHT)
+    def move_right(self, wrap: bool = False):
+        return self.move(Direction.RIGHT, wrap)
 
-    def move_left(self):
-        return self.move(Direction.LEFT)
+    def move_left(self, wrap: bool = False):
+        return self.move(Direction.LEFT, wrap)
 
-    def move_up(self):
-        return self.move(Direction.UP)
+    def move_up(self, wrap: bool = False):
+        return self.move(Direction.UP, wrap)
 
-    def move_down(self):
-        return self.move(Direction.DOWN)
+    def move_down(self, wrap: bool = False):
+        return self.move(Direction.DOWN, wrap)
 
 
 class FocusStack:
