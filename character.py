@@ -66,11 +66,7 @@ class Character(arcade.Sprite):
         self.is_focused = False
         self.focus_animation = None
 
-        # Initialize the character with its first default texture
-        # if len(self._animations_by_state["default"]) > 0:
-        #    self.texture = self._animations_by_state["default"][0]
-        # else:
-        #    raise FileNotFoundError(f"No .png files found in folder: {self._sprite_pack_path + '/default'}")
+        self.times_struck_this_turn = 0
 
     def update(self, delta_time: float = 1 / 60, **kwargs):
         """ Helps the player do things.

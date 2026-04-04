@@ -37,7 +37,7 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         self.target = target
 
         self.sprite.center_x = self.target.center_x + 24
-        self.sprite.center_y = self.target.center_y - 24
+        self.sprite.center_y = self.target.center_y - 24 + (self.target.times_struck_this_turn * 40)
         self.sprite.scale_x = 2.0
         self.sprite.scale_y = 0.1
 
@@ -46,8 +46,10 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         self.number_has_not_bounced = True
         self.time_after_bounce = 0
         self.total_duration = 3.0
-        self.floor = self.target.center_y - 56
+        self.floor = (self.target.center_y - 56) + (self.target.times_struck_this_turn * 40)
         self.number_has_not_bounced_again = True
+
+        self.target.times_struck_this_turn += 1
 
     def update_animation(self, delta_time: float = settings.FRAMERATE, *args, **kwargs) -> None:
         self.time += delta_time

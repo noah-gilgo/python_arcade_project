@@ -442,10 +442,13 @@ class BattleController:
         for hit_marker in self.fight_hit_markers[:]:
             temp_actor = hit_marker.actor
             temp_target = hit_marker.target
-            if min_hit_marker_center_x - 20 < hit_marker.sprite.center_x < min_hit_marker_center_x + 20:
+            if min_hit_marker_center_x - 20 < hit_marker.sprite.center_x < min_hit_marker_center_x + 20 and fight_box_min_x < hit_marker.sprite.center_x < fight_box_max_x:
                 temp_actor.set_animation_state("battle_attack")
                 pyglet.clock.unschedule(lambda dt: temp_actor.set_animation_state)
-                pyglet.clock.schedule_once(lambda dt: temp_actor.set_animation_state("battle_idle"), 1.0)
+                pyglet.clock.schedule_once(
+                    lambda dt, actor=temp_actor: actor.set_animation_state("battle_idle"),
+                    1.0
+                )
                 if fight_box_min_x <= hit_marker.sprite.center_x <= fight_box_max_x:
                     if fight_crit_box_min_x <= hit_marker.sprite.center_x <= fight_crit_box_max_x:
                         hit_marker.sprite.center_x = fight_crit_box_center_x
@@ -458,7 +461,8 @@ class BattleController:
                     temp_attack_multiplier = attack_multiplier
                     self.player_attack_sound.play()
                     pyglet.clock.schedule_once(
-                        lambda dt: self.attack_target(temp_actor, temp_target, temp_attack_multiplier),
+                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier:
+                        self.attack_target(actor, target, mult),
                         0.4
                     )
                 self.fight_hit_markers.remove(hit_marker)
@@ -484,8 +488,8 @@ class BattleController:
             self.player_attack_sound.play()
             temp_actor = actor
             temp_actor.set_animation_state("battle_attack")
-            pyglet.clock.unschedule(lambda dt: temp_actor.set_animation_state)
-            pyglet.clock.schedule_once(lambda dt: temp_actor.set_animation_state("battle_idle"), 1.0)
+            pyglet.clock.unschedule(lambda dt: temp_actor.set_animation_state) # TODO: fix this
+            pyglet.clock.schedule_once(lambda dt: temp_actor.set_animation_state("battle_idle"), 1.5)
 
         else:
             self.enemy_hit_sound.play()
@@ -501,7 +505,10 @@ class BattleController:
             )
             self.effects_list.append(shake_animation)
             target.set_animation_state("battle_hurt")
-            pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
+            pyglet.clock.schedule_once(
+                lambda dt, target=target: target.set_animation_state("battle_idle"),
+                1.0
+            )
 
         target.hp -= damage_dealt
 
