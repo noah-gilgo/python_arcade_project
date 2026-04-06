@@ -110,7 +110,7 @@ class IceShockAnimation(MultiSpriteAnimation):
             self.flag4 = True
 
         if self.time > 0.40:
-            dt = (self.time - 0.4) * 2
+            # dt = self.time # (self.time - 0.4) * 2
             sprite_index = 0
             for sprite in self.sprites[3:]:
                 center = self.triangle[sprite_index // 6]
@@ -127,14 +127,14 @@ class IceShockAnimation(MultiSpriteAnimation):
                 if tangent_length != 0:
                     tangent_x /= tangent_length
                     tangent_y /= tangent_length
-                radial_velocity_x = (cos(angle) * (((1 - (dt/1.5)) ** 2) * 12))
-                radial_velocity_y = (sin(angle) * (((1 - (dt/1.5)) ** 2) * 12))
+                radial_velocity_x = (cos(angle) * (((1 - (self.time/1.5)) ** 2) * 12))
+                radial_velocity_y = (sin(angle) * (((1 - (self.time/1.5)) ** 2) * 12))
                 tangent_velocity_x = tangent_x * 2.5
                 tangent_velocity_y = tangent_y * 2.5
                 sprite_velocity_x = radial_velocity_x + tangent_velocity_x
                 sprite_velocity_y = radial_velocity_y + tangent_velocity_y
                 sprite.sprite.velocity = (sprite_velocity_x, sprite_velocity_y)
-                sprite.sprite.alpha = max(0, int(255 * (1 - (dt/1.5))))
+                sprite.sprite.alpha = max(0, int(255 * (1 - (self.time/1.5))))
                 sprite_index += 1
 
         if self.time >= self.total_duration:

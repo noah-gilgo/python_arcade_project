@@ -17,7 +17,7 @@ import dialogue_box
 import battle_widgets
 from battle_state_machine import BattleController
 from spell_animations import IceShockAnimation
-from spells import Spell
+from spells import Spell, IceShock
 
 
 class GameView(arcade.View):
@@ -234,18 +234,7 @@ class GameView(arcade.View):
                                                                     is_pacifying_spell=True,
                                                                     is_aoe_spell=True
                                                                 ),
-                                                                Spell(
-                                                                    name="IceShock",
-                                                                    description="Damage w/ ICE",
-                                                                    tp_cost=16,
-                                                                    element_id=8,
-                                                                    base_health_change=100,
-                                                                    is_friendly_spell=False,
-                                                                    is_healing_spell=False,
-                                                                    is_pacifying_spell=False,
-                                                                    is_aoe_spell=False,
-                                                                    animation=IceShockAnimation()
-                                                                ),
+                                                                IceShock(),
                                                                 Spell(
                                                                     name="SnowGrave",
                                                                     description="Fatal",

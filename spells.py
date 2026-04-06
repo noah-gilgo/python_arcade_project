@@ -1,3 +1,4 @@
+import random
 from copy import copy, deepcopy
 
 import arcade.color
@@ -12,6 +13,7 @@ from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnima
 from character import Character
 from elemental_pairs import ElementalPair
 from graphics_objects import MultiSpriteAnimation
+from spell_animations import IceShockAnimation
 
 
 class Spell:
@@ -32,6 +34,13 @@ class Spell:
         self.animation = animation  # The animation that plays when casting the spell.
         self.magic_color = magic_color  # The color that the enemy flashes when hit with the spell.
 
+    def spell_damage_function(self, caster) -> float:
+        """
+        Calculates the damage dealt by the spell depending on caster stats.
+        :return:
+        """
+        return self.base_health_change * caster.magic
+
     def affect_targets_with_spell(self, caster, targets, controller):
         """ Perform the calculations required after a spell is cast on a character. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
@@ -45,7 +54,7 @@ class Spell:
                 else:
                     target.hp = target.max_hp
             else:
-                damage_dealt = self.base_health_change
+                damage_dealt = self.spell_damage_function(caster)
                 if self.element_id:
                     for element in default_data.ELEMENTAL_PAIRS:
                         if element.element_id == self.element_id:
@@ -101,3 +110,26 @@ class Spell:
 def generate_basic_spells():
     """ Generates some basic spells from Deltarune. """
     pass
+
+
+class IceShock(Spell):
+    def __init__(self):
+        super().__init__(
+            name="IceShock",
+            description="Damage w/ ICE",
+            tp_cost=16,
+            element_id=8,
+            base_health_change=100,
+            is_friendly_spell=False,
+            is_healing_spell=False,
+            is_pacifying_spell=False,
+            is_aoe_spell=False,
+            animation=IceShockAnimation()
+        )
+
+    def spell_damage_function(self, caster) -> float:
+        """ Calculates the damage dealt by the spell depending on caster stats.
+        :return: None
+        """
+
+        return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
