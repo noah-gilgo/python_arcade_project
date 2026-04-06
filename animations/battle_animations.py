@@ -295,9 +295,9 @@ class FightHitBar(SingleSpriteAnimation):
 
     def update_animation(self, delta_time: float):
         """ Updates the bar animation. """
-        self.time += delta_time
+        self.time = self.controller.fight_bar_clock
         if self.bar_is_moving:
-            self.sprite.center_x -= delta_time * 400
+            self.sprite.center_x = self.initial_center_x - (self.time * 400)
         if self.sprite.center_x < self.trailing_bar_center_x - self.trailing_bars_respawn_distance:
             for bar in self.trailing_bars:
                 if not bar.visible:

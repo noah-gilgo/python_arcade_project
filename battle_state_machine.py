@@ -231,11 +231,39 @@ class BattleController:
         self.fight_crit_box_sprites_array = []
         self.icon_and_press_sprites_array = []
         self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
+        self.blue_divider_lines_sprites_array = []
         self.fight_hit_markers = []
+
+        # All of the clocks used by the BattleController.
+        self.fight_bar_clock = 0.0
+        self.fight_bar_clock_is_updating = False
 
         self.battle_idle_callback = None
         self.battle_idle_target = None
         self.enemy_hit_sound_player = None
+
+    def update_clocks(self, delta_time: float):
+        """
+        This is where any local clocks used by the battle controller are updated.
+        :return: None
+        """
+        if self.fight_bar_clock_is_updating:
+            self.fight_bar_clock += delta_time
+
+    def start_fight_bar_clock(self):
+        """
+        Starts the clock used to move the attack bars used during the FIGHT act.
+        :return: None
+        """
+        self.fight_bar_clock_is_updating = True
+
+    def stop_fight_bar_clock(self):
+        """
+        Stops the clock used to move the attack bars used during the FIGHT act.
+        :return: None
+        """
+        self.fight_bar_clock_is_updating = False
+        self.fight_bar_clock = 0.0
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -346,10 +374,13 @@ class BattleController:
             for sprite in self.icon_and_press_sprites_array:
                 sprite.kill()
 
+        self.start_fight_bar_clock()
+
         height_of_fight_ui = int(settings.WINDOW_HEIGHT / 4)
         height_of_fight_bar = int(height_of_fight_ui / (len(players_fighting) if len(players_fighting) > 3 else 3))
         width_of_fight_bar = 236
         width_of_fight_crit_bar = 20
+
 
         player_index = 0
         icon_center_x = 48
@@ -358,6 +389,8 @@ class BattleController:
         fight_crit_box_center_x = fight_box_center_x - ((width_of_fight_bar / 2) - 16)
 
         icon_scale = 2.0 if len(players_fighting) < 4 else 2.0 / (len(players_fighting) / 3)
+
+        fight_hit_bar_effects = []
 
         for player in players_fighting:
             fight_box = Image.new("RGBA", (width_of_fight_bar, height_of_fight_bar), (0, 0, 0, 255))
@@ -378,6 +411,18 @@ class BattleController:
 
             self.fight_box_sprites_array.append(fight_box_sprite)
             self.effects_sprite_list.append(fight_box_sprite)
+
+            if player_index > 0:
+                length_of_divider_bar = int((settings.WINDOW_WIDTH - fight_box_sprite.right) / 5)
+                blue_divider_line = Image.new("RGBA", (length_of_divider_bar, 4), (0, 0, 128, 255))
+                blue_divider_line_center_x = fight_box_sprite.right + (length_of_divider_bar / 2)
+                blue_divider_line_center_y = fight_box_sprite.top - 2
+                blue_divider_line_sprite = Sprite(Texture(blue_divider_line),
+                                                  center_x=blue_divider_line_center_x,
+                                                  center_y=blue_divider_line_center_y)
+
+                self.blue_divider_lines_sprites_array.append(blue_divider_line_sprite)
+                self.effects_sprite_list.append(blue_divider_line_sprite)
 
             draw_fight_crit_box.rectangle(
                 [
@@ -408,12 +453,19 @@ class BattleController:
                 bar_center_y=int(fight_box_center_y)
             )
             self.fight_hit_markers.append(fight_hit_bar_effect)
+            fight_hit_bar_effects.append(fight_hit_bar_effect)
+            player_index += 1
 
-            self.effects_list.append(fight_hit_bar_effect)
+        for fight_hit_bar_effect in fight_hit_bar_effects:
             for sprite in fight_hit_bar_effect.get_sprites():
                 self.effects_sprite_list.append(sprite)
 
-            player_index += 1
+        for fight_hit_bar_effect in fight_hit_bar_effects:
+            self.effects_list.append(fight_hit_bar_effect)
+
+        for fight_hit_bar_effect in fight_hit_bar_effects:
+            fight_hit_bar_effect.time = 0
+            fight_hit_bar_effect.sprite.center_x = fight_hit_bar_effect.initial_center_x
 
     def despawn_fight_bars(self):
         """ Cleans up the fight bars after they've spawned. """
@@ -422,6 +474,8 @@ class BattleController:
         for sprite in self.fight_crit_box_sprites_array:
             sprite.kill()
         for sprite in self.icon_and_press_sprites_array:
+            sprite.kill()
+        for sprite in self.blue_divider_lines_sprites_array:
             sprite.kill()
 
     def attempt_to_hit_enemy(self):
@@ -494,8 +548,7 @@ class BattleController:
         if damage_dealt <= 0:
             damage_dealt_text = "MISS"
             damage_dealt_color = arcade.color.WHITE
-            self.player_attack_sound.stop(self.enemy_hit_sound_player)
-            self.enemy_hit_sound_player = self.player_attack_sound.play()
+            self.player_attack_sound.play()
             temp_actor = actor
             temp_actor.set_animation_state("battle_attack")
 

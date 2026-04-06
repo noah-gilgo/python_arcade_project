@@ -384,6 +384,8 @@ class GameView(arcade.View):
             else:
                 effect.update_animation(delta_time)
 
+        self.battle_controller.update_clocks(delta_time)
+
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
 
