@@ -233,6 +233,9 @@ class BattleController:
         self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
         self.fight_hit_markers = []
 
+        self.battle_idle_callback = None
+        self.battle_idle_target = None
+
     def confirm_command(self):
         SelectCommand(self).execute()
 
@@ -488,8 +491,6 @@ class BattleController:
             self.player_attack_sound.play()
             temp_actor = actor
             temp_actor.set_animation_state("battle_attack")
-            pyglet.clock.unschedule(lambda dt: temp_actor.set_animation_state) # TODO: fix this
-            pyglet.clock.schedule_once(lambda dt: temp_actor.set_animation_state("battle_idle"), 1.5)
 
         else:
             self.enemy_hit_sound.play()
@@ -505,10 +506,11 @@ class BattleController:
             )
             self.effects_list.append(shake_animation)
             target.set_animation_state("battle_hurt")
-            pyglet.clock.schedule_once(
-                lambda dt, target=target: target.set_animation_state("battle_idle"),
-                1.0
-            )
+            if hasattr(self, "battle_idle_callback"):
+                pyglet.clock.unschedule(self.battle_idle_callback)
+            self.battle_idle_target = target
+            self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
+            pyglet.clock.schedule_once(self.battle_idle_callback, 1.5)
 
         target.hp -= damage_dealt
 
@@ -1091,3 +1093,11 @@ class DownCommand(Command):
                     self.controller.move_focus_between_players_in_player_select(previously_focused_widget,
                                                                                 currently_focused_widget)
                     self.controller.menu_move_sound.play()
+
+def set_animation_state_to_battle_idle(self, target: character.Character):
+    """
+    Scheduled cancellable function that sets the target's animation state to battle_idle.
+    :param target: The target having its animation state changed.
+    :return:
+    """
+    target.set_animation_state("battle_idle")

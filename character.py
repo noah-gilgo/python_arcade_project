@@ -68,12 +68,28 @@ class Character(arcade.Sprite):
 
         self.times_struck_this_turn = 0
 
+        self.not_idle = False
+        self.non_idle_timer = 0.0
+
+    def set_animation_to_not_idle(self, duration: float = 1.0):
+        """
+        Starts a timer that eventually sets the character back to a battle_idle animation state.
+        Used in situations where the character receives a temporary animation state.
+        :param duration: The amount of time the character is meant to not be idle.
+        :return: None
+        """
+        self.not_idle = True
+        self.non_idle_timer = duration
+
     def update(self, delta_time: float = 1 / 60, **kwargs):
         """ Helps the player do things.
         :param delta_time: the amount of time in seconds that the player updates
         :param **kwargs:
         """
-
+        if self.not_idle and self.non_idle_timer > 0.0:
+            self.non_idle_timer -= delta_time
+            if self.non_idle_timer <= 0.0:
+                self.not_idle = False
         pass
 
     def update_animation(self, delta_time=1/60, **kwargs):

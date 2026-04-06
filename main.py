@@ -130,7 +130,7 @@ class GameView(arcade.View):
         self.effects = []
 
         # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(4)
+        self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(3)
 
     def setup(self):
@@ -176,7 +176,7 @@ class GameView(arcade.View):
         self.character_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_two)
 
-
+        """
         self.player_three = player_character.PlayerCharacter(scale=4.0,
                                                              center_x=self._holy_arc[2][0],
                                                              center_y=self._holy_arc[2][1],
@@ -194,11 +194,12 @@ class GameView(arcade.View):
         self.player_three.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_three)
+        """
 
 
         self.player_four = player_character.PlayerCharacter(scale=4.0,
-                                                            center_x=self._holy_arc[3][0],
-                                                            center_y=self._holy_arc[3][1],
+                                                            center_x=self._holy_arc[2][0],
+                                                            center_y=self._holy_arc[2][1],
                                                             angle=0,
                                                             sprite_folder_name="noelle",
                                                             name="Noelle",
@@ -382,20 +383,6 @@ class GameView(arcade.View):
                 self.effects.remove(effect)
             else:
                 effect.update_animation(delta_time)
-
-
-        # Used for testing the animation system
-
-        """
-        if self._global_timer > 2.0:
-            if self._animation_state_index < len(self._animation_states):
-                for player in self.player_characters:
-                    player.set_animation_state(self._animation_states[self._animation_state_index])
-                self._animation_state_index += 1
-            self._global_timer = 0.0
-
-        self._global_timer += delta_time
-        """
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """

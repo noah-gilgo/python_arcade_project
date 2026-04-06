@@ -277,7 +277,7 @@ class FightHitBar(SingleSpriteAnimation):
         self.trailing_bars_respawn_distance = 30
         self.trailing_bar_center_x = self.initial_center_x
 
-        for i in range(7):
+        for i in range(6):
             trailing_bar_sprite = Sprite(
                 path_or_texture=self.bar_texture,
                 center_x=self.trailing_bar_center_x,
