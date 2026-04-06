@@ -515,14 +515,17 @@ class BattleController:
                         hit_marker.sprite.center_x = fight_crit_box_center_x
                         hit_marker.register_critical_hit()
                         attack_multiplier = 1.25
+                        is_crit = True
                         # TODO: add crit particle animation
                     else:
                         hit_marker.register_hit()
                         attack_multiplier = fight_box_min_x / hit_marker.sprite.center_x
+                        is_crit = False
                     temp_attack_multiplier = attack_multiplier
+                    temp_is_crit = is_crit
                     pyglet.clock.schedule_once(
-                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier:
-                        self.attack_target(actor, target, mult),
+                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier, is_crit=temp_is_crit:
+                        self.attack_target(actor, target, mult, is_crit),
                         0.4
                     )
                 self.fight_hit_markers.remove(hit_marker)
@@ -531,7 +534,7 @@ class BattleController:
             self.player_attack_sound.play()
 
     def attack_target(self, actor: player_character.PlayerCharacter, target: character.Character,
-                      attack_damage_multiplier: float = 1.0):
+                      attack_damage_multiplier: float = 1.0, is_crit: bool = False):
         """ Decreases the targets health by a calculated amount and animates the target taking damage. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
         damage_dealt = int(actor.attack * 10 * attack_damage_multiplier)
@@ -571,6 +574,11 @@ class BattleController:
             self.battle_idle_target = target
             self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
             pyglet.clock.schedule_once(self.battle_idle_callback, 1.5)
+
+            if is_crit:
+                self.add_tp_to_meter(6.0)
+            else:
+                self.add_tp_to_meter(attack_damage_multiplier * 4.0)
 
         target.hp -= damage_dealt
 
