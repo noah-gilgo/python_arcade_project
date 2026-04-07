@@ -17,7 +17,7 @@ import player_character
 import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
-    StrikeEnemyAnimation
+    StrikeEnemyAnimation, EnemyFleeingAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from dialogue_box import TextBoxDialog
@@ -218,6 +218,7 @@ class BattleController:
         self.player_attack_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_laz_c.wav", False)
         self.player_critical_hit_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_criticalswing.wav", False)
         self.enemy_hit_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_damage.wav", False)
+        self.enemy_flee_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_defeatrun.wav", False)
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = ActionsQueue()
@@ -547,6 +548,13 @@ class BattleController:
                       attack_damage_multiplier: float = 1.0, is_crit: bool = False):
         """ Decreases the targets health by a calculated amount and animates the target taking damage. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
+
+        if len(self.enemies) == 0:
+            return
+
+        if target not in self.enemies:
+            target = self.enemies[0]
+
         damage_dealt = int(actor.attack * 10 * attack_damage_multiplier)
         if actor.element_id:
             for element in default_data.ELEMENTAL_PAIRS:
@@ -558,6 +566,7 @@ class BattleController:
 
         damage_dealt_text = str(damage_dealt)
 
+        # If the attack reduces the enemy HP to 0
         if damage_dealt <= 0:
             damage_dealt_text = "MISS"
             damage_dealt_color = arcade.color.WHITE
@@ -574,22 +583,32 @@ class BattleController:
                 int(actor.battle_ui_color.a)
             ])
 
-            shake_animation = ShakeAnimation(
-                sprite=target
-            )
-            self.effects_list.append(shake_animation)
-            strike_enemy_animation = StrikeEnemyAnimation(
-                actor=actor,
-                target=target
-            )
-            self.effects_list.append(strike_enemy_animation)
-            self.effects_sprite_list.append(strike_enemy_animation.sprite)
             target.set_animation_state("battle_hurt")
-            if hasattr(self, "battle_idle_callback"):
-                pyglet.clock.unschedule(self.battle_idle_callback)
-            self.battle_idle_target = target
-            self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
-            pyglet.clock.schedule_once(self.battle_idle_callback, 1.5)
+            if target.hp <= 0:
+                damage_dealt_text = "LOST"
+                damage_dealt_color = arcade.color.RED
+                self.enemy_flee_sound.play()
+                enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
+                self.effects_list.append(enemy_fleeing_animation)
+                for sprite in enemy_fleeing_animation.get_sprites():
+                    self.effects_sprite_list.append(sprite)
+                self.enemies.remove(target)
+            else:
+                shake_animation = ShakeAnimation(
+                    sprite=target
+                )
+                self.effects_list.append(shake_animation)
+                strike_enemy_animation = StrikeEnemyAnimation(
+                    actor=actor,
+                    target=target
+                )
+                self.effects_list.append(strike_enemy_animation)
+                self.effects_sprite_list.append(strike_enemy_animation.sprite)
+                if hasattr(self, "battle_idle_callback"):
+                    pyglet.clock.unschedule(self.battle_idle_callback)
+                self.battle_idle_target = target
+                self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
+                pyglet.clock.schedule_once(self.battle_idle_callback, 1.5)
 
             # TODO: This currently makes the damage numbers above the enemies disappear.
             """

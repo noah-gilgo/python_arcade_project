@@ -429,3 +429,75 @@ class StrikeEnemyAnimation(SingleSpriteAnimation):
         else:
             self.sprite.kill()
             self.terminate_animation()
+
+
+class EnemyFleeingAnimation(MultiSpriteAnimation):
+    def __init__(self, actor: character.Character):
+        super().__init__()
+
+        self.actor = actor
+
+        self.sweat_sprite = Sprite(
+            path_or_texture="assets/sprites/effects/sweat.png",
+            center_x=actor.left,
+            center_y=actor.top,
+            scale=2.0
+        )
+
+        self.initial_center_x = actor.center_x
+        self.initial_center_y = actor.center_y
+
+        self.final_center_x = settings.WINDOW_WIDTH + actor.width
+
+        self.distance_of_sprites = self.final_center_x - self.initial_center_x
+
+        self.actor_texture = actor.texture
+
+        self.enemy_retreating_sprites = []
+        self.enemy_retreating_sprites_invisible = True
+
+        self.number_of_sprites = 40
+        self.sprite_alpha_reduction_factor = 20
+
+        self.time_since_started_fleeing = 0.0
+
+        for i in range(self.number_of_sprites):
+            retreating_sprite = Sprite(
+                path_or_texture=self.actor_texture,
+                center_x=self.initial_center_x + (self.distance_of_sprites * (i / self.number_of_sprites)),
+                center_y=self.initial_center_y,
+                scale=4.0
+            )
+
+            retreating_sprite.visible = False
+
+            self.enemy_retreating_sprites.append(retreating_sprite)
+
+        self.actor.set_animation_state("battle_hurt")
+
+    def update_animation(self, delta_time: float):
+        self.time += delta_time
+
+        if self.time < 0.6:
+            self.sweat_sprite.visible = (self.time // .15) // 2 == 1
+        elif 0.6 <= self.time < 1.5:
+            self.sweat_sprite.visible = False
+            self.actor.visible = False
+            self.sprite_alpha_reduction_factor = 20
+            self.time_since_started_fleeing += delta_time
+            for sprite in self.enemy_retreating_sprites:
+                if self.enemy_retreating_sprites_invisible:
+                    sprite.visible = True
+                    self.sprite_alpha_reduction_factor -= 0.5
+                sprite.alpha = max(255 - (self.time_since_started_fleeing * 50 * self.sprite_alpha_reduction_factor), 0)
+
+            if self.enemy_retreating_sprites_invisible:
+                self.enemy_retreating_sprites_invisible = False
+        else:
+            self.sweat_sprite.kill()
+            for sprite in self.enemy_retreating_sprites:
+                sprite.kill()
+            self.terminate_animation()
+
+    def get_sprites(self):
+        return self.enemy_retreating_sprites + [self.sweat_sprite]
