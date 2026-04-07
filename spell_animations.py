@@ -4,7 +4,9 @@ import arcade
 from arcade import Sprite, Sound, play_sound
 from math import sin, cos, atan2
 
-from graphics_objects import MultiSpriteAnimation, AnimatedSprite
+import character
+from graphics_methods import make_texture_solid_color
+from graphics_objects import MultiSpriteAnimation, AnimatedSprite, SingleSpriteAnimation
 
 
 class IceShockAnimation(MultiSpriteAnimation):
@@ -154,3 +156,52 @@ class IceShockAnimation(MultiSpriteAnimation):
 
             self.circle_radius += 5
             self.circle_alpha = self.circle_alpha - 18 if self.circle_alpha - 18 > 0 else 0
+
+
+class FreezeAnimation(SingleSpriteAnimation):
+    def __init__(self, target: character.Character):
+        super().__init__(
+            sprite=target
+        )
+
+        self.freeze_texture = make_texture_solid_color(self.sprite.texture)
+
+        self.freeze_sprites = []
+
+        for i in range(2):
+            freeze_sprite = Sprite(
+                path_or_texture=self.freeze_texture.crop(
+                    0,
+                    self.freeze_texture.image.height - 1,
+                    self.freeze_texture.image.width - 1,
+                    1
+                ),
+                center_x=self.sprite.center_x - 5 + (i * 10),
+            )
+            freeze_sprite.width = self.sprite.width
+            freeze_sprite.alpha = 174
+            freeze_sprite.bottom = self.sprite.bottom
+            self.freeze_sprites.append(freeze_sprite)
+
+        self.total_duration = 1.2
+
+    def update_animation(self, delta_time):
+        if self.time < self.total_duration:
+            self.time += delta_time
+
+            full_height = self.freeze_texture.image.height
+            height = max(int(full_height * (self.time / self.total_duration)), 1)
+            y = full_height - height
+
+            for freeze_sprite in self.freeze_sprites:
+                freeze_sprite.texture = self.freeze_texture.crop(
+                    0,
+                    y,
+                    self.freeze_texture.image.width - 1,
+                    height
+                )
+                freeze_sprite.height = max(int(self.sprite.height * (self.time / self.total_duration)), 1)
+                freeze_sprite.center_y = int(self.sprite.center_y - ((self.sprite.height - freeze_sprite.height) / 2))
+
+    def get_sprites(self):
+        return self.freeze_sprites

@@ -566,7 +566,6 @@ class BattleController:
 
         damage_dealt_text = str(damage_dealt)
 
-        # If the attack reduces the enemy HP to 0
         if damage_dealt <= 0:
             damage_dealt_text = "MISS"
             damage_dealt_color = arcade.color.WHITE
@@ -584,6 +583,7 @@ class BattleController:
             ])
 
             target.set_animation_state("battle_hurt")
+            # If the attack reduces the enemy HP to 0
             if target.hp <= 0:
                 damage_dealt_text = "LOST"
                 damage_dealt_color = arcade.color.RED

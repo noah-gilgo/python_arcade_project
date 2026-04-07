@@ -8,12 +8,12 @@ from arcade.types import Color
 import character
 import default_data
 import non_player_character
-from animations.battle_animations import NumberBounceAnimation
+from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from character import Character
 from elemental_pairs import ElementalPair
 from graphics_objects import MultiSpriteAnimation
-from spell_animations import IceShockAnimation
+from spell_animations import IceShockAnimation, FreezeAnimation
 
 
 class Spell:
@@ -45,7 +45,13 @@ class Spell:
         """ Perform the calculations required after a spell is cast on a character. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
         # TODO: Move all of the spell functions to the battle controller instead of using all these parameters, maybe
+        if len(targets) == 0:
+            return
+
         for target in targets:
+            schedule_battle_idle = True
+            if target not in targets:
+                target = target[0]
             damage_dealt = 0
             if self.is_friendly_spell:
                 new_hp = target.hp + self.base_health_change
@@ -65,6 +71,8 @@ class Spell:
 
                 target.hp -= int(damage_dealt)
 
+            damage_dealt_text = str(damage_dealt)
+
             damage_dealt_color = Color.from_iterable([
                 int((caster.battle_ui_color.r + 255) / 2),
                 int((caster.battle_ui_color.g + 255) / 2),
@@ -72,8 +80,34 @@ class Spell:
                 int(caster.battle_ui_color.a)
             ])
 
+            # If the attack reduces the enemy HP to 0
+            if target.hp <= 0:
+                schedule_battle_idle = False
+                if self.element_id == 8: # Fire/Ice
+                    if self.name.lower() == "iceshock":
+                        damage_dealt_text = "FROZEN"
+                        damage_dealt_color = arcade.color.LIGHT_BLUE
+                        freeze_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav", False)
+                        freeze_sound.play()
+                        target.non_idle_timer = 0
+                        target.set_animation_state("battle_hurt")
+                        freeze_animation = FreezeAnimation(target=target)
+                        controller.effects_list.append(freeze_animation)
+                        for sprite in freeze_animation.get_sprites():
+                            controller.effects_sprite_list.append(sprite)
+                        controller.enemies.remove(target)
+                else:
+                    damage_dealt_text = "LOST"
+                    damage_dealt_color = arcade.color.RED
+                    controller.enemy_flee_sound.play()
+                    enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
+                    controller.effects_list.append(enemy_fleeing_animation)
+                    for sprite in enemy_fleeing_animation.get_sprites():
+                        controller.effects_sprite_list.append(sprite)
+                    controller.enemies.remove(target)
+
             damage_dealt_animation = NumberBounceAnimation(
-                text=damage_dealt,
+                text=damage_dealt_text,
                 color=damage_dealt_color,
                 target=target
             )
@@ -93,7 +127,8 @@ class Spell:
             controller.effects_list.append(shake_animation)
             controller.effects_list.append(color_filter_animation)
             controller.effects_sprite_list.append(color_filter_animation.filter_sprite)
-            pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
+            if schedule_battle_idle:
+                pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
 
     def animate_spell(self, targets: list[character.Character], spell_sprite_list, animation_list):
         """ Animate the spell being cast. """
