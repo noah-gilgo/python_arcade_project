@@ -3,9 +3,10 @@ import random
 import arcade
 import pyglet
 from PIL import Image
-from arcade import Sprite, Texture
+from arcade import Sprite, Texture, LRBT
 from arcade.types import Color
 
+import character
 import non_player_character
 import player_character
 import settings
@@ -245,6 +246,35 @@ class TPGainAnimation(SparkleAnimation):
         )
 
 
+class CriticalHitSparkleAnimation(SparkleAnimation):
+    """
+    The sparkles that fly away from the player when they land a critical hit.
+    """
+    def __init__(self, target: Sprite):
+        particle_rect = LRBT(
+            target.right,
+            target.right + 100,
+            target.center_y,
+            target.center_y + 20
+        )
+        super().__init__(
+            target=target,
+            total_duration=1.0,
+            particle_starting_rect=particle_rect,
+            number_of_particles=3
+        )
+        self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 196
+
+    def particle_movement_function(self, particle_sprite: Sprite, delta_time: float):
+        texture_index = int(self.time * 6) % len(self.particle_sprite_list)
+        for particle_sprite in self.particle_sprite_list:
+            particle_sprite.set_texture(texture_index)
+            particle_sprite.center_x += self.time * self.particle_sprite_translation_factor
+
+            particle_sprite.alpha = int(
+                (1 - (self.time / self.total_duration)) * 255)
+
+
 class FightHitBar(SingleSpriteAnimation):
     """
     The little bar that you have to time with the fight sprite thingy.
@@ -369,3 +399,30 @@ class FightHitBar(SingleSpriteAnimation):
     def terminate_animation(self):
         super().terminate_animation()
         self.kill_sprites()
+
+
+class StrikeEnemyAnimation(SingleSpriteAnimation):
+    def __init__(self, actor, target: character.Character):
+        super().__init__(sprite=target)
+        self.sprite_pack_path = "assets/sprites/player_characters/" + actor.sprite_folder_name + "/battle_hit_animation"
+
+        self.strike_enemy_textures = texture_methods.load_textures_at_filepath_into_texture_array(
+            self.sprite_pack_path
+        )
+
+        self.number_of_strike_enemy_textures = len(self.strike_enemy_textures)
+
+        self.sprite = Sprite(center_x=target.center_x, center_y=target.center_y, scale=5.0)
+        self.sprite.textures = self.strike_enemy_textures
+        self.sprite_texture_index = 0
+        self.sprite.set_texture(self.sprite_texture_index)
+        self.animation_rate = 0.08 # The rate that the textures change in seconds
+
+    def update_animation(self, delta_time: float):
+        self.time += delta_time
+        self.sprite_texture_index = int(self.time / self.animation_rate)
+        if self.sprite_texture_index < self.number_of_strike_enemy_textures:
+            self.sprite.set_texture(self.sprite_texture_index)
+        else:
+            self.sprite.kill()
+            self.terminate_animation()

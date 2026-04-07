@@ -16,7 +16,8 @@ import non_player_character
 import player_character
 import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction
-from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar
+from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
+    StrikeEnemyAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from dialogue_box import TextBoxDialog
@@ -212,10 +213,11 @@ class BattleController:
         self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
         self.heal_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_power.wav", False)
         self.mercy_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_mercyadd.wav", False)
-        self.spare_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_spare.wav")
-        self.tp_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_cardrive.wav")
-        self.player_attack_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_laz_c.wav")
-        self.enemy_hit_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_damage.wav")
+        self.spare_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_spare.wav", False)
+        self.tp_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_cardrive.wav", False)
+        self.player_attack_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_laz_c.wav", False)
+        self.player_critical_hit_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_criticalswing.wav", False)
+        self.enemy_hit_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_damage.wav", False)
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = ActionsQueue()
@@ -498,6 +500,7 @@ class BattleController:
                 min_hit_marker_center_x = hit_marker.sprite.center_x
 
         enemy_hit = False
+        is_crit = False
 
         for hit_marker in self.fight_hit_markers[:]:
             temp_actor = hit_marker.actor
@@ -520,7 +523,6 @@ class BattleController:
                     else:
                         hit_marker.register_hit()
                         attack_multiplier = fight_box_min_x / hit_marker.sprite.center_x
-                        is_crit = False
                     temp_attack_multiplier = attack_multiplier
                     temp_is_crit = is_crit
                     pyglet.clock.schedule_once(
@@ -528,10 +530,18 @@ class BattleController:
                         self.attack_target(actor, target, mult, is_crit),
                         0.4
                     )
+                    if is_crit:
+                        critical_hit_sparkle_animation = CriticalHitSparkleAnimation(temp_actor)
+                        self.effects_list.append(critical_hit_sparkle_animation)
+                        for sprite in critical_hit_sparkle_animation.get_sprites():
+                            self.effects_sprite_list.append(sprite)
+
                 self.fight_hit_markers.remove(hit_marker)
 
         if enemy_hit:
             self.player_attack_sound.play()
+            if is_crit:
+                self.player_critical_hit_sound.play()
 
     def attack_target(self, actor: player_character.PlayerCharacter, target: character.Character,
                       attack_damage_multiplier: float = 1.0, is_crit: bool = False):
@@ -568,6 +578,12 @@ class BattleController:
                 sprite=target
             )
             self.effects_list.append(shake_animation)
+            strike_enemy_animation = StrikeEnemyAnimation(
+                actor=actor,
+                target=target
+            )
+            self.effects_list.append(strike_enemy_animation)
+            self.effects_sprite_list.append(strike_enemy_animation.sprite)
             target.set_animation_state("battle_hurt")
             if hasattr(self, "battle_idle_callback"):
                 pyglet.clock.unschedule(self.battle_idle_callback)
@@ -575,10 +591,13 @@ class BattleController:
             self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
             pyglet.clock.schedule_once(self.battle_idle_callback, 1.5)
 
+            # TODO: This currently makes the damage numbers above the enemies disappear.
+            """
             if is_crit:
                 self.add_tp_to_meter(6.0)
             else:
                 self.add_tp_to_meter(attack_damage_multiplier * 4.0)
+            """
 
         target.hp -= damage_dealt
 
