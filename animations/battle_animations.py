@@ -465,9 +465,11 @@ class EnemyFleeingAnimation(MultiSpriteAnimation):
             retreating_sprite = Sprite(
                 path_or_texture=self.actor_texture,
                 center_x=self.initial_center_x + (self.distance_of_sprites * (i / self.number_of_sprites)),
-                center_y=self.initial_center_y,
-                scale=4.0
+                center_y=self.initial_center_y
             )
+
+            retreating_sprite.height = self.actor.height
+            retreating_sprite.width = self.actor.width
 
             retreating_sprite.visible = False
 
