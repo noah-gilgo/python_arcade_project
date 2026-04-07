@@ -263,16 +263,19 @@ class CriticalHitSparkleAnimation(SparkleAnimation):
             particle_starting_rect=particle_rect,
             number_of_particles=3
         )
-        self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 196
+        self.particle_sprite_translation_factor = 2
+        for particle_sprite in self.particle_sprite_list:
+            particle_sprite.scale=3.0
+
 
     def particle_movement_function(self, particle_sprite: Sprite, delta_time: float):
         texture_index = int(self.time * 6) % len(self.particle_sprite_list)
         for particle_sprite in self.particle_sprite_list:
             particle_sprite.set_texture(texture_index)
-            particle_sprite.center_x += self.time * self.particle_sprite_translation_factor
+            particle_sprite.center_x += (self.time * self.particle_sprite_translation_factor) + 2
 
             particle_sprite.alpha = int(
-                (1 - (self.time / self.total_duration)) * 255)
+                (1 - (self.time / self.total_duration)) * 192)
 
 
 class FightHitBar(SingleSpriteAnimation):
