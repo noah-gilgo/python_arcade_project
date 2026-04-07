@@ -441,7 +441,7 @@ class EnemyFleeingAnimation(MultiSpriteAnimation):
             path_or_texture="assets/sprites/effects/sweat.png",
             center_x=actor.left,
             center_y=actor.top,
-            scale=2.0
+            scale=3.0
         )
 
         self.initial_center_x = actor.center_x

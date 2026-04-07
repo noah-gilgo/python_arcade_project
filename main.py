@@ -366,6 +366,7 @@ class GameView(arcade.View):
 
         for enemy in self.enemies:
             enemy.update_animation(delta_time)
+            enemy.update(delta_time)
 
         for effect in self.effects:
             if hasattr(effect, "is_terminated") and effect.is_terminated:

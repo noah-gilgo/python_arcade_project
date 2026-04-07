@@ -69,6 +69,8 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
 
         self.filter_sprite = arcade.Sprite()
         self.filter_sprite.texture = make_texture_solid_color(self.sprite.texture)
+        self.filter_sprite.center_x = self.sprite.center_x
+        self.filter_sprite.center_y = self.sprite.center_y
         self.filter_sprite.scale = self.sprite.scale
         self.filter_sprite.color = self.color
         self.filter_sprite.alpha = self.min_alpha

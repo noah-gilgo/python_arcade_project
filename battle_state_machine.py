@@ -582,7 +582,6 @@ class BattleController:
                 int(actor.battle_ui_color.a)
             ])
 
-            target.set_animation_state("battle_hurt")
             # If the attack reduces the enemy HP to 0
             if target.hp <= 0:
                 damage_dealt_text = "LOST"
@@ -604,11 +603,9 @@ class BattleController:
                 )
                 self.effects_list.append(strike_enemy_animation)
                 self.effects_sprite_list.append(strike_enemy_animation.sprite)
-                if hasattr(self, "battle_idle_callback"):
-                    pyglet.clock.unschedule(self.battle_idle_callback)
                 self.battle_idle_target = target
                 self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
-                pyglet.clock.schedule_once(self.battle_idle_callback, 1.5)
+                target.set_animation_to_not_idle(1.5, "battle_hurt")
 
             # TODO: This currently makes the damage numbers above the enemies disappear.
             """

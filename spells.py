@@ -86,7 +86,7 @@ class Spell:
                 if self.element_id == 8: # Fire/Ice
                     if self.name.lower() == "iceshock":
                         damage_dealt_text = "FROZEN"
-                        damage_dealt_color = arcade.color.LIGHT_BLUE
+                        damage_dealt_color = arcade.color.CYAN
                         freeze_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav", False)
                         freeze_sound.play()
                         target.non_idle_timer = 0

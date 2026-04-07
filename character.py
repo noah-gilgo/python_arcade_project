@@ -71,7 +71,7 @@ class Character(arcade.Sprite):
         self.not_idle = False
         self.non_idle_timer = 0.0
 
-    def set_animation_to_not_idle(self, duration: float = 1.0):
+    def set_animation_to_not_idle(self, duration: float = 1.0, animation_state: str = "battle_idle"):
         """
         Starts a timer that eventually sets the character back to a battle_idle animation state.
         Used in situations where the character receives a temporary animation state.
@@ -80,6 +80,7 @@ class Character(arcade.Sprite):
         """
         self.not_idle = True
         self.non_idle_timer = duration
+        self.set_animation_state(animation_state)
 
     def update(self, delta_time: float = 1 / 60, **kwargs):
         """ Helps the player do things.
@@ -90,6 +91,7 @@ class Character(arcade.Sprite):
             self.non_idle_timer -= delta_time
             if self.non_idle_timer <= 0.0:
                 self.not_idle = False
+                self.set_animation_state("battle_idle")
         pass
 
     def update_animation(self, delta_time=1/60, **kwargs):
