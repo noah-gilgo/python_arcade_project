@@ -69,6 +69,8 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
 
         self.filter_sprite = arcade.Sprite()
         self.filter_sprite.texture = make_texture_solid_color(self.sprite.texture)
+        self.filter_sprite.center_x = self.sprite.center_x
+        self.filter_sprite.center_y = self.sprite.center_y
         self.filter_sprite.scale = self.sprite.scale
         self.filter_sprite.color = self.color
         self.filter_sprite.alpha = self.min_alpha
@@ -96,8 +98,7 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
 
 class SparkleAnimation(SingleSpriteAnimation):
     def __init__(self, target: Sprite, total_duration: float = 1.0, color: Color = None,
-                 particle_starting_rect: Rect = None, particle_movement_function = None,
-                 number_of_particles: int = 10, rotations_per_second: float = 0.7,
+                 particle_starting_rect: Rect = None, number_of_particles: int = 10, rotations_per_second: float = 0.7,
                  particle_scale: float = 1.0):
         super().__init__(
             sprite=target,
@@ -130,7 +131,7 @@ class SparkleAnimation(SingleSpriteAnimation):
         else:
             self.spare_particle_textures = spare_particle_textures
 
-        self.spare_particle_sprite_list = []
+        self.particle_sprite_list = []
 
         self.number_of_particles = number_of_particles
 
@@ -148,24 +149,23 @@ class SparkleAnimation(SingleSpriteAnimation):
             self.initial_particle_positions.append((sprite.center_x, sprite.center_y))
             sprite.scale = random.randint(3, 5) * particle_scale
             sprite.visible = True
-            self.spare_particle_sprite_list.append(sprite)
-
-        # The function used to move the particles between 0 < self.time < self.total_duration
-        if particle_movement_function is None:
-            def default_movement_function(particle_sprite: Sprite):
-                self.current_initial_particle_x = self.initial_particle_positions[self.current_initial_particle_position_index][0]
-                self.current_initial_particle_y = self.initial_particle_positions[self.current_initial_particle_position_index][1]
-                particle_sprite.center_x = self.current_initial_particle_x + (ease_out(self.time) * self.particle_sprite_translation_factor * 2)
-                particle_sprite.center_y = self.current_initial_particle_y + (ease_out(self.time) * self.particle_sprite_translation_factor * 8)
-                particle_sprite.alpha = ease_out((self.total_duration - self.time) / self.total_duration) * 255
-            self.particle_movement_function = default_movement_function
-        else:
-            self.particle_movement_function = particle_movement_function
-
+            self.particle_sprite_list.append(sprite)
 
         # Miscellaneous variables so that on_update isn't repeating redundant calculations
         self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 84
         self.rotations_factor = rotations_per_second * 360
+
+    def particle_movement_function(self, particle_sprite: Sprite, delta_time: float):
+        particle_sprite.turn_right(delta_time * self.rotations_factor)
+        self.current_initial_particle_x = self.initial_particle_positions[self.current_initial_particle_position_index][
+            0]
+        self.current_initial_particle_y = self.initial_particle_positions[self.current_initial_particle_position_index][
+            1]
+        particle_sprite.center_x = self.current_initial_particle_x + (
+                    ease_out(self.time) * self.particle_sprite_translation_factor * 2)
+        particle_sprite.center_y = self.current_initial_particle_y + (
+                    ease_out(self.time) * self.particle_sprite_translation_factor * 8)
+        particle_sprite.alpha = ease_out((self.total_duration - self.time) / self.total_duration) * 255
 
     def update_animation(self, delta_time):
         self.time += delta_time
@@ -173,13 +173,12 @@ class SparkleAnimation(SingleSpriteAnimation):
 
         # Animate the particle sprites to rotate, drift to the right, and change textures
         texture_index = int(self.time * 6) % len(self.spare_particle_textures)
-        for particle_sprite in self.spare_particle_sprite_list:
+        for particle_sprite in self.particle_sprite_list:
             particle_sprite.set_texture(texture_index)
-            particle_sprite.turn_right(delta_time * self.rotations_factor)
-            self.particle_movement_function(particle_sprite)
+            self.particle_movement_function(particle_sprite, delta_time)
             self.current_initial_particle_position_index += 1
         if self.time > self.total_duration:
-            for particle_sprite in self.spare_particle_sprite_list:
+            for particle_sprite in self.particle_sprite_list:
                 particle_sprite.kill()
             self.terminate_animation()
 
@@ -188,4 +187,4 @@ class SparkleAnimation(SingleSpriteAnimation):
         Get the sprites used by this animation.
         :return: Both of the fading out sprites used by this animation.
         """
-        return self.spare_particle_sprite_list
+        return self.particle_sprite_list

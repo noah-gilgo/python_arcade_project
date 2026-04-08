@@ -1,9 +1,14 @@
 import random
 
 import arcade
-from arcade import Sprite
+import pyglet
+from PIL import Image
+from arcade import Sprite, Texture, LRBT
 from arcade.types import Color
 
+import character
+import non_player_character
+import player_character
 import settings
 import texture_methods
 from animations.common_animations import SparkleAnimation
@@ -32,8 +37,8 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         self.target = target
 
-        self.sprite.center_x = self.target.center_x + 24
-        self.sprite.center_y = self.target.center_y - 24
+        self.sprite.right = self.target.right + 24
+        self.sprite.center_y = self.target.center_y - 24 + (self.target.times_struck_this_turn * 40)
         self.sprite.scale_x = 2.0
         self.sprite.scale_y = 0.1
 
@@ -42,8 +47,10 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         self.number_has_not_bounced = True
         self.time_after_bounce = 0
         self.total_duration = 3.0
-        self.floor = self.target.center_y - 56
+        self.floor = (self.target.center_y - 56) + (self.target.times_struck_this_turn * 40)
         self.number_has_not_bounced_again = True
+
+        self.target.times_struck_this_turn += 1
 
     def update_animation(self, delta_time: float = settings.FRAMERATE, *args, **kwargs) -> None:
         self.time += delta_time
@@ -58,7 +65,7 @@ class NumberBounceAnimation(SingleSpriteAnimation):
                 return
 
         # Translate the sprite based on provided coordinates.
-        if self.sprite.scale_y == 0.9 and self.time < 2.0:
+        if self.sprite.scale_y >= 0.9 and self.time < 2.0:
             horizontal_velocity = max(420 - (self.time_after_initial_slide * 30 * settings.FRAMES_PER_SECOND), 0)
             self.sprite.center_x += horizontal_velocity * delta_time
             if self.number_has_not_bounced:
@@ -227,7 +234,7 @@ class HealAnimation(SparkleAnimation):
 
 class TPGainAnimation(SparkleAnimation):
     """
-    The default heal animation. (orange sparkles drifing up)
+    The default heal animation. (orange sparkles drifting up)
     """
     def __init__(self, target: Sprite):
         super().__init__(
@@ -237,3 +244,262 @@ class TPGainAnimation(SparkleAnimation):
             particle_starting_rect=target.rect,
             number_of_particles=10
         )
+
+
+class CriticalHitSparkleAnimation(SparkleAnimation):
+    """
+    The sparkles that fly away from the player when they land a critical hit.
+    """
+    def __init__(self, target: Sprite):
+        particle_rect = LRBT(
+            target.right,
+            target.right + 100,
+            target.center_y,
+            target.center_y + 20
+        )
+        super().__init__(
+            target=target,
+            total_duration=1.0,
+            particle_starting_rect=particle_rect,
+            number_of_particles=3
+        )
+        self.particle_sprite_translation_factor = 2
+        for particle_sprite in self.particle_sprite_list:
+            particle_sprite.scale=3.0
+
+
+    def particle_movement_function(self, particle_sprite: Sprite, delta_time: float):
+        texture_index = int(self.time * 6) % len(self.particle_sprite_list)
+        for particle_sprite in self.particle_sprite_list:
+            particle_sprite.set_texture(texture_index)
+            particle_sprite.center_x += (self.time * self.particle_sprite_translation_factor) + 2
+
+            particle_sprite.alpha = int(
+                (1 - (self.time / self.total_duration)) * 192)
+
+
+class FightHitBar(SingleSpriteAnimation):
+    """
+    The little bar that you have to time with the fight sprite thingy.
+    """
+    def __init__(self, controller, actor, target, bar_height: int = 30, bar_center_y: int = 100):
+        self.bar_width = 12
+        self.bar_height = bar_height
+        self.bar_center_y = bar_center_y
+        self.bar_texture = Texture(Image.new("RGBA", (self.bar_width, self.bar_height), (255, 255, 255, 255)))
+        self.critical_bar_texture = make_texture_solid_color(self.bar_texture, arcade.color.YELLOW)
+        self.initial_center_x = random.randint(int(settings.WINDOW_WIDTH / 400), int(settings.WINDOW_WIDTH / 200)) * 200
+
+        super().__init__(
+            sprite=Sprite(
+                path_or_texture=self.bar_texture,
+                center_x=self.initial_center_x,
+                center_y=bar_center_y,
+            )
+        )
+
+        self.sprite.textures = [self.bar_texture, self.critical_bar_texture]
+        self.sprite.texture_index = 0
+
+        self.actor = actor
+        self.target = target
+        self.controller = controller
+
+        self.trailing_bars = []
+        self.trailing_bars_spawn_rate = 0.2
+        self.trailing_bars_respawn_distance = 30
+        self.trailing_bar_center_x = self.initial_center_x
+
+        for i in range(6):
+            trailing_bar_sprite = Sprite(
+                path_or_texture=self.bar_texture,
+                center_x=self.trailing_bar_center_x,
+                center_y=self.sprite.center_y
+            )
+            trailing_bar_sprite.visible = False
+            trailing_bar_sprite.alpha = 128
+            self.trailing_bars.append(trailing_bar_sprite)
+
+        self.hit_registered = False
+        self.critical_hit_registered = False
+        self.time_since_hit_registered = 0.0
+        self.bar_is_moving = True
+        self.bar_is_not_removed = True
+
+    def update_animation(self, delta_time: float):
+        """ Updates the bar animation. """
+        self.time = self.controller.fight_bar_clock
+        if self.bar_is_moving:
+            self.sprite.center_x = self.initial_center_x - (self.time * 400)
+        if self.sprite.center_x < self.trailing_bar_center_x - self.trailing_bars_respawn_distance:
+            for bar in self.trailing_bars:
+                if not bar.visible:
+                    bar.center_x = self.sprite.center_x
+                    bar.visible = True
+                    self.trailing_bar_center_x = self.sprite.center_x
+                    break
+                if bar.alpha == 0 and not self.hit_registered:
+                    bar.center_x = self.sprite.center_x
+                    bar.alpha = 128
+                    self.trailing_bar_center_x = self.sprite.center_x
+        for bar in self.trailing_bars:
+            if bar.visible:
+                bar.alpha = max(bar.alpha - 5, 0)
+        if self.sprite.center_x < 150:
+            self.sprite.visible = False
+            self.bar_is_moving = False
+            if self.bar_is_not_removed:
+                self.controller.attack_target(self.actor, self.target, 0.0)
+                self.controller.fight_hit_markers.remove(self)
+                self.bar_is_not_removed = False
+            pyglet.clock.schedule_once(lambda dt: self.terminate_animation(), 1.0)
+
+        if self.hit_registered:
+            self.time_since_hit_registered += delta_time
+            if self.critical_hit_registered:
+                self.sprite.scale = 1.0 + (self.time_since_hit_registered * 12)
+                self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 16)
+            else:
+                self.sprite.scale = 1.0 + (self.time_since_hit_registered * 6)
+                self.sprite.center_y = self.bar_center_y + (self.time_since_hit_registered * 8)
+            self.sprite.alpha = max(255 - (self.time_since_hit_registered * 1000), 0)
+            if self.time_since_hit_registered > 1:
+                self.terminate_animation()
+
+    def get_bar_sprite(self) -> Sprite:
+        """
+        Returns the main bar sprite of the animation (the one the player lines up with the hit box).
+        :return: self.sprite (the bar sprite the player lines up with the hit box in the FIGHT widget)
+        """
+        return self.sprite
+
+    def get_sprites(self):
+        """
+        Returns a list of sprites used by this animation.
+        :return: list[Sprite]
+        """
+        return self.trailing_bars + [self.sprite]
+
+    def kill_sprites(self):
+        """
+        Kills all sprites used by this animation.
+        :return:
+        """
+        self.sprite.kill()
+        for sprite in self.trailing_bars:
+            sprite.kill()
+
+    def register_hit(self):
+        self.hit_registered = True
+        self.bar_is_moving = False
+
+    def register_critical_hit(self):
+        self.sprite.set_texture(1)
+        self.critical_hit_registered = True
+
+        self.register_hit()
+
+    def terminate_animation(self):
+        super().terminate_animation()
+        self.kill_sprites()
+
+
+class StrikeEnemyAnimation(SingleSpriteAnimation):
+    def __init__(self, actor, target: character.Character):
+        super().__init__(sprite=target)
+        self.sprite_pack_path = "assets/sprites/player_characters/" + actor.sprite_folder_name + "/battle_hit_animation"
+
+        self.strike_enemy_textures = texture_methods.load_textures_at_filepath_into_texture_array(
+            self.sprite_pack_path
+        )
+
+        self.number_of_strike_enemy_textures = len(self.strike_enemy_textures)
+
+        self.sprite = Sprite(center_x=target.center_x, center_y=target.center_y, scale=5.0)
+        self.sprite.textures = self.strike_enemy_textures
+        self.sprite_texture_index = 0
+        self.sprite.set_texture(self.sprite_texture_index)
+        self.animation_rate = 0.08 # The rate that the textures change in seconds
+
+    def update_animation(self, delta_time: float):
+        self.time += delta_time
+        self.sprite_texture_index = int(self.time / self.animation_rate)
+        if self.sprite_texture_index < self.number_of_strike_enemy_textures:
+            self.sprite.set_texture(self.sprite_texture_index)
+        else:
+            self.sprite.kill()
+            self.terminate_animation()
+
+
+class EnemyFleeingAnimation(MultiSpriteAnimation):
+    def __init__(self, actor: character.Character):
+        super().__init__()
+
+        self.actor = actor
+
+        self.sweat_sprite = Sprite(
+            path_or_texture="assets/sprites/effects/sweat.png",
+            center_x=actor.left,
+            center_y=actor.top,
+            scale=3.0
+        )
+
+        self.initial_center_x = actor.center_x
+        self.initial_center_y = actor.center_y
+
+        self.final_center_x = settings.WINDOW_WIDTH + actor.width
+
+        self.distance_of_sprites = self.final_center_x - self.initial_center_x
+
+        self.actor_texture = actor.texture
+
+        self.enemy_retreating_sprites = []
+        self.enemy_retreating_sprites_invisible = True
+
+        self.number_of_sprites = 40
+        self.sprite_alpha_reduction_factor = 20
+
+        self.time_since_started_fleeing = 0.0
+
+        for i in range(self.number_of_sprites):
+            retreating_sprite = Sprite(
+                path_or_texture=self.actor_texture,
+                center_x=self.initial_center_x + (self.distance_of_sprites * (i / self.number_of_sprites)),
+                center_y=self.initial_center_y
+            )
+
+            retreating_sprite.height = self.actor.height
+            retreating_sprite.width = self.actor.width
+
+            retreating_sprite.visible = False
+
+            self.enemy_retreating_sprites.append(retreating_sprite)
+
+        self.actor.set_animation_state("battle_hurt")
+
+    def update_animation(self, delta_time: float):
+        self.time += delta_time
+
+        if self.time < 0.6:
+            self.sweat_sprite.visible = (self.time // .15) // 2 == 1
+        elif 0.6 <= self.time < 1.5:
+            self.sweat_sprite.visible = False
+            self.actor.visible = False
+            self.sprite_alpha_reduction_factor = 20
+            self.time_since_started_fleeing += delta_time
+            for sprite in self.enemy_retreating_sprites:
+                if self.enemy_retreating_sprites_invisible:
+                    sprite.visible = True
+                    self.sprite_alpha_reduction_factor -= 0.5
+                sprite.alpha = max(255 - (self.time_since_started_fleeing * 50 * self.sprite_alpha_reduction_factor), 0)
+
+            if self.enemy_retreating_sprites_invisible:
+                self.enemy_retreating_sprites_invisible = False
+        else:
+            self.sweat_sprite.kill()
+            for sprite in self.enemy_retreating_sprites:
+                sprite.kill()
+            self.terminate_animation()
+
+    def get_sprites(self):
+        return self.enemy_retreating_sprites + [self.sweat_sprite]

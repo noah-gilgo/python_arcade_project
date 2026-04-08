@@ -17,7 +17,7 @@ import dialogue_box
 import battle_widgets
 from battle_state_machine import BattleController
 from spell_animations import IceShockAnimation
-from spells import Spell
+from spells import Spell, IceShock
 
 
 class GameView(arcade.View):
@@ -58,10 +58,6 @@ class GameView(arcade.View):
 
         # Setup camera stuff
         self.camera = arcade.Camera2D()
-
-        # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(3)
-        self._unholy_arc = math_methods.initialize_unholy_arc(3)
 
         # Temporary, for testing player animations.
         self._global_timer = 0.0
@@ -133,6 +129,10 @@ class GameView(arcade.View):
         self.effects_sprites = SpriteList()
         self.effects = []
 
+        # Initializes the starting positions of the player characters and enemy characters.
+        self._holy_arc = math_methods.initialize_holy_arc(4)
+        self._unholy_arc = math_methods.initialize_unholy_arc(3)
+
     def setup(self):
         # Create and append the players to the SpriteList.
 
@@ -148,6 +148,8 @@ class GameView(arcade.View):
                                                            magic=0,
                                                            battle_ui_color=Color(0, 255, 255, 255),
                                                            battle_ui_icon_color=Color(0, 162, 232, 255),
+                                                           fight_box_color=Color(0, 0, 255, 255),
+                                                           fight_crit_box_color=Color(0, 162, 232, 255),
                                                            knows_magic=False)
         self.player_one.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_one)  # Append the instance to the SpriteList
@@ -167,41 +169,48 @@ class GameView(arcade.View):
                                                            defense=2,
                                                            magic=1,
                                                            battle_ui_color=Color(255, 0, 255, 255),
-                                                           battle_ui_icon_color=Color(234, 121, 200, 255))  # Sprite initialization
+                                                           battle_ui_icon_color=Color(234, 121, 200, 255),  # Sprite initialization
+                                                           fight_box_color = Color(128, 0, 128, 255),
+                                                           fight_crit_box_color=Color(234, 121, 200, 255))
         self.player_two.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_two)
 
-        """
+
         self.player_three = player_character.PlayerCharacter(scale=4.0,
                                                              center_x=self._holy_arc[2][0],
                                                              center_y=self._holy_arc[2][1],
                                                              angle=0,
                                                              sprite_folder_name="ralsei",
-                                                             name="ralsei",
+                                                             name="Ralsei",
                                                              max_hp=70,
                                                              attack=8,
                                                              defense=2,
                                                              magic=7,
                                                              battle_ui_color=Color(0, 255, 0, 255),
-                                                             battle_ui_icon_color=Color(181, 230, 29, 255))  # Sprite initialization
+                                                             battle_ui_icon_color=Color(181, 230, 29, 255), # Sprite initialization
+                                                             fight_box_color=Color(0, 255, 0, 255),
+                                                             fight_crit_box_color=Color(181, 230, 29, 255))
         self.player_three.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_three)
-        """
+
+
 
         self.player_four = player_character.PlayerCharacter(scale=4.0,
-                                                            center_x=self._holy_arc[2][0],
-                                                            center_y=self._holy_arc[2][1],
+                                                            center_x=self._holy_arc[3][0],
+                                                            center_y=self._holy_arc[3][1],
                                                             angle=0,
                                                             sprite_folder_name="noelle",
                                                             name="Noelle",
                                                             max_hp=90,
-                                                            attack=10,
-                                                            defense=2,
-                                                            magic=0,
+                                                            attack=3,
+                                                            defense=1,
+                                                            magic=11,
                                                             battle_ui_color=Color(255, 255, 0, 255),
                                                             battle_ui_icon_color=Color(255, 255, 0, 255),
+                                                            fight_box_color=Color(255, 255, 0, 255),
+                                                            fight_crit_box_color=Color(254, 254, 255, 255),
                                                             spells=[
                                                                 Spell(
                                                                     name="Heal Prayer",
@@ -225,18 +234,7 @@ class GameView(arcade.View):
                                                                     is_pacifying_spell=True,
                                                                     is_aoe_spell=True
                                                                 ),
-                                                                Spell(
-                                                                    name="IceShock",
-                                                                    description="Damage w/ ICE",
-                                                                    tp_cost=16,
-                                                                    element_id=8,
-                                                                    base_health_change=100,
-                                                                    is_friendly_spell=False,
-                                                                    is_healing_spell=False,
-                                                                    is_pacifying_spell=False,
-                                                                    is_aoe_spell=False,
-                                                                    animation=IceShockAnimation()
-                                                                ),
+                                                                IceShock(),
                                                                 Spell(
                                                                     name="SnowGrave",
                                                                     description="Fatal",
@@ -261,7 +259,7 @@ class GameView(arcade.View):
                                                                  center_y=self._unholy_arc[0][1],
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
-                                                                 name="Rudinn",
+                                                                 name="Rudinn 1",
                                                                  hp=90,
                                                                  max_hp=90,
                                                                  attack=10,
@@ -276,7 +274,7 @@ class GameView(arcade.View):
                                                                  center_y=self._unholy_arc[1][1],
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
-                                                                 name="Rudinn",
+                                                                 name="Rudinn 2",
                                                                  hp=50,
                                                                  max_hp=90,
                                                                  attack=10,
@@ -292,7 +290,7 @@ class GameView(arcade.View):
                                                                  center_y=self._unholy_arc[2][1],
                                                                  angle=0,
                                                                  sprite_folder_name="rudinn",
-                                                                 name="Rudinn",
+                                                                 name="Rudinn 3",
                                                                  hp=10,
                                                                  max_hp=90,
                                                                  attack=10,
@@ -344,11 +342,11 @@ class GameView(arcade.View):
         with self.camera.activate():
             self.background_sprites.draw(pixelated=True)
             self.character_sprites.draw(pixelated=True)
+            self.manager.draw(pixelated=True)
             self.effects_sprites.draw(pixelated=True)
             for effect in self.effects:
                 if hasattr(effect, "draw") and callable(effect.draw):
                     effect.draw()
-            self.manager.draw(pixelated=True)
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -368,6 +366,7 @@ class GameView(arcade.View):
 
         for enemy in self.enemies:
             enemy.update_animation(delta_time)
+            enemy.update(delta_time)
 
         for effect in self.effects:
             if hasattr(effect, "is_terminated") and effect.is_terminated:
@@ -375,26 +374,14 @@ class GameView(arcade.View):
             else:
                 effect.update_animation(delta_time)
 
-
-        # Used for testing the animation system
-
-        """
-        if self._global_timer > 2.0:
-            if self._animation_state_index < len(self._animation_states):
-                for player in self.player_characters:
-                    player.set_animation_state(self._animation_states[self._animation_state_index])
-                self._animation_state_index += 1
-            self._global_timer = 0.0
-
-        self._global_timer += delta_time
-        """
+        self.battle_controller.update_clocks(delta_time)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
 
         if key == arcade.key.F11:
             self.window.set_fullscreen(not self.window.fullscreen)
-            settings.WINDOW_SCALE = math.sqrt((self.width / self._initial_width) * (self.height / self._initial_height))
+            settings.WINDOW_SCALE = self.height / self._initial_height
             self.camera.zoom = settings.WINDOW_SCALE
             # self.manager.trigger_render()
             # self.manager.execute_layout()

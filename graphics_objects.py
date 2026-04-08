@@ -93,7 +93,7 @@ class SimpleLoopAnimation:
 
 
 class MultiSpriteAnimation:
-    def __init__(self, sprites: list[AnimatedSprite], delta_time: float = 0.05,
+    def __init__(self, sprites: list[AnimatedSprite] = [], delta_time: float = 0.05,
                  total_duration: float = 1.0):
         self.sprites = sprites
         self.time = 0.0

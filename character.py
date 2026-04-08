@@ -66,18 +66,32 @@ class Character(arcade.Sprite):
         self.is_focused = False
         self.focus_animation = None
 
-        # Initialize the character with its first default texture
-        # if len(self._animations_by_state["default"]) > 0:
-        #    self.texture = self._animations_by_state["default"][0]
-        # else:
-        #    raise FileNotFoundError(f"No .png files found in folder: {self._sprite_pack_path + '/default'}")
+        self.times_struck_this_turn = 0
+
+        self.not_idle = False
+        self.non_idle_timer = 0.0
+
+    def set_animation_to_not_idle(self, duration: float = 1.0, animation_state: str = "battle_idle"):
+        """
+        Starts a timer that eventually sets the character back to a battle_idle animation state.
+        Used in situations where the character receives a temporary animation state.
+        :param duration: The amount of time the character is meant to not be idle.
+        :return: None
+        """
+        self.not_idle = True
+        self.non_idle_timer = duration
+        self.set_animation_state(animation_state)
 
     def update(self, delta_time: float = 1 / 60, **kwargs):
         """ Helps the player do things.
         :param delta_time: the amount of time in seconds that the player updates
         :param **kwargs:
         """
-
+        if self.not_idle and self.non_idle_timer > 0.0:
+            self.non_idle_timer -= delta_time
+            if self.non_idle_timer <= 0.0:
+                self.not_idle = False
+                self.set_animation_state("battle_idle")
         pass
 
     def update_animation(self, delta_time=1/60, **kwargs):

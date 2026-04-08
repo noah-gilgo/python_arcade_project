@@ -377,17 +377,10 @@ class BattleHUDCharacterIcon(UIImage):
         :param texture_path: The path to the image file of the character portrait.
         :param dimensions: A tuple/list containing the x, y, width, and height dimensions of the portrait, respectively
         """
-
-        texture_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
-        hurt_texture_path = "assets/sprites/player_characters/" + character.sprite_folder_name + "/battle_hud/hud_default_hurt_icon.png"
-
-        image = Image.open(texture_path)
-        hurt_image = Image.open(hurt_texture_path)
-        self.normal_texture = arcade.Texture(arcade.load_image(texture_path).resize(image.size, Image.Resampling.NEAREST))
-        self.hurt_texture = arcade.Texture(arcade.load_image(hurt_texture_path).resize(hurt_image.size, Image.Resampling.NEAREST))
+        self.character = character
 
         super().__init__(
-            texture=self.normal_texture,
+            texture=self.character.normal_icon_texture,
             width=64,
             height=48
         )
@@ -398,15 +391,15 @@ class BattleHUDCharacterIcon(UIImage):
         Sets the icon texture back to normal.
         :return:
         """
-        self.texture = self.normal_texture
+        self.texture = self.character.normal_icon_texture
 
     def change_to_hurt_icon(self):
         """
         Temporarily changes the icon to the character's hurt icon.
         :return: None
         """
-        if self.texture == self.normal_texture:
-            self.texture = self.hurt_texture
+        if self.texture == self.character.normal_icon_texture:
+            self.texture = self.character.hurt_icon_texture
             pyglet.clock.schedule_once(self.set_texture_to_normal, 1.0)
 
 
@@ -643,7 +636,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
         super().__init__(
             children=[],
             x=x_offset,
-            y=int(settings.WINDOW_HEIGHT / 5.1) - 2,
+            y=int(settings.WINDOW_HEIGHT / 5.1),
             width=width,
             align="center",
             space_between=self._horizontal_spacing,
@@ -668,6 +661,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
 
     def do_layout(self):
         self.center_x = int(settings.WINDOW_WIDTH / 2)
+        self.y = int(settings.WINDOW_HEIGHT / 5.1)
         super().do_layout()
 
 
