@@ -519,6 +519,8 @@ class BulletBoard:
             scale=2.0
         )
 
+        self.bullet_board_sprite.alpha = 128
+
         self.bullet_board_sprite.visible = False
 
         self.bullet_board_loading_animation_sprites = []
@@ -529,15 +531,18 @@ class BulletBoard:
                 center_x=settings.WINDOW_CENTER_X,
                 center_y=settings.WINDOW_HEIGHT * (2 / 3)
             )
-            bullet_board_sprite.alpha = 0
+            bullet_board_sprite.alpha = 128
+            bullet_board_sprite.visible = False
             bullet_board_sprite.turn_left(15 * i)
             bullet_board_sprite.scale = scale
             scale += 0.1
 
-            self.bullet_board_loading_animation_sprites.append(bullet_board_sprite)
+            self.bullet_board_loading_animation_sprites.insert(0, bullet_board_sprite)
+
+        self.bullet_board_loading_animation_sprites.insert(0, self.bullet_board_sprite)
 
         self.time = 0
-        self.load_bullet_board_animation_total_duration = 2.0
+        self.load_bullet_board_animation_total_duration = 1.0
 
         self.number_of_sprites_in_loading_animation = len(self.bullet_board_loading_animation_sprites)
         self.loading_animation_framerate = self.number_of_sprites_in_loading_animation / self.load_bullet_board_animation_total_duration
@@ -551,14 +556,19 @@ class BulletBoard:
         """ Updates the load bullet board animation. """
         if self.load_bullet_board_animation_playing:
             self.time += delta_time
-            sprite_index = 0
+            sprite_index = self.number_of_sprites_in_loading_animation
             for sprite in self.bullet_board_loading_animation_sprites:
-                if sprite_index < (self.time * self.loading_animation_framerate) * 1.5:
-                    sprite.alpha = 256 - (256 * (self.time / self.load_bullet_board_animation_total_duration))
-                sprite_index += 1
+                if sprite_index < (self.time * self.loading_animation_framerate):
+                    sprite.visible = True
+                    if sprite_index < self.number_of_sprites_in_loading_animation - 1:
+                        sprite.alpha -= 6 # 255 - (1.5 * (255 * (self.time / self.load_bullet_board_animation_total_duration)))
+
+                sprite_index -= 1
 
             if self.time >= self.load_bullet_board_animation_total_duration:
-                self.bullet_board_sprite.visible = True
+                for sprite in self.bullet_board_loading_animation_sprites[1:]:
+                    sprite.visible = False
+                self.bullet_board_sprite.alpha = 255
                 self.load_bullet_board_animation_playing = False
                 self.time = 0.0
                 self.is_terminated = True
@@ -571,7 +581,7 @@ class BulletBoard:
         if self.bullet_board_sprites_not_loaded:
             for sprite in self.bullet_board_loading_animation_sprites:
                 controller.effects_sprite_list.append(sprite)
-            controller.effects_sprite_list.append(self.bullet_board_sprite)
+            # controller.effects_sprite_list.append(self.bullet_board_sprite)
 
         self.bullet_board_sprites_not_loaded = False
 
