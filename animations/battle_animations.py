@@ -2,7 +2,7 @@ import random
 
 import arcade
 import pyglet
-from PIL import Image
+from PIL import Image, ImageDraw
 from arcade import Sprite, Texture, LRBT
 from arcade.types import Color
 
@@ -503,3 +503,60 @@ class EnemyFleeingAnimation(MultiSpriteAnimation):
 
     def get_sprites(self):
         return self.enemy_retreating_sprites + [self.sweat_sprite]
+
+
+class BulletBoard:
+    def __init__(self):
+        self.bullet_board_image = Image.new("RGBA", (150, 150))
+        self.draw = ImageDraw.Draw(self.bullet_board_image)
+        self.draw.rectangle((0, 0, 150, 150), outline=(0, 192, 0, 255), fill=(0, 0, 0, 0), width=4)
+        self.bullet_board_texture = Texture(self.bullet_board_image)
+        self.bullet_board_sprite = Sprite(
+            path_or_texture=self.bullet_board_texture,
+            center_x=settings.WINDOW_CENTER_X,
+            center_y=settings.WINDOW_HEIGHT * (2 / 3)
+        )
+
+        self.bullet_board_sprite.visible = False
+
+        self.bullet_board_loading_animation_sprites = []
+        scale = 0.1
+        for i in range(1, 18):
+            bullet_board_sprite = Sprite(
+                path_or_texture=self.bullet_board_texture,
+                center_x=settings.WINDOW_CENTER_X,
+                center_y=settings.WINDOW_HEIGHT * (2 / 3)
+            )
+            bullet_board_sprite.alpha = 0
+            bullet_board_sprite.turn_left(15 * i)
+            bullet_board_sprite.scale = scale
+            scale += 0.1
+
+            self.bullet_board_loading_animation_sprites.append(bullet_board_sprite)
+
+        self.time = 0
+        self.load_bullet_board_animation_total_duration = 1.0
+
+        self.number_of_sprites_in_loading_animation = len(self.bullet_board_loading_animation_sprites)
+        self.loading_animation_framerate = self.load_bullet_board_animation_total_duration / self.number_of_sprites_in_loading_animation
+
+        self.load_bullet_board_animation_playing = False
+
+    def update_load_bullet_board_animation(self, delta_time: float):
+        """ Updates the load bullet board animation. """
+        if self.load_bullet_board_animation_playing:
+            self.time += delta_time
+            sprite_index = 0
+            for sprite in self.bullet_board_loading_animation_sprites:
+                if sprite_index < self.time * self.loading_animation_framerate:
+                    sprite.alpha = 128 - (128 * (self.time / self.load_bullet_board_animation_total_duration))
+                sprite_index += 1
+
+            if self.time >= self.load_bullet_board_animation_total_duration:
+                self.bullet_board_sprite.visible = True
+                self.load_bullet_board_animation_playing = False
+
+    def load_bullet_board(self):
+        """ Loads the bullet board image. """
+        self.load_bullet_board_animation_playing = True
+        # TODO: Load a hitbox the same size as the bullet board.
