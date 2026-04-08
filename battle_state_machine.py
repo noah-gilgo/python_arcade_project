@@ -17,7 +17,7 @@ import player_character
 import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
-    StrikeEnemyAnimation, EnemyFleeingAnimation
+    StrikeEnemyAnimation, EnemyFleeingAnimation, BulletBoard
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from dialogue_box import TextBoxDialog
@@ -244,6 +244,9 @@ class BattleController:
         self.battle_idle_callback = None
         self.battle_idle_target = None
         self.enemy_hit_sound_player = None
+
+        self.bullet_board = BulletBoard()
+        self.bullet_board.load_bullet_board(self)
 
     def update_clocks(self, delta_time: float):
         """

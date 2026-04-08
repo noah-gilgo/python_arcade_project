@@ -4,6 +4,7 @@ import arcade
 import pyglet
 from PIL import Image, ImageDraw
 from arcade import Sprite, Texture, LRBT
+from arcade.easing import ease_in
 from arcade.types import Color
 
 import character
@@ -13,7 +14,7 @@ import settings
 import texture_methods
 from animations.common_animations import SparkleAnimation
 from character import Character
-from graphics_methods import make_texture_solid_color
+from graphics_methods import make_texture_solid_color, ease_out
 from graphics_objects import MultiSpriteAnimation, SingleSpriteAnimation
 
 
@@ -509,12 +510,13 @@ class BulletBoard:
     def __init__(self):
         self.bullet_board_image = Image.new("RGBA", (150, 150))
         self.draw = ImageDraw.Draw(self.bullet_board_image)
-        self.draw.rectangle((0, 0, 150, 150), outline=(0, 192, 0, 255), fill=(0, 0, 0, 0), width=4)
+        self.draw.rectangle((0, 0, 149, 149), outline=(0, 192, 0, 255), fill=(0, 0, 0, 255), width=4)
         self.bullet_board_texture = Texture(self.bullet_board_image)
         self.bullet_board_sprite = Sprite(
             path_or_texture=self.bullet_board_texture,
             center_x=settings.WINDOW_CENTER_X,
-            center_y=settings.WINDOW_HEIGHT * (2 / 3)
+            center_y=settings.WINDOW_HEIGHT * (2 / 3),
+            scale=2.0
         )
 
         self.bullet_board_sprite.visible = False
@@ -535,28 +537,43 @@ class BulletBoard:
             self.bullet_board_loading_animation_sprites.append(bullet_board_sprite)
 
         self.time = 0
-        self.load_bullet_board_animation_total_duration = 1.0
+        self.load_bullet_board_animation_total_duration = 2.0
 
         self.number_of_sprites_in_loading_animation = len(self.bullet_board_loading_animation_sprites)
-        self.loading_animation_framerate = self.load_bullet_board_animation_total_duration / self.number_of_sprites_in_loading_animation
+        self.loading_animation_framerate = self.number_of_sprites_in_loading_animation / self.load_bullet_board_animation_total_duration
 
         self.load_bullet_board_animation_playing = False
+        self.bullet_board_sprites_not_loaded = True  # TODO: remove sprites from list after battle is done
 
-    def update_load_bullet_board_animation(self, delta_time: float):
+        self.is_terminated = False
+
+    def update_animation(self, delta_time: float):
         """ Updates the load bullet board animation. """
         if self.load_bullet_board_animation_playing:
             self.time += delta_time
             sprite_index = 0
             for sprite in self.bullet_board_loading_animation_sprites:
-                if sprite_index < self.time * self.loading_animation_framerate:
-                    sprite.alpha = 128 - (128 * (self.time / self.load_bullet_board_animation_total_duration))
+                if sprite_index < (self.time * self.loading_animation_framerate) * 1.5:
+                    sprite.alpha = 256 - (256 * (self.time / self.load_bullet_board_animation_total_duration))
                 sprite_index += 1
 
             if self.time >= self.load_bullet_board_animation_total_duration:
                 self.bullet_board_sprite.visible = True
                 self.load_bullet_board_animation_playing = False
+                self.time = 0.0
+                self.is_terminated = True
 
-    def load_bullet_board(self):
+    def load_bullet_board(self, controller):
         """ Loads the bullet board image. """
         self.load_bullet_board_animation_playing = True
         # TODO: Load a hitbox the same size as the bullet board.
+        controller.effects_list.append(self)
+        if self.bullet_board_sprites_not_loaded:
+            for sprite in self.bullet_board_loading_animation_sprites:
+                controller.effects_sprite_list.append(sprite)
+            controller.effects_sprite_list.append(self.bullet_board_sprite)
+
+        self.bullet_board_sprites_not_loaded = False
+
+    def get_sprites(self):
+        return self.bullet_board_loading_animation_sprites + [self.bullet_board_sprite]
