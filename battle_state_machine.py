@@ -520,7 +520,6 @@ class BattleController:
                         hit_marker.register_critical_hit()
                         attack_multiplier = 1.25
                         is_crit = True
-                        # TODO: add crit particle animation
                     else:
                         hit_marker.register_hit()
                         attack_multiplier = fight_box_min_x / hit_marker.sprite.center_x
