@@ -531,7 +531,7 @@ class BulletBoard:
                 center_x=settings.WINDOW_CENTER_X,
                 center_y=settings.WINDOW_HEIGHT * (2 / 3)
             )
-            bullet_board_sprite.alpha = 128
+            bullet_board_sprite.alpha = 255
             bullet_board_sprite.visible = False
             bullet_board_sprite.turn_left(15 * i)
             bullet_board_sprite.scale = scale
@@ -548,6 +548,7 @@ class BulletBoard:
         self.loading_animation_framerate = self.number_of_sprites_in_loading_animation / self.load_bullet_board_animation_total_duration
 
         self.load_bullet_board_animation_playing = False
+        self.unload_bullet_board_animation_playing = False
         self.bullet_board_sprites_not_loaded = True  # TODO: remove sprites from list after battle is done
 
         self.is_terminated = False
@@ -560,28 +561,59 @@ class BulletBoard:
             for sprite in self.bullet_board_loading_animation_sprites:
                 if sprite_index < (self.time * self.loading_animation_framerate):
                     sprite.visible = True
-                    if sprite_index < self.number_of_sprites_in_loading_animation - 1:
-                        sprite.alpha -= 6 # 255 - (1.5 * (255 * (self.time / self.load_bullet_board_animation_total_duration)))
+                    if sprite_index < self.number_of_sprites_in_loading_animation:
+                        sprite.alpha -= 12 # 255 - (1.5 * (255 * (self.time / self.load_bullet_board_animation_total_duration)))
+                    else:
+                        sprite.alpha = min(sprite.alpha + 4, 255)
 
                 sprite_index -= 1
 
-            if self.time >= self.load_bullet_board_animation_total_duration:
-                for sprite in self.bullet_board_loading_animation_sprites[1:]:
-                    sprite.visible = False
-                self.bullet_board_sprite.alpha = 255
+            if self.time >= self.load_bullet_board_animation_total_duration * 1.6:
+                # for sprite in self.bullet_board_loading_animation_sprites[1:]:
+                #     sprite.visible = False
+                # self.bullet_board_sprite.alpha = 255
                 self.load_bullet_board_animation_playing = False
                 self.time = 0.0
-                self.is_terminated = True
+
+        if self.unload_bullet_board_animation_playing:
+            self.time += delta_time
+            sprite_index = 0
+            for sprite in self.bullet_board_loading_animation_sprites:
+                if sprite_index < (self.time * self.loading_animation_framerate):
+                    sprite.visible = True
+                    if sprite_index < self.number_of_sprites_in_loading_animation:
+                        sprite.alpha -= 4  # 255 - (1.5 * (255 * (self.time / self.load_bullet_board_animation_total_duration)))
+                    else:
+                        sprite.alpha = min(sprite.alpha + 4, 255)
+
+                sprite_index += 1
+
+            if self.time >= self.load_bullet_board_animation_total_duration * 1.6:
+                # for sprite in self.bullet_board_loading_animation_sprites[1:]:
+                #     sprite.visible = False
+                # self.bullet_board_sprite.alpha = 255
+                self.unload_bullet_board_animation_playing = False
+                self.time = 0.0
 
     def load_bullet_board(self, controller):
-        """ Loads the bullet board image. """
+        """ Loads the bullet board sprite. """
         self.load_bullet_board_animation_playing = True
         # TODO: Load a hitbox the same size as the bullet board.
         controller.effects_list.append(self)
         if self.bullet_board_sprites_not_loaded:
             for sprite in self.bullet_board_loading_animation_sprites:
                 controller.effects_sprite_list.append(sprite)
-            # controller.effects_sprite_list.append(self.bullet_board_sprite)
+
+        self.bullet_board_sprites_not_loaded = False
+
+    def unload_bullet_board(self, controller):
+        """ Unloads the bullet board sprite. """
+        self.unload_bullet_board_animation_playing = True
+        # TODO: Unload the bullet board hitbox.
+        controller.effects_list.append(self)
+        if self.bullet_board_sprites_not_loaded:
+            for sprite in self.bullet_board_loading_animation_sprites:
+                controller.effects_sprite_list.remove(sprite)
 
         self.bullet_board_sprites_not_loaded = False
 

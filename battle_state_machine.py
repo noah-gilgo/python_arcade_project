@@ -22,16 +22,15 @@ from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnima
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
-from graphics_objects import MultiSpriteAnimation
 from items import Item, ConsumableItem
 from player_character import PlayerCharacter
+from soul import Soul
 
 """
 This architecture is my attempt at replicating the state architecture recommended by Robert Nystrom in his book
 Game Programming Patterns. The guide I followed can be found here:
 https://gameprogrammingpatterns.com/state.html
 """
-
 
 class BattleState(Enum):
     PLAYER_ATTACKING = auto()
@@ -52,122 +51,6 @@ class BattleState(Enum):
     DEFEAT = auto()
 
 
-"""
-class CommandInput:
-    def __init__(self, battle):
-        self.battle = battle
-
-        self.command_menu = battle.battle_player_character_cards
-
-        # Track the current state of what key is pressed
-        self.left_pressed = False
-        self.right_pressed = False
-        self.up_pressed = False
-        self.down_pressed = False
-
-
-    def update_player_speed(self, soul):
-        # Calculate speed based on the keys pressed
-        self.soul.change_x = 0
-        self.soul.change_y = 0
-
-        if self.up_pressed and not self.down_pressed:
-            self.soul.change_y = character.MOVEMENT_SPEED
-        elif self.down_pressed and not self.up_pressed:
-            self.soul.change_y = -character.MOVEMENT_SPEED
-        if self.left_pressed and not self.right_pressed:
-            self.soul.change_x = -character.MOVEMENT_SPEED
-        elif self.right_pressed and not self.left_pressed:
-            self.soul.change_x = character.MOVEMENT_SPEED
-
-
-    def handle_key(self, key):
-        # Handles user inputs made during the battle.
-        match key:
-            case arcade.key.Z:
-                self.battle.confirm_command()
-            case arcade.key.RIGHT:
-                print("right key pressed")
-                self.battle.right_command()
-            case arcade.key.LEFT:
-                self.battle.left_command()
-
-        # Selecting one of the fight action buttons (FIGHT, ACT, MAGIC, SPARE, etc.)
-        if self.battle.state == BattleState.PLAYER_COMMAND:
-            if key == arcade.key.LEFT:
-                self.battle.ui.command_menu.move(-1)
-            elif key == arcade.key.RIGHT:
-                self.battle.ui.command_menu.move(1)
-            elif key == arcade.key.C:
-                self.battle.confirm_command()
-
-        # Selecting one of the acts after selecting the ACT button.
-        elif self.battle.state == BattleState.PLAYER_ACT_SELECT:
-            if key == arcade.key.LEFT:
-                self.battle.ui.command_menu.move(-1, 0)
-            elif key == arcade.key.RIGHT:
-                self.battle.ui.command_menu.move(1, 0)
-            elif key == arcade.key.UP:
-                self.battle.ui.command_menu.move(0, -1)
-            elif key == arcade.key.DOWN:
-                self.battle.ui.command_menu.move(0, 1)
-            elif key == arcade.key.C:
-                self.battle.confirm_command()
-
-        # Selecting one of the spells after selecting the MAGIC button.
-        elif self.battle.state == BattleState.PLAYER_MAGIC_SELECT:
-            if key == arcade.key.LEFT:
-                self.battle.ui.command_menu.move(-1, 0)
-            elif key == arcade.key.RIGHT:
-                self.battle.ui.command_menu.move(1, 0)
-            elif key == arcade.key.UP:
-                self.battle.ui.command_menu.move(0, -1)
-            elif key == arcade.key.DOWN:
-                self.battle.ui.command_menu.move(0, 1)
-            elif key == arcade.key.C:
-                self.battle.confirm_command()
-
-        # Selecting one of the items after selecting the ITEM button.
-        elif self.battle.state == BattleState.PLAYER_ITEM_SELECT:
-            if key == arcade.key.LEFT:
-                self.battle.ui.command_menu.move(-1, 0)
-            elif key == arcade.key.RIGHT:
-                self.battle.ui.command_menu.move(1, 0)
-            elif key == arcade.key.UP:
-                self.battle.ui.command_menu.move(0, -1)
-            elif key == arcade.key.DOWN:
-                self.battle.ui.command_menu.move(0, 1)
-            elif key == arcade.key.C:
-                self.battle.confirm_command()
-
-        elif self.battle.state == BattleState.PLAYER_TARGET:
-            if key == arcade.key.UP:
-                self.battle.ui.command_menu.move(-1)
-            elif key == arcade.key.DOWN:
-                self.battle.ui.command_menu.move(1)
-
-        elif self.battle.state == BattleState.DIALOGUE:
-            if key == arcade.key.C:
-                self.battle.confirm_command()
-
-        
-        elif self.battle.state == BattleState.ENEMY_ATTACK:
-            if key == arcade.key.UP:
-                self.up_pressed = True
-                self.soul.update_player_speed()
-            elif key == arcade.key.DOWN:
-                self.down_pressed = True
-                self.soul.update_player_speed()
-            elif key == arcade.key.LEFT:
-                self.left_pressed = True
-                self.soul.update_player_speed()
-            elif key == arcade.key.RIGHT:
-                self.right_pressed = True
-                self.soul.update_player_speed()
-        
-"""
-
-
 class BattleController:
     def __init__(self, ui_manager: UIManager,
                  battle_player_character_cards: UILayout,
@@ -177,6 +60,8 @@ class BattleController:
                  effects_sprite_list: SpriteList,
                  effects_list: list,
                  tp_meter: battle_widgets.TPMeter):
+        # TODO: move most of these parameters into the BattleController.
+
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
@@ -190,10 +75,6 @@ class BattleController:
         self.turn = 0
         self.selected_command = None
         self.selected_target = None
-
-        # References to all of the battle buttons and their indexes
-        # self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
-        # self.ui_manager.add(self.battle_player_character_cards)
 
         self.ui_manager.execute_layout()
 
@@ -247,6 +128,8 @@ class BattleController:
 
         self.bullet_board = BulletBoard()
         self.bullet_board.load_bullet_board(self)
+
+        self.soul = Soul()
 
     def update_clocks(self, delta_time: float):
         """
