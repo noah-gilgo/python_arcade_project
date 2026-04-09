@@ -16,6 +16,7 @@ import math
 import dialogue_box
 import battle_widgets
 from battle_state_machine import BattleController
+from soul import Soul
 from spell_animations import IceShockAnimation
 from spells import Spell, IceShock
 
@@ -129,6 +130,9 @@ class GameView(arcade.View):
         self.effects_sprites = SpriteList()
         self.effects = []
 
+        self.soul_sprites = SpriteList()
+        self.soul = None
+
         # Initializes the starting positions of the player characters and enemy characters.
         self._holy_arc = math_methods.initialize_holy_arc(4)
         self._unholy_arc = math_methods.initialize_unholy_arc(3)
@@ -154,6 +158,9 @@ class GameView(arcade.View):
         self.player_one.set_animation_state("battle_idle")
         self.character_sprites.append(self.player_one)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_one)
+
+        self.soul = Soul(self.player_characters[0])
+        self.soul_sprites.append(self.soul)
 
         self._animation_states = self.player_one.get_valid_animation_states()
 
@@ -331,7 +338,8 @@ class GameView(arcade.View):
             enemies=self.enemies,
             effects_sprite_list=self.effects_sprites,
             effects_list=self.effects,
-            tp_meter=self.tp_meter
+            tp_meter=self.tp_meter,
+            soul=self.soul
         )
 
     def on_draw(self):
@@ -347,6 +355,7 @@ class GameView(arcade.View):
             for effect in self.effects:
                 if hasattr(effect, "draw") and callable(effect.draw):
                     effect.draw()
+            self.soul_sprites.draw(pixelated=True)
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -373,6 +382,8 @@ class GameView(arcade.View):
                 self.effects.remove(effect)
             else:
                 effect.update_animation(delta_time)
+
+        self.soul.update(delta_time)
 
         self.battle_controller.update_clocks(delta_time)
 

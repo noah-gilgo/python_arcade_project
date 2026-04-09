@@ -553,6 +553,10 @@ class BulletBoard:
 
         self.is_terminated = False
 
+    def get_center_coordinates(self):
+        """ Get the center coordinates of the bullet board. """
+        return (self.bullet_board_sprite.center_x, self.bullet_board_sprite.center_y)
+
     def update_animation(self, delta_time: float):
         """ Updates the load bullet board animation. """
         if self.load_bullet_board_animation_playing:

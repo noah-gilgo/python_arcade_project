@@ -59,7 +59,8 @@ class BattleController:
                  enemies: list[non_player_character.NonPlayerCharacter],
                  effects_sprite_list: SpriteList,
                  effects_list: list,
-                 tp_meter: battle_widgets.TPMeter):
+                 tp_meter: battle_widgets.TPMeter,
+                 soul: Soul):
         # TODO: move most of these parameters into the BattleController.
 
         self.battle_player_character_cards = battle_player_character_cards
@@ -127,9 +128,8 @@ class BattleController:
         self.enemy_hit_sound_player = None
 
         self.bullet_board = BulletBoard()
-        self.bullet_board.load_bullet_board(self)
-
-        self.soul = Soul()
+        self.soul = soul
+        self.load_bullet_board()
 
     def update_clocks(self, delta_time: float):
         """
@@ -153,6 +153,11 @@ class BattleController:
         """
         self.fight_bar_clock_is_updating = False
         self.fight_bar_clock = 0.0
+
+    def load_bullet_board(self):
+        """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
+        self.bullet_board.load_bullet_board(self)
+        self.soul.move_to_bullet_board(self.bullet_board)
 
     def confirm_command(self):
         SelectCommand(self).execute()
