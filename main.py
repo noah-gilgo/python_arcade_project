@@ -1,23 +1,18 @@
 import arcade
 from arcade import SpriteList
 from arcade.gui import UIManager
-from arcade.resources import resolve_resource_path
 from arcade.types import Color
 
 import math_methods
 import non_player_character
 import player_character
 import settings
-import character
-import pyglet
 import sound_methods
 import graphics_methods
-import math
 import dialogue_box
 import battle_widgets
 from battle_state_machine import BattleController
 from soul import Soul
-from spell_animations import IceShockAnimation
 from spells import Spell, IceShock
 
 

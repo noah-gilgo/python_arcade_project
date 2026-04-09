@@ -1,7 +1,7 @@
 import arcade
 
 import player_character
-from animations.battle_animations import BulletBoard
+from bullet_board import BulletBoard
 
 
 class Soul(arcade.Sprite):
@@ -24,11 +24,11 @@ class Soul(arcade.Sprite):
         self.up_pressed = False
         self.down_pressed = False
 
-        # Variables used by the animation that moves the sould to the center of the bullet board.
+        # Variables used by the animation that moves the soul to the center of the bullet board.
         self.player_with_soul_coordinates = (self.center_x, self.center_y)
         self.bullet_board_center_coordinates = (0.0, 0.0)
         self.moving_soul_to_bullet_board = False
-        self.moving_soul_to_bullet_board_animation_duration = 2.0
+        self.moving_soul_to_bullet_board_animation_duration = 0.5
         self.total_distance_to_move_soul_x = 1
         self.total_distance_to_move_soul_y = 1
         self.moving_soul_to_bullet_board_animation_time = 0.0
@@ -55,6 +55,8 @@ class Soul(arcade.Sprite):
             self.change_x = -self.movement_speed
         elif self.right_pressed and not self.left_pressed:
             self.change_x = self.movement_speed
+
+        self.velocity = (self.change_x, self.change_y)
 
     def update(self, delta_time: float = 1/60):
         if self.moving_soul_to_bullet_board:

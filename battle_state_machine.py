@@ -17,13 +17,14 @@ import player_character
 import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
-    StrikeEnemyAnimation, EnemyFleeingAnimation, BulletBoard
+    StrikeEnemyAnimation, EnemyFleeingAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
 from items import Item, ConsumableItem
 from player_character import PlayerCharacter
+from bullet_board import BulletBoard
 from soul import Soul
 
 """
@@ -130,6 +131,7 @@ class BattleController:
         self.bullet_board = BulletBoard()
         self.soul = soul
         self.load_bullet_board()
+        pyglet.clock.schedule_once(lambda dt: self.unload_bullet_board(), 2.0)
 
     def update_clocks(self, delta_time: float):
         """
@@ -158,6 +160,11 @@ class BattleController:
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
         self.bullet_board.load_bullet_board(self)
         self.soul.move_to_bullet_board(self.bullet_board)
+
+    def unload_bullet_board(self):
+        """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
+        self.bullet_board.unload_bullet_board(self)
+        # self.soul.move_to_bullet_board(self.bullet_board)
 
     def confirm_command(self):
         SelectCommand(self).execute()
