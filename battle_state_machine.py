@@ -798,7 +798,8 @@ class BattleController:
             return
         else:
             self.state = BattleState.ENEMY_ATTACK
-            # TODO: Add code here to initiate the enemy attack.
+            self.load_bullet_board()
+            self.battle_textbox.load_dialog(TextBoxDialog(text=""))
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """
