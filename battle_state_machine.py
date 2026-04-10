@@ -1,5 +1,4 @@
 from enum import Enum, auto
-import command
 
 import arcade.key
 import pyglet
@@ -61,7 +60,7 @@ class BattleController:
                  effects_sprite_list: SpriteList,
                  effects_list: list,
                  tp_meter: battle_widgets.TPMeter,
-                 soul: Soul):
+                 soul_sprites: SpriteList):
         # TODO: move most of these parameters into the BattleController.
 
         self.battle_player_character_cards = battle_player_character_cards
@@ -129,9 +128,76 @@ class BattleController:
         self.enemy_hit_sound_player = None
 
         self.bullet_board = BulletBoard()
-        self.soul = soul
-        self.load_bullet_board()
-        pyglet.clock.schedule_once(lambda dt: self.unload_bullet_board(), 2.0)
+        self.soul_sprites = soul_sprites
+        self.soul = Soul(self.player_characters[0], self)
+        self.soul_sprites.append(self.soul)
+
+        # Tracks which keys are pressed down
+        self.z_pressed = False
+        self.x_pressed = False
+        self.c_pressed = False
+        self.up_pressed = False
+        self.down_pressed = False
+        self.left_pressed = False
+        self.right_pressed = False
+
+    def add_key_pressed(self, key):
+        """
+        If a key is pressed, track that it is pressed.
+        :param key: The key that was pressed.
+        :return:
+        """
+        match key:
+            case arcade.key.Z:
+                self.z_pressed = True
+                return
+            case arcade.key.X:
+                self.x_pressed = True
+                return
+            case arcade.key.C:
+                self.c_pressed = True
+                return
+            case arcade.key.UP:
+                self.up_pressed = True
+                return
+            case arcade.key.DOWN:
+                self.down_pressed = True
+                return
+            case arcade.key.LEFT:
+                self.left_pressed = True
+                return
+            case arcade.key.RIGHT:
+                self.right_pressed = True
+                return
+
+    def remove_key_pressed(self, key):
+        """
+        If a key is released, track that it was released.
+        :param key: The key that was pressed.
+        :return:
+        """
+        match key:
+            case arcade.key.Z:
+                self.z_pressed = False
+                return
+            case arcade.key.X:
+                self.x_pressed = False
+                return
+            case arcade.key.C:
+                self.c_pressed = False
+                return
+            case arcade.key.UP:
+                self.up_pressed = False
+                return
+            case arcade.key.DOWN:
+                self.down_pressed = False
+                return
+            case arcade.key.LEFT:
+                self.left_pressed = False
+                return
+            case arcade.key.RIGHT:
+                self.right_pressed = False
+                return
 
     def update_clocks(self, delta_time: float):
         """
@@ -164,7 +230,6 @@ class BattleController:
     def unload_bullet_board(self):
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
         self.bullet_board.unload_bullet_board(self)
-        # self.soul.move_to_bullet_board(self.bullet_board)
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -983,43 +1048,48 @@ class RightCommand(Command):
     """ A command object representing the user pressing right (usually pressing -> in the original game.) """
 
     def execute(self):
-        if self.controller.state == BattleState.PLAYER_COMMAND:
-            move_succeeded = self.controller.focus_stack.get_highest_member().move_right(wrap=True)
-        else:
-            move_succeeded = self.controller.focus_stack.get_highest_member().move_right()
-        if move_succeeded:
-            self.controller.menu_move_sound.play()
-            match self.controller.state:
-                case BattleState.PLAYER_MAGIC_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    )
-                case BattleState.PLAYER_ITEM_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                    )
+        # States that are in the Battle GUI
+        if self.controller.state in [BattleState.PLAYER_COMMAND, BattleState.PLAYER_MAGIC_SELECT,
+                                     BattleState.PLAYER_ITEM_SELECT]:
+            if self.controller.state == BattleState.PLAYER_COMMAND:
+                move_succeeded = self.controller.focus_stack.get_highest_member().move_right(wrap=True)
+            else:
+                move_succeeded = self.controller.focus_stack.get_highest_member().move_right()
+            if move_succeeded:
+                self.controller.menu_move_sound.play()
+                match self.controller.state:
+                    case BattleState.PLAYER_MAGIC_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                        )
+                    case BattleState.PLAYER_ITEM_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                        )
 
 
 class LeftCommand(Command):
     """ A command object representing the user pressing left (usually pressing <- in the original game.) """
 
     def execute(self):
-        if self.controller.state == BattleState.PLAYER_COMMAND:
-            move_succeeded = self.controller.focus_stack.get_highest_member().move_left(wrap=True)
-        else:
-            move_succeeded = self.controller.focus_stack.get_highest_member().move_left()
-        if move_succeeded:
-            self.controller.menu_move_sound.play()
-            match self.controller.state:
-                case BattleState.PLAYER_MAGIC_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    )
-                case BattleState.PLAYER_ITEM_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                    )
-
+        # States that are in the Battle GUI
+        if self.controller.state in [BattleState.PLAYER_COMMAND, BattleState.PLAYER_MAGIC_SELECT,
+                                     BattleState.PLAYER_ITEM_SELECT]:
+            if self.controller.state == BattleState.PLAYER_COMMAND:
+                move_succeeded = self.controller.focus_stack.get_highest_member().move_left(wrap=True)
+            else:
+                move_succeeded = self.controller.focus_stack.get_highest_member().move_left()
+            if move_succeeded:
+                self.controller.menu_move_sound.play()
+                match self.controller.state:
+                    case BattleState.PLAYER_MAGIC_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                        )
+                    case BattleState.PLAYER_ITEM_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                        )
 
 class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """

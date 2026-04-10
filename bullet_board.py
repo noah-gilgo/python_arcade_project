@@ -64,9 +64,10 @@ class BulletBoard:
                 if sprite_index < (self.time * self.loading_animation_framerate):
                     sprite.visible = True
                     if sprite_index < self.number_of_sprites_in_loading_animation:
-                        sprite.alpha -= 12 # 255 - (1.5 * (255 * (self.time / self.load_bullet_board_animation_total_duration)))
+                        sprite.alpha -= (720
+                                         * delta_time) # 255 - (1.5 * (255 * (self.time / self.load_bullet_board_animation_total_duration)))
                     else:
-                        sprite.alpha = min(sprite.alpha + 4, 255)
+                        sprite.alpha = min(sprite.alpha + (180 * delta_time), 255)
 
                 sprite_index -= 1
 
@@ -84,7 +85,7 @@ class BulletBoard:
                 if sprite_index < (self.time * self.loading_animation_framerate):
                     sprite.visible = False
                 else:
-                    sprite.alpha = min(sprite.alpha - 4, 255)
+                    sprite.alpha = max(sprite.alpha - (180 * delta_time), 0)
 
                 sprite_index += 1
 

@@ -154,9 +154,6 @@ class GameView(arcade.View):
         self.character_sprites.append(self.player_one)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_one)
 
-        self.soul = Soul(self.player_characters[0])
-        self.soul_sprites.append(self.soul)
-
         self._animation_states = self.player_one.get_valid_animation_states()
 
 
@@ -334,7 +331,7 @@ class GameView(arcade.View):
             effects_sprite_list=self.effects_sprites,
             effects_list=self.effects,
             tp_meter=self.tp_meter,
-            soul=self.soul
+            soul_sprites=self.soul_sprites
         )
 
     def on_draw(self):
@@ -378,7 +375,8 @@ class GameView(arcade.View):
             else:
                 effect.update_animation(delta_time)
 
-        self.soul.update(delta_time)
+        for soul_sprite in self.soul_sprites:
+            soul_sprite.update(delta_time)
 
         self.battle_controller.update_clocks(delta_time)
 
@@ -392,7 +390,11 @@ class GameView(arcade.View):
             # self.manager.trigger_render()
             # self.manager.execute_layout()
 
+        self.battle_controller.add_key_pressed(key)
         self.battle_controller.handle_key(key)
+
+    def on_key_release(self, key, modifiers):
+        self.battle_controller.remove_key_pressed(key)
 
 
 def main():

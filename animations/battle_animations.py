@@ -326,6 +326,7 @@ class FightHitBar(SingleSpriteAnimation):
         self.time_since_hit_registered = 0.0
         self.bar_is_moving = True
         self.bar_is_not_removed = True
+        self.load_bullet_board_called = False
 
     def update_animation(self, delta_time: float):
         """ Updates the bar animation. """
@@ -366,6 +367,10 @@ class FightHitBar(SingleSpriteAnimation):
             self.sprite.alpha = max(255 - (self.time_since_hit_registered * 1000), 0)
             if self.time_since_hit_registered > 1:
                 self.terminate_animation()
+
+        if len(self.controller.fight_hit_markers) == 0 and not self.load_bullet_board_called:
+            pyglet.clock.schedule_once(lambda dt: self.controller.load_bullet_board(), 1.5)
+            self.load_bullet_board_called = True
 
     def get_bar_sprite(self) -> Sprite:
         """
