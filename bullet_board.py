@@ -40,7 +40,7 @@ class BulletBoard:
         self.bullet_board_loading_animation_sprites.insert(0, self.bullet_board_sprite)
 
         self.time = 0
-        self.load_bullet_board_animation_total_duration = 1.0
+        self.load_bullet_board_animation_total_duration = 0.8
 
         self.number_of_sprites_in_loading_animation = len(self.bullet_board_loading_animation_sprites)
         self.loading_animation_framerate = self.number_of_sprites_in_loading_animation / self.load_bullet_board_animation_total_duration
@@ -59,6 +59,7 @@ class BulletBoard:
         """ Updates the load bullet board animation. """
         if self.load_bullet_board_animation_playing:
             self.time += delta_time
+            # print(self.time)
             sprite_index = self.number_of_sprites_in_loading_animation
             for sprite in self.bullet_board_loading_animation_sprites:
                 if sprite_index < (self.time * self.loading_animation_framerate):
@@ -100,10 +101,12 @@ class BulletBoard:
         """ Loads the bullet board sprite. """
         self.load_bullet_board_animation_playing = True
         # TODO: Load a hitbox the same size as the bullet board.
-        controller.effects_list.append(self)
+        if self not in controller.effects_list:
+            controller.effects_list.append(self)
         if self.bullet_board_sprites_not_loaded:
             for sprite in self.bullet_board_loading_animation_sprites:
-                controller.effects_sprite_list.append(sprite)
+                if sprite not in controller.effects_sprite_list:
+                    controller.effects_sprite_list.append(sprite)
 
             self.bullet_board_sprites_not_loaded = False
 
