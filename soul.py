@@ -24,7 +24,7 @@ class Soul(arcade.Sprite):
         self.player_with_soul_coordinates = (self.center_x, self.center_y)
         self.bullet_board_center_coordinates = (0.0, 0.0)
         self.moving_soul_to_bullet_board = False
-        self.moving_soul_to_bullet_board_animation_duration = 1.0
+        self.moving_soul_to_bullet_board_animation_duration = 0.6
         self.total_distance_to_move_soul_x = 1
         self.total_distance_to_move_soul_y = 1
         self.moving_soul_to_bullet_board_animation_time = 0.0
@@ -67,7 +67,6 @@ class Soul(arcade.Sprite):
     def update(self, delta_time):
         if self.moving_soul_to_bullet_board:
             self.moving_soul_to_bullet_board_animation_time += delta_time
-            print(self.moving_soul_to_bullet_board_animation_time)
             distance_ratio = delta_time / self.moving_soul_to_bullet_board_animation_duration
             distance_to_move_soul_x = self.total_distance_to_move_soul_x * distance_ratio
             distance_to_move_soul_y = self.total_distance_to_move_soul_y * distance_ratio
