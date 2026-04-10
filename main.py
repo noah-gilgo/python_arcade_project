@@ -344,10 +344,14 @@ class GameView(arcade.View):
             self.character_sprites.draw(pixelated=True)
             self.manager.draw(pixelated=True)
             self.effects_sprites.draw(pixelated=True)
+            #for sprite in self.effects_sprites:
+            #    sprite.draw_hit_box(color=arcade.color.GREEN)
             for effect in self.effects:
                 if hasattr(effect, "draw") and callable(effect.draw):
                     effect.draw()
             self.soul_sprites.draw(pixelated=True)
+            #for sprite in self.soul_sprites:
+            #    sprite.draw_hit_box(color=arcade.color.GREEN)
 
     def on_resize(self, width, height):
         super().on_resize(width, height)

@@ -19,6 +19,7 @@ from animations.battle_animations import NumberBounceAnimation, HealAnimation, F
     StrikeEnemyAnimation, EnemyFleeingAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
+from bullet_patterns import RainingDiamondBulletPattern
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
 from items import Item, ConsumableItem
@@ -131,6 +132,8 @@ class BattleController:
         self.soul_sprites = soul_sprites
         self.soul = Soul(self.player_characters[0], self)
         self.soul_sprites.append(self.soul)
+
+        self.effects_list.append(RainingDiamondBulletPattern(self))
 
         # Tracks which keys are pressed down
         self.z_pressed = False

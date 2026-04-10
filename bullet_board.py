@@ -40,7 +40,7 @@ class BulletBoard:
         self.bullet_board_loading_animation_sprites.insert(0, self.bullet_board_sprite)
 
         self.time = 0
-        self.load_bullet_board_animation_total_duration = 0.8
+        self.load_bullet_board_animation_total_duration = 0.6
 
         self.number_of_sprites_in_loading_animation = len(self.bullet_board_loading_animation_sprites)
         self.loading_animation_framerate = self.number_of_sprites_in_loading_animation / self.load_bullet_board_animation_total_duration

@@ -1,4 +1,5 @@
 import arcade
+from arcade.hitbox import HitBox
 
 import player_character
 from bullet_board import BulletBoard
@@ -14,9 +15,23 @@ class Soul(arcade.Sprite):
             scale=2.0
         )
 
+        self.hit_box = HitBox(
+            points=[
+                (-10.0, -10.0),
+                (-10.0, 10.0),
+                (10.0, 10.0),
+                (10.0, -10.0)
+            ],
+            position=(
+                self.center_x,
+                self.center_y
+            )
+        )
+
+
         self.controller = battle_controller
 
-        self.movement_speed = 5.0
+        self.movement_speed = 4.0
 
         self.visible = False
 
@@ -51,15 +66,20 @@ class Soul(arcade.Sprite):
         # Calculate speed based on the keys pressed
         self.change_x = 0
         self.change_y = 0
+        movement_speed = self.movement_speed
+
+        # If the player is holding down C, make them move slower.
+        if self.controller.c_pressed:
+            movement_speed /= 2
 
         if self.controller.up_pressed and not self.controller.down_pressed:
-            self.change_y = self.movement_speed
+            self.change_y = movement_speed
         elif self.controller.down_pressed and not self.controller.up_pressed:
-            self.change_y = -self.movement_speed
+            self.change_y = -movement_speed
         if self.controller.left_pressed and not self.controller.right_pressed:
-            self.change_x = -self.movement_speed
+            self.change_x = -movement_speed
         elif self.controller.right_pressed and not self.controller.left_pressed:
-            self.change_x = self.movement_speed
+            self.change_x = movement_speed
 
         self.center_x += self.change_x
         self.center_y += self.change_y
