@@ -135,7 +135,7 @@ class BattleController:
 
         self.effects_list.append(RainingDiamondBulletPattern(self))
 
-        # Tracks which keys are pressed down
+        # Tracks which keys are pressed down. Used for situations where controls requires multiple keys.
         self.z_pressed = False
         self.x_pressed = False
         self.c_pressed = False

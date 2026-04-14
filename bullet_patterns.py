@@ -65,6 +65,5 @@ class RainingDiamondBulletPattern(BulletPattern):
                 center_y=self.bullet_board.bullet_board_sprite.top + 20
             )
             self.spawn_bullet(bullet)
-            print("bullet_spawned at " + str(bullet.center_x) + " " + str(bullet.center_y))
 
             self.time_since_last_diamond_spawned = 0.0
