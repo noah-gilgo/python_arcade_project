@@ -1,5 +1,4 @@
 from enum import Enum, auto
-import command
 
 import arcade.key
 import pyglet
@@ -20,18 +19,19 @@ from animations.battle_animations import NumberBounceAnimation, HealAnimation, F
     StrikeEnemyAnimation, EnemyFleeingAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
+from bullet_patterns import RainingDiamondBulletPattern
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
-from graphics_objects import MultiSpriteAnimation
 from items import Item, ConsumableItem
 from player_character import PlayerCharacter
+from bullet_board import BulletBoard
+from soul import Soul
 
 """
 This architecture is my attempt at replicating the state architecture recommended by Robert Nystrom in his book
 Game Programming Patterns. The guide I followed can be found here:
 https://gameprogrammingpatterns.com/state.html
 """
-
 
 class BattleState(Enum):
     PLAYER_ATTACKING = auto()
@@ -52,122 +52,6 @@ class BattleState(Enum):
     DEFEAT = auto()
 
 
-"""
-class CommandInput:
-    def __init__(self, battle):
-        self.battle = battle
-
-        self.command_menu = battle.battle_player_character_cards
-
-        # Track the current state of what key is pressed
-        self.left_pressed = False
-        self.right_pressed = False
-        self.up_pressed = False
-        self.down_pressed = False
-
-
-    def update_player_speed(self, soul):
-        # Calculate speed based on the keys pressed
-        self.soul.change_x = 0
-        self.soul.change_y = 0
-
-        if self.up_pressed and not self.down_pressed:
-            self.soul.change_y = character.MOVEMENT_SPEED
-        elif self.down_pressed and not self.up_pressed:
-            self.soul.change_y = -character.MOVEMENT_SPEED
-        if self.left_pressed and not self.right_pressed:
-            self.soul.change_x = -character.MOVEMENT_SPEED
-        elif self.right_pressed and not self.left_pressed:
-            self.soul.change_x = character.MOVEMENT_SPEED
-
-
-    def handle_key(self, key):
-        # Handles user inputs made during the battle.
-        match key:
-            case arcade.key.Z:
-                self.battle.confirm_command()
-            case arcade.key.RIGHT:
-                print("right key pressed")
-                self.battle.right_command()
-            case arcade.key.LEFT:
-                self.battle.left_command()
-
-        # Selecting one of the fight action buttons (FIGHT, ACT, MAGIC, SPARE, etc.)
-        if self.battle.state == BattleState.PLAYER_COMMAND:
-            if key == arcade.key.LEFT:
-                self.battle.ui.command_menu.move(-1)
-            elif key == arcade.key.RIGHT:
-                self.battle.ui.command_menu.move(1)
-            elif key == arcade.key.C:
-                self.battle.confirm_command()
-
-        # Selecting one of the acts after selecting the ACT button.
-        elif self.battle.state == BattleState.PLAYER_ACT_SELECT:
-            if key == arcade.key.LEFT:
-                self.battle.ui.command_menu.move(-1, 0)
-            elif key == arcade.key.RIGHT:
-                self.battle.ui.command_menu.move(1, 0)
-            elif key == arcade.key.UP:
-                self.battle.ui.command_menu.move(0, -1)
-            elif key == arcade.key.DOWN:
-                self.battle.ui.command_menu.move(0, 1)
-            elif key == arcade.key.C:
-                self.battle.confirm_command()
-
-        # Selecting one of the spells after selecting the MAGIC button.
-        elif self.battle.state == BattleState.PLAYER_MAGIC_SELECT:
-            if key == arcade.key.LEFT:
-                self.battle.ui.command_menu.move(-1, 0)
-            elif key == arcade.key.RIGHT:
-                self.battle.ui.command_menu.move(1, 0)
-            elif key == arcade.key.UP:
-                self.battle.ui.command_menu.move(0, -1)
-            elif key == arcade.key.DOWN:
-                self.battle.ui.command_menu.move(0, 1)
-            elif key == arcade.key.C:
-                self.battle.confirm_command()
-
-        # Selecting one of the items after selecting the ITEM button.
-        elif self.battle.state == BattleState.PLAYER_ITEM_SELECT:
-            if key == arcade.key.LEFT:
-                self.battle.ui.command_menu.move(-1, 0)
-            elif key == arcade.key.RIGHT:
-                self.battle.ui.command_menu.move(1, 0)
-            elif key == arcade.key.UP:
-                self.battle.ui.command_menu.move(0, -1)
-            elif key == arcade.key.DOWN:
-                self.battle.ui.command_menu.move(0, 1)
-            elif key == arcade.key.C:
-                self.battle.confirm_command()
-
-        elif self.battle.state == BattleState.PLAYER_TARGET:
-            if key == arcade.key.UP:
-                self.battle.ui.command_menu.move(-1)
-            elif key == arcade.key.DOWN:
-                self.battle.ui.command_menu.move(1)
-
-        elif self.battle.state == BattleState.DIALOGUE:
-            if key == arcade.key.C:
-                self.battle.confirm_command()
-
-        
-        elif self.battle.state == BattleState.ENEMY_ATTACK:
-            if key == arcade.key.UP:
-                self.up_pressed = True
-                self.soul.update_player_speed()
-            elif key == arcade.key.DOWN:
-                self.down_pressed = True
-                self.soul.update_player_speed()
-            elif key == arcade.key.LEFT:
-                self.left_pressed = True
-                self.soul.update_player_speed()
-            elif key == arcade.key.RIGHT:
-                self.right_pressed = True
-                self.soul.update_player_speed()
-        
-"""
-
-
 class BattleController:
     def __init__(self, ui_manager: UIManager,
                  battle_player_character_cards: UILayout,
@@ -176,7 +60,10 @@ class BattleController:
                  enemies: list[non_player_character.NonPlayerCharacter],
                  effects_sprite_list: SpriteList,
                  effects_list: list,
-                 tp_meter: battle_widgets.TPMeter):
+                 tp_meter: battle_widgets.TPMeter,
+                 soul_sprites: SpriteList):
+        # TODO: move most of these parameters into the BattleController.
+
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
@@ -190,10 +77,6 @@ class BattleController:
         self.turn = 0
         self.selected_command = None
         self.selected_target = None
-
-        # References to all of the battle buttons and their indexes
-        # self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
-        # self.ui_manager.add(self.battle_player_character_cards)
 
         self.ui_manager.execute_layout()
 
@@ -245,6 +128,80 @@ class BattleController:
         self.battle_idle_target = None
         self.enemy_hit_sound_player = None
 
+        self.bullet_board = BulletBoard()
+        self.soul_sprites = soul_sprites
+        self.soul = Soul(self.player_characters[0], self)
+        self.soul_sprites.append(self.soul)
+
+        self.effects_list.append(RainingDiamondBulletPattern(self))
+
+        # Tracks which keys are pressed down. Used for situations where controls requires multiple keys.
+        self.z_pressed = False
+        self.x_pressed = False
+        self.c_pressed = False
+        self.up_pressed = False
+        self.down_pressed = False
+        self.left_pressed = False
+        self.right_pressed = False
+
+    def add_key_pressed(self, key):
+        """
+        If a key is pressed, track that it is pressed.
+        :param key: The key that was pressed.
+        :return:
+        """
+        match key:
+            case arcade.key.Z:
+                self.z_pressed = True
+                return
+            case arcade.key.X:
+                self.x_pressed = True
+                return
+            case arcade.key.C:
+                self.c_pressed = True
+                return
+            case arcade.key.UP:
+                self.up_pressed = True
+                return
+            case arcade.key.DOWN:
+                self.down_pressed = True
+                return
+            case arcade.key.LEFT:
+                self.left_pressed = True
+                return
+            case arcade.key.RIGHT:
+                self.right_pressed = True
+                return
+
+    def remove_key_pressed(self, key):
+        """
+        If a key is released, track that it was released.
+        :param key: The key that was pressed.
+        :return:
+        """
+        match key:
+            case arcade.key.Z:
+                self.z_pressed = False
+                return
+            case arcade.key.X:
+                self.x_pressed = False
+                return
+            case arcade.key.C:
+                self.c_pressed = False
+                return
+            case arcade.key.UP:
+                self.up_pressed = False
+                return
+            case arcade.key.DOWN:
+                self.down_pressed = False
+                return
+            case arcade.key.LEFT:
+                self.left_pressed = False
+                return
+            case arcade.key.RIGHT:
+                self.right_pressed = False
+                return
+
     def update_clocks(self, delta_time: float):
         """
         This is where any local clocks used by the battle controller are updated.
@@ -267,6 +224,15 @@ class BattleController:
         """
         self.fight_bar_clock_is_updating = False
         self.fight_bar_clock = 0.0
+
+    def load_bullet_board(self):
+        """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
+        self.bullet_board.load_bullet_board(self)
+        self.soul.move_to_bullet_board(self.bullet_board)
+
+    def unload_bullet_board(self):
+        """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
+        self.bullet_board.unload_bullet_board(self)
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -835,7 +801,8 @@ class BattleController:
             return
         else:
             self.state = BattleState.ENEMY_ATTACK
-            # TODO: Add code here to initiate the enemy attack.
+            self.load_bullet_board()
+            self.battle_textbox.load_dialog(TextBoxDialog(text=""))
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """
@@ -1085,43 +1052,48 @@ class RightCommand(Command):
     """ A command object representing the user pressing right (usually pressing -> in the original game.) """
 
     def execute(self):
-        if self.controller.state == BattleState.PLAYER_COMMAND:
-            move_succeeded = self.controller.focus_stack.get_highest_member().move_right(wrap=True)
-        else:
-            move_succeeded = self.controller.focus_stack.get_highest_member().move_right()
-        if move_succeeded:
-            self.controller.menu_move_sound.play()
-            match self.controller.state:
-                case BattleState.PLAYER_MAGIC_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    )
-                case BattleState.PLAYER_ITEM_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                    )
+        # States that are in the Battle GUI
+        if self.controller.state in [BattleState.PLAYER_COMMAND, BattleState.PLAYER_MAGIC_SELECT,
+                                     BattleState.PLAYER_ITEM_SELECT]:
+            if self.controller.state == BattleState.PLAYER_COMMAND:
+                move_succeeded = self.controller.focus_stack.get_highest_member().move_right(wrap=True)
+            else:
+                move_succeeded = self.controller.focus_stack.get_highest_member().move_right()
+            if move_succeeded:
+                self.controller.menu_move_sound.play()
+                match self.controller.state:
+                    case BattleState.PLAYER_MAGIC_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                        )
+                    case BattleState.PLAYER_ITEM_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                        )
 
 
 class LeftCommand(Command):
     """ A command object representing the user pressing left (usually pressing <- in the original game.) """
 
     def execute(self):
-        if self.controller.state == BattleState.PLAYER_COMMAND:
-            move_succeeded = self.controller.focus_stack.get_highest_member().move_left(wrap=True)
-        else:
-            move_succeeded = self.controller.focus_stack.get_highest_member().move_left()
-        if move_succeeded:
-            self.controller.menu_move_sound.play()
-            match self.controller.state:
-                case BattleState.PLAYER_MAGIC_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    )
-                case BattleState.PLAYER_ITEM_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                    )
-
+        # States that are in the Battle GUI
+        if self.controller.state in [BattleState.PLAYER_COMMAND, BattleState.PLAYER_MAGIC_SELECT,
+                                     BattleState.PLAYER_ITEM_SELECT]:
+            if self.controller.state == BattleState.PLAYER_COMMAND:
+                move_succeeded = self.controller.focus_stack.get_highest_member().move_left(wrap=True)
+            else:
+                move_succeeded = self.controller.focus_stack.get_highest_member().move_left()
+            if move_succeeded:
+                self.controller.menu_move_sound.play()
+                match self.controller.state:
+                    case BattleState.PLAYER_MAGIC_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                        )
+                    case BattleState.PLAYER_ITEM_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                        )
 
 class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """

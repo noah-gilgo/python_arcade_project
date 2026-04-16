@@ -1,22 +1,18 @@
 import arcade
 from arcade import SpriteList
 from arcade.gui import UIManager
-from arcade.resources import resolve_resource_path
 from arcade.types import Color
 
 import math_methods
 import non_player_character
 import player_character
 import settings
-import character
-import pyglet
 import sound_methods
 import graphics_methods
-import math
 import dialogue_box
 import battle_widgets
 from battle_state_machine import BattleController
-from spell_animations import IceShockAnimation
+from soul import Soul
 from spells import Spell, IceShock
 
 
@@ -128,6 +124,9 @@ class GameView(arcade.View):
 
         self.effects_sprites = SpriteList()
         self.effects = []
+
+        self.soul_sprites = SpriteList()
+        self.soul = None
 
         # Initializes the starting positions of the player characters and enemy characters.
         self._holy_arc = math_methods.initialize_holy_arc(4)
@@ -331,7 +330,8 @@ class GameView(arcade.View):
             enemies=self.enemies,
             effects_sprite_list=self.effects_sprites,
             effects_list=self.effects,
-            tp_meter=self.tp_meter
+            tp_meter=self.tp_meter,
+            soul_sprites=self.soul_sprites
         )
 
     def on_draw(self):
@@ -344,9 +344,14 @@ class GameView(arcade.View):
             self.character_sprites.draw(pixelated=True)
             self.manager.draw(pixelated=True)
             self.effects_sprites.draw(pixelated=True)
+            #for sprite in self.effects_sprites:
+            #    sprite.draw_hit_box(color=arcade.color.GREEN)
             for effect in self.effects:
                 if hasattr(effect, "draw") and callable(effect.draw):
                     effect.draw()
+            self.soul_sprites.draw(pixelated=True)
+            #for sprite in self.soul_sprites:
+            #    sprite.draw_hit_box(color=arcade.color.GREEN)
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -374,6 +379,9 @@ class GameView(arcade.View):
             else:
                 effect.update_animation(delta_time)
 
+        for soul_sprite in self.soul_sprites:
+            soul_sprite.update(delta_time)
+
         self.battle_controller.update_clocks(delta_time)
 
     def on_key_press(self, key, modifiers):
@@ -386,7 +394,11 @@ class GameView(arcade.View):
             # self.manager.trigger_render()
             # self.manager.execute_layout()
 
+        self.battle_controller.add_key_pressed(key)
         self.battle_controller.handle_key(key)
+
+    def on_key_release(self, key, modifiers):
+        self.battle_controller.remove_key_pressed(key)
 
 
 def main():
