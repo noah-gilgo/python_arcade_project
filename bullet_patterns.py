@@ -49,8 +49,8 @@ class BulletPattern:
 
 
 class RainingDiamondBulletPattern(BulletPattern):
-    def __init__(self, controller):
-        super().__init__(controller, 999.0)
+    def __init__(self, controller, total_duration: float = 999.0):
+        super().__init__(controller, total_duration)
 
         self.time_since_last_diamond_spawned = 0.0
         self.diamond_frequency = 0.5

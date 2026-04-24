@@ -1,3 +1,5 @@
+from bullet_patterns import RainingDiamondBulletPattern
+
 
 class EnemyIndividualAttack:
     """
@@ -7,19 +9,36 @@ class EnemyIndividualAttack:
     contribution that an enemy can make to a combo attack.
     """
 
-    def __init__(self, unique_enemies: int = 1):
+    def __init__(self, attacker, attackers: list):
         """
         Initializes the initial conditions for the attack.
-        :param unique_enemies: an optional parameter indicating how many unique enemies are attacking. Can be used to
-        modify the behavior of the attack depending on the unique number of enemies.
+        :param attacker: the enemy doing the attack.
+        :param attackers: the enemies attacking. Can be used to modify the behavior of the attack depending on the
+        unique number/types of enemies.
         """
-        self.unique_enemies = unique_enemies
+        self.attacker = attacker
+        self.attackers = attackers
         self.time = 0.0
+        self.bullet_patterns = []
 
-    def update_animation(self):
+    def update_animation(self, delta_time: float):
         """
         Updates a multitude of bullet patterns. Behavior can be coded to vary based on the number of unique enemies.
         :return: None
         """
-        pass
+        if len(self.bullet_patterns) > 0:
+            for bullet_pattern in self.bullet_patterns:
+                bullet_pattern.update_animation(delta_time)
+
+
+class DefaultAttack(EnemyIndividualAttack):
+    """
+    Default enemy attack.
+    """
+    def __init__(self, attacker, attackers: list):
+        super().__init__(attacker, attackers)
+        self.bullet_patterns = [RainingDiamondBulletPattern()]
+
+    def update_animation(self, delta_time: float):
+        super().update_animation(delta_time)
 

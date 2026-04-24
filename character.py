@@ -5,6 +5,7 @@ import graphics_objects
 import settings
 import texture_methods
 from animations.common_animations import FadeInFadeOutColorAnimation
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 SPRITE_SCALING = 1.0
 MOVEMENT_SPEED = 5
@@ -13,10 +14,12 @@ WINDOW_HEIGHT = settings.WINDOW_HEIGHT
 
 
 class Character(arcade.Sprite):
-    def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection,
+                 scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int,
                  element_id: int = 0):
         super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle)
+        self.sprites_and_effects_collection = sprites_and_effects_collection
         self.sprite_folder_name = sprite_folder_name
         self.name = name
         self.max_hp = max_hp
@@ -48,6 +51,8 @@ class Character(arcade.Sprite):
 
         self.not_idle = False
         self.non_idle_timer = 0.0
+
+        self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_laz_c.wav", False)
 
     def set_animation_to_not_idle(self, duration: float = 1.0, animation_state: str = "battle_idle"):
         """
@@ -146,8 +151,7 @@ class Character(arcade.Sprite):
 
     def unfocus(self):
         """
-        Creates an instance of a repeating FadeInFadeOutColorAnimation. Returns it so it can be added to the
-        animation queue in main.
+        Destroys instance of FadeInFadeOutColorAnimation associated with the focused enemy.
         """
         if self.focus_animation:
             self.focus_animation.is_terminated = True

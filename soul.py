@@ -73,7 +73,7 @@ class Soul(arcade.Sprite):
         movement_speed = self.movement_speed
 
         # If the player is holding down C, make them move slower.
-        if self.controller.c_pressed:
+        if self.controller.x_pressed:
             movement_speed /= 2
 
         if self.controller.up_pressed and not self.controller.down_pressed:
@@ -89,7 +89,7 @@ class Soul(arcade.Sprite):
         self.center_y += self.change_y
 
     def update(self, delta_time):
-        if self.moving_soul_to_bullet_board:
+        if self.moving_soul_to_bullet_board: # If the soul is being moved to/from the bullet board
             self.moving_soul_to_bullet_board_animation_time += delta_time
             distance_ratio = delta_time / self.moving_soul_to_bullet_board_animation_duration
             distance_to_move_soul_x = self.total_distance_to_move_soul_x * distance_ratio
@@ -97,11 +97,12 @@ class Soul(arcade.Sprite):
             self.center_x += distance_to_move_soul_x
             self.center_y += distance_to_move_soul_y
             if self.moving_soul_to_bullet_board_animation_time >= self.moving_soul_to_bullet_board_animation_duration:
+                # Terminate the soul movement animation
                 self.center_x = self.bullet_board_center_coordinates[0]
                 self.center_y = self.bullet_board_center_coordinates[1]
                 self.moving_soul_to_bullet_board = False
                 self.enable_soul_movement()
             return
-        else:
+        else: # The default movement for the soul.
             if self.soul_movement_enabled:
                 self.update_soul_speed()

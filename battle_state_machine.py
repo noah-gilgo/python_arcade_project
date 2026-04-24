@@ -588,7 +588,6 @@ class BattleController:
             target=target
         )
 
-
         self.effects_sprite_list.append(damage_dealt_animation.sprite)
         self.effects_list.append(damage_dealt_animation)
 

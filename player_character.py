@@ -5,24 +5,28 @@ from arcade.types import Color
 
 import character
 import graphics_objects
+from animations.battle_animations import NumberBounceAnimation
+from animations.common_animations import ShakeAnimation
 from graphics_methods import make_texture_solid_color
 from spells import Spell
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 
 
 class PlayerCharacter(character.Character):
-    def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection,
+                 scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int, magic: int,
                  battle_ui_color: Color, battle_ui_icon_color: Color, fight_box_color: Color = arcade.color.GRAY,
                  fight_crit_box_color: Color = arcade.color.WHITE,
-                 element_id: int = 0, knows_magic: bool = True, spells=list[Spell]):
+                 element_id: int = 0, knows_magic: bool = True, spells: list[Spell] = []):
 
         self._sprite_pack_path = PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
-        super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle,
-                         sprite_folder_name=sprite_folder_name, name=name, max_hp=max_hp, attack=attack,
-                         defense=defense, element_id=element_id)
+        super().__init__(sprites_and_effects_collection=sprites_and_effects_collection, scale=scale, center_x=center_x,
+                         center_y=center_y, angle=angle, sprite_folder_name=sprite_folder_name, name=name,
+                         max_hp=max_hp, attack=attack, defense=defense, element_id=element_id)
 
         icon_texture_path = "assets/sprites/player_characters/" + self.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
         icon_hurt_texture_path = "assets/sprites/player_characters/" + self.sprite_folder_name + "/battle_hud/hud_default_hurt_icon.png"
@@ -41,6 +45,7 @@ class PlayerCharacter(character.Character):
         self.fight_box_color = fight_box_color
         self.fight_crit_box_color = fight_crit_box_color
         self.is_defending = False
+
 
         self._animations_by_state.update({
             "battle_idle": graphics_objects.SimpleLoopAnimation(
@@ -171,3 +176,49 @@ class PlayerCharacter(character.Character):
         self.is_defending = False
         if self._animations_by_state["battle_defend"]:
             self.set_animation_state("battle_idle")
+
+    def take_damage(self, damage_dealt: float = 0, element_id = 0):
+        """ Damages the player character, removing some of their HP. """
+        damage_dealt_text = str(damage_dealt)
+        damage_dealt_color = arcade.color.WHITE
+        previous_hp = self.hp
+
+        if damage_dealt <= 0:
+            damage_dealt_text = "MISS"
+            self.set_animation_state("battle_attack")
+
+        else:
+            self.hurt_sound.play()
+
+            # If the attack reduces the enemy HP to 0
+            if self.hp <= 0:
+                if previous_hp > 0:
+                    damage_dealt_text = "DOWN"
+                    damage_dealt_color = arcade.color.RED
+                    self.set_animation_state("battle_downed")
+                    self.hp = -80
+            else:
+                self.hp -= damage_dealt
+
+                shake_animation = ShakeAnimation(
+                    sprite=self
+                )
+                self.sprites_and_effects_collection.effects.append(shake_animation)
+                self.set_animation_to_not_idle(1.5, "battle_hurt")
+
+                damage_dealt_animation = NumberBounceAnimation(
+                    text=damage_dealt_text,
+                    color=damage_dealt_color,
+                    target=self
+                )
+
+                self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
+                self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
+
+            # TODO: This currently makes the damage numbers above the enemies disappear.
+            """
+            if is_crit:
+                self.add_tp_to_meter(6.0)
+            else:
+                self.add_tp_to_meter(attack_damage_multiplier * 4.0)
+            """

@@ -14,6 +14,7 @@ import battle_widgets
 from battle_state_machine import BattleController
 from soul import Soul
 from spells import Spell, IceShock
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
 class GameView(arcade.View):
@@ -26,11 +27,17 @@ class GameView(arcade.View):
         self._initial_width = self.width
         self._initial_height = self.height
 
-        # Variables that will hold sprite lists
-        self.background_sprites = arcade.SpriteList()
-        self.character_sprites = arcade.SpriteList()
-        self.foreground_sprites = arcade.SpriteList()
-        self.effects_sprites = arcade.SpriteList()
+        # Setup camera stuff
+        self.camera = arcade.Camera2D()
+
+        self.sprites_and_effects_collection = SpritesAndEffectsCollection(self.camera)
+
+        # Variables that will hold references to sprite lists
+        self.background_sprites = self.sprites_and_effects_collection.background_sprites
+        self.character_sprites = self.sprites_and_effects_collection.character_sprites
+        self.effects_sprites = self.sprites_and_effects_collection.effects_sprites
+        self.bullet_sprites = self.sprites_and_effects_collection.bullet_sprites
+        self.soul_sprites = self.sprites_and_effects_collection.soul_sprites
 
         # Set up the player info
         self.player_one = None
@@ -51,9 +58,6 @@ class GameView(arcade.View):
 
         self.background_music = None
         self.background_music_player = None
-
-        # Setup camera stuff
-        self.camera = arcade.Camera2D()
 
         # Temporary, for testing player animations.
         self._global_timer = 0.0
@@ -135,7 +139,8 @@ class GameView(arcade.View):
     def setup(self):
         # Create and append the players to the SpriteList.
 
-        self.player_one = player_character.PlayerCharacter(scale=4.0,
+        self.player_one = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
+                                                           scale=4.0,
                                                            center_x=self._holy_arc[0][0],
                                                            center_y=self._holy_arc[0][1],
                                                            angle=0,
@@ -157,7 +162,8 @@ class GameView(arcade.View):
         self._animation_states = self.player_one.get_valid_animation_states()
 
 
-        self.player_two = player_character.PlayerCharacter(scale=4.0,
+        self.player_two = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
+                                                           scale=4.0,
                                                            center_x=self._holy_arc[1][0],
                                                            center_y=self._holy_arc[1][1],
                                                            angle=0,
@@ -176,7 +182,8 @@ class GameView(arcade.View):
         self.player_characters.append(self.player_two)
 
 
-        self.player_three = player_character.PlayerCharacter(scale=4.0,
+        self.player_three = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
+                                                             scale=4.0,
                                                              center_x=self._holy_arc[2][0],
                                                              center_y=self._holy_arc[2][1],
                                                              angle=0,
@@ -196,7 +203,8 @@ class GameView(arcade.View):
 
 
 
-        self.player_four = player_character.PlayerCharacter(scale=4.0,
+        self.player_four = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
+                                                            scale=4.0,
                                                             center_x=self._holy_arc[3][0],
                                                             center_y=self._holy_arc[3][1],
                                                             angle=0,
@@ -253,48 +261,21 @@ class GameView(arcade.View):
         self.player_four.get_valid_animation_states()
 
         # Create and append the enemies to the SpriteList.
-        self.enemy_one = non_player_character.NonPlayerCharacter(scale=4.0,
-                                                                 center_x=self._unholy_arc[0][0],
-                                                                 center_y=self._unholy_arc[0][1],
-                                                                 angle=0,
-                                                                 sprite_folder_name="rudinn",
-                                                                 name="Rudinn 1",
-                                                                 hp=90,
-                                                                 max_hp=90,
-                                                                 attack=10,
-                                                                 defense=2
-                                                                 )
+        self.enemy_one = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
+                                                        center_x=self._unholy_arc[0][0], center_y=self._unholy_arc[0][1])
         self.enemy_one.set_animation_state("battle_idle")
         self.character_sprites.append(self.enemy_one)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_one)
 
-        self.enemy_two = non_player_character.NonPlayerCharacter(scale=4.0,
-                                                                 center_x=self._unholy_arc[1][0],
-                                                                 center_y=self._unholy_arc[1][1],
-                                                                 angle=0,
-                                                                 sprite_folder_name="rudinn",
-                                                                 name="Rudinn 2",
-                                                                 hp=50,
-                                                                 max_hp=90,
-                                                                 attack=10,
-                                                                 defense=2
-                                                                 )
+        self.enemy_two = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
+                                                        center_x=self._unholy_arc[1][0], center_y=self._unholy_arc[1][1])
         self.enemy_two.set_animation_state("battle_idle")
         self.enemy_two.mercy = 100
         self.character_sprites.append(self.enemy_two)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_two)
 
-        self.enemy_three = non_player_character.NonPlayerCharacter(scale=4.0,
-                                                                 center_x=self._unholy_arc[2][0],
-                                                                 center_y=self._unholy_arc[2][1],
-                                                                 angle=0,
-                                                                 sprite_folder_name="rudinn",
-                                                                 name="Rudinn 3",
-                                                                 hp=10,
-                                                                 max_hp=90,
-                                                                 attack=10,
-                                                                 defense=2
-                                                                 )
+        self.enemy_three = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
+                                                        center_x=self._unholy_arc[2][0], center_y=self._unholy_arc[2][1])
         self.enemy_three.set_animation_state("battle_idle")
         self.enemy_three.tired = 100
         self.character_sprites.append(self.enemy_three)  # Append the instance to the SpriteList
@@ -338,20 +319,8 @@ class GameView(arcade.View):
         # 3. Clear the screen
         self.clear()
 
-        # Draw in layer order (background -> player -> foreground)
-        with self.camera.activate():
-            self.background_sprites.draw(pixelated=True)
-            self.character_sprites.draw(pixelated=True)
-            self.manager.draw(pixelated=True)
-            self.effects_sprites.draw(pixelated=True)
-            #for sprite in self.effects_sprites:
-            #    sprite.draw_hit_box(color=arcade.color.GREEN)
-            for effect in self.effects:
-                if hasattr(effect, "draw") and callable(effect.draw):
-                    effect.draw()
-            self.soul_sprites.draw(pixelated=True)
-            #for sprite in self.soul_sprites:
-            #    sprite.draw_hit_box(color=arcade.color.GREEN)
+        self.sprites_and_effects_collection.draw()
+        self.manager.draw()
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
