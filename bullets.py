@@ -23,6 +23,7 @@ class Bullet(Sprite):
         self.kill_bullet_when_offscreen = kill_bullet_when_offscreen
         self.base_damage = base_damage # The base damage that the bullet should deal to its target.
         self.tp_gain = tp_gain  # The amount of TP gained when the soul grazes the bullet
+        self.has_been_grazed = False  # Whether the bullet has been grazed yet
         self.element_id = element_id # The element ID of the bullet. Defaults to 0
         self.targets_multiple_players = targets_multiple_players # Determines if the bullet should damage multiple players
 

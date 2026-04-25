@@ -206,7 +206,7 @@ class PlayerCharacter(character.Character):
                     damage_dealt_text = "DOWN"
                     damage_dealt_color = arcade.color.RED
                     self.set_animation_state("battle_downed")
-                    self.hp = -80
+                    self.hp = min(-self.max_hp / 2, -80)
             else:
                 self.set_animation_to_not_idle(1.2, "battle_hurt")
 
