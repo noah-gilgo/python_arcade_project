@@ -30,14 +30,8 @@ class GameView(arcade.View):
         # Setup camera stuff
         self.camera = arcade.Camera2D()
 
+        # Holds all main sprite lists used by the system
         self.sprites_and_effects_collection = SpritesAndEffectsCollection(self.camera)
-
-        # Variables that will hold references to sprite lists
-        self.background_sprites = self.sprites_and_effects_collection.background_sprites
-        self.character_sprites = self.sprites_and_effects_collection.character_sprites
-        self.effects_sprites = self.sprites_and_effects_collection.effects_sprites
-        self.bullet_sprites = self.sprites_and_effects_collection.bullet_sprites
-        self.soul_sprites = self.sprites_and_effects_collection.soul_sprites
 
         # Set up the player info
         self.player_one = None
@@ -126,9 +120,6 @@ class GameView(arcade.View):
 
         self.battle_controller = None
 
-        self.effects_sprites = SpriteList()
-        self.effects = []
-
         self.soul_sprites = SpriteList()
         self.soul = None
 
@@ -156,7 +147,6 @@ class GameView(arcade.View):
                                                            fight_crit_box_color=Color(0, 162, 232, 255),
                                                            knows_magic=False)
         self.player_one.set_animation_state("battle_idle")
-        self.character_sprites.append(self.player_one)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_one)
 
         self._animation_states = self.player_one.get_valid_animation_states()
@@ -178,7 +168,6 @@ class GameView(arcade.View):
                                                            fight_box_color = Color(128, 0, 128, 255),
                                                            fight_crit_box_color=Color(234, 121, 200, 255))
         self.player_two.set_animation_state("battle_idle")
-        self.character_sprites.append(self.player_two)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_two)
 
 
@@ -198,7 +187,6 @@ class GameView(arcade.View):
                                                              fight_box_color=Color(0, 255, 0, 255),
                                                              fight_crit_box_color=Color(181, 230, 29, 255))
         self.player_three.set_animation_state("battle_idle")
-        self.character_sprites.append(self.player_three)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_three)
 
 
@@ -255,7 +243,6 @@ class GameView(arcade.View):
                                                                 )
                                                             ])
         self.player_four.set_animation_state("battle_idle")
-        self.character_sprites.append(self.player_four)  # Append the instance to the SpriteList
         self.player_characters.append(self.player_four)
 
         self.player_four.get_valid_animation_states()
@@ -264,21 +251,18 @@ class GameView(arcade.View):
         self.enemy_one = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                         center_x=self._unholy_arc[0][0], center_y=self._unholy_arc[0][1])
         self.enemy_one.set_animation_state("battle_idle")
-        self.character_sprites.append(self.enemy_one)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_one)
 
         self.enemy_two = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                         center_x=self._unholy_arc[1][0], center_y=self._unholy_arc[1][1])
         self.enemy_two.set_animation_state("battle_idle")
         self.enemy_two.mercy = 100
-        self.character_sprites.append(self.enemy_two)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_two)
 
         self.enemy_three = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                         center_x=self._unholy_arc[2][0], center_y=self._unholy_arc[2][1])
         self.enemy_three.set_animation_state("battle_idle")
         self.enemy_three.tired = 100
-        self.character_sprites.append(self.enemy_three)  # Append the instance to the SpriteList
         self.enemies.append(self.enemy_three)
 
         # self._animation_states = self.enemy_one.get_valid_animation_states()
@@ -293,7 +277,7 @@ class GameView(arcade.View):
         sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
 
         # Animate the background of the GONERMAKER.
-        graphics_methods.animate_depths(self.background_sprites)
+        graphics_methods.animate_depths(self.sprites_and_effects_collection.background_sprites)
 
         # Initialize the GUI.
         self.text_box = dialogue_box.TextBox()
@@ -309,8 +293,7 @@ class GameView(arcade.View):
             battle_textbox=self.text_box,
             player_characters=self.player_characters,
             enemies=self.enemies,
-            effects_sprite_list=self.effects_sprites,
-            effects_list=self.effects,
+            sprites_and_effects_collection=self.sprites_and_effects_collection,
             tp_meter=self.tp_meter,
             soul_sprites=self.soul_sprites
         )
@@ -342,9 +325,9 @@ class GameView(arcade.View):
             enemy.update_animation(delta_time)
             enemy.update(delta_time)
 
-        for effect in self.effects:
+        for effect in self.sprites_and_effects_collection.effects:
             if hasattr(effect, "is_terminated") and effect.is_terminated:
-                self.effects.remove(effect)
+                self.sprites_and_effects_collection.effects.remove(effect)
             else:
                 effect.update_animation(delta_time)
 

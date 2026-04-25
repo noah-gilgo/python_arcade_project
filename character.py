@@ -28,6 +28,8 @@ class Character(arcade.Sprite):
         self.defense = defense
         self.element_id = element_id
 
+        self.sprites_and_effects_collection.character_sprites.append(self)
+
         self.current_animation_state = "default"
 
         # This dictionary maps state names to texture arrays that represent the animations of said state.

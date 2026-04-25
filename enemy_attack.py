@@ -1,4 +1,5 @@
 import non_player_character
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
 class EnemyAttack:
@@ -12,7 +13,8 @@ class EnemyAttack:
     of the EnemyAttack.
     """
 
-    def __init__(self, enemies: list[non_player_character.NonPlayerCharacter]):
+    def __init__(self, enemies: list[non_player_character.NonPlayerCharacter],
+                 sprites_and_effects_collection: SpritesAndEffectsCollection):
         """
         Initializes the initial conditions for the attack.
         :param enemies: The enemies present in battle.

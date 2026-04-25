@@ -26,6 +26,7 @@ from items import Item, ConsumableItem
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 """
 This architecture is my attempt at replicating the state architecture recommended by Robert Nystrom in his book
@@ -58,8 +59,7 @@ class BattleController:
                  battle_textbox: UIWidget,
                  player_characters: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
-                 effects_sprite_list: SpriteList,
-                 effects_list: list,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection,
                  tp_meter: battle_widgets.TPMeter,
                  soul_sprites: SpriteList):
         # TODO: move most of these parameters into the BattleController.
@@ -108,8 +108,7 @@ class BattleController:
         self.sorted_actions_queue = {}
 
         # Sprite lists that need to be accessed for animations.
-        self.effects_sprite_list = effects_sprite_list
-        self.effects_list = effects_list
+        self.sprites_and_effects_collection = sprites_and_effects_collection
 
         self.items = items.initialize_default_items()
 
@@ -133,7 +132,8 @@ class BattleController:
         self.soul = Soul(self.player_characters[0], self)
         self.soul_sprites.append(self.soul)
 
-        self.effects_list.append(RainingDiamondBulletPattern(self))
+        self.sprites_and_effects_collection.effects.append(RainingDiamondBulletPattern(self.sprites_and_effects_collection,
+                                                                                       self.bullet_board))
 
         # Tracks which keys are pressed down. Used for situations where controls requires multiple keys.
         self.z_pressed = False
@@ -379,7 +379,7 @@ class BattleController:
             fight_box_sprite = Sprite(Texture(fight_box), center_x=fight_box_center_x, center_y=fight_box_center_y)
 
             self.fight_box_sprites_array.append(fight_box_sprite)
-            self.effects_sprite_list.append(fight_box_sprite)
+            self.sprites_and_effects_collection.effects_sprites.append(fight_box_sprite)
 
             if player_index > 0:
                 length_of_divider_bar = int((settings.WINDOW_WIDTH - fight_box_sprite.right) / 5)
@@ -391,7 +391,7 @@ class BattleController:
                                                   center_y=blue_divider_line_center_y)
 
                 self.blue_divider_lines_sprites_array.append(blue_divider_line_sprite)
-                self.effects_sprite_list.append(blue_divider_line_sprite)
+                self.sprites_and_effects_collection.effects_sprites.append(blue_divider_line_sprite)
 
             draw_fight_crit_box.rectangle(
                 [
@@ -404,15 +404,15 @@ class BattleController:
             fight_crit_box_sprite = Sprite(Texture(fight_crit_box), center_x=fight_crit_box_center_x, center_y=fight_box_center_y)
 
             self.fight_crit_box_sprites_array.append(fight_crit_box_sprite)
-            self.effects_sprite_list.append(fight_crit_box_sprite)
+            self.sprites_and_effects_collection.effects_sprites.append(fight_crit_box_sprite)
 
 
             icon_sprite = Sprite(player.normal_icon_texture, scale=icon_scale, center_x=icon_center_x, center_y=fight_box_center_y)
             press_sprite = Sprite(self.press_texture, scale=2.0, center_x=press_center_x, center_y=fight_box_center_y + ((height_of_fight_bar / 2) - 20))
             self.icon_and_press_sprites_array.append(icon_sprite)
             self.icon_and_press_sprites_array.append(press_sprite)
-            self.effects_sprite_list.append(icon_sprite)
-            self.effects_sprite_list.append(press_sprite)
+            self.sprites_and_effects_collection.effects_sprites.append(icon_sprite)
+            self.sprites_and_effects_collection.effects_sprites.append(press_sprite)
 
             fight_hit_bar_effect = FightHitBar(
                 controller=self,
@@ -427,10 +427,10 @@ class BattleController:
 
         for fight_hit_bar_effect in fight_hit_bar_effects:
             for sprite in fight_hit_bar_effect.get_sprites():
-                self.effects_sprite_list.append(sprite)
+                self.sprites_and_effects_collection.effects_sprites.append(sprite)
 
         for fight_hit_bar_effect in fight_hit_bar_effects:
-            self.effects_list.append(fight_hit_bar_effect)
+            self.sprites_and_effects_collection.effects.append(fight_hit_bar_effect)
 
         for fight_hit_bar_effect in fight_hit_bar_effects:
             fight_hit_bar_effect.time = 0
@@ -498,9 +498,9 @@ class BattleController:
                     )
                     if is_crit:
                         critical_hit_sparkle_animation = CriticalHitSparkleAnimation(temp_actor)
-                        self.effects_list.append(critical_hit_sparkle_animation)
+                        self.sprites_and_effects_collection.effects.append(critical_hit_sparkle_animation)
                         for sprite in critical_hit_sparkle_animation.get_sprites():
-                            self.effects_sprite_list.append(sprite)
+                            self.sprites_and_effects_collection.effects_sprites.append(sprite)
 
                 self.fight_hit_markers.remove(hit_marker)
 
@@ -553,21 +553,21 @@ class BattleController:
                 damage_dealt_color = arcade.color.RED
                 self.enemy_flee_sound.play()
                 enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
-                self.effects_list.append(enemy_fleeing_animation)
+                self.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)
                 for sprite in enemy_fleeing_animation.get_sprites():
-                    self.effects_sprite_list.append(sprite)
+                    self.sprites_and_effects_collection.effects_sprites.append(sprite)
                 self.enemies.remove(target)
             else:
                 shake_animation = ShakeAnimation(
                     sprite=target
                 )
-                self.effects_list.append(shake_animation)
+                self.sprites_and_effects_collection.effects.append(shake_animation)
                 strike_enemy_animation = StrikeEnemyAnimation(
                     actor=actor,
                     target=target
                 )
-                self.effects_list.append(strike_enemy_animation)
-                self.effects_sprite_list.append(strike_enemy_animation.sprite)
+                self.sprites_and_effects_collection.effects.append(strike_enemy_animation)
+                self.sprites_and_effects_collection.effects_sprites.append(strike_enemy_animation.sprite)
                 self.battle_idle_target = target
                 self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
                 target.set_animation_to_not_idle(1.5, "battle_hurt")
@@ -588,8 +588,8 @@ class BattleController:
             target=target
         )
 
-        self.effects_sprite_list.append(damage_dealt_animation.sprite)
-        self.effects_list.append(damage_dealt_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
+        self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):
@@ -642,16 +642,16 @@ class BattleController:
                     color=arcade.color.WHITE,
                     total_duration=0.3
                 )
-                self.effects_list.append(color_filter_animation)
-                self.effects_sprite_list.append(color_filter_animation.filter_sprite)
+                self.sprites_and_effects_collection.effects.append(color_filter_animation)
+                self.sprites_and_effects_collection.effects_sprites.append(color_filter_animation.filter_sprite)
 
                 sparkle_animation = HealAnimation(
                     target=target
                 )
 
-                self.effects_list.append(sparkle_animation)
+                self.sprites_and_effects_collection.effects.append(sparkle_animation)
                 for sprite in sparkle_animation.get_sprites():
-                    self.effects_sprite_list.append(sprite)
+                    self.sprites_and_effects_collection.effects_sprites.append(sprite)
 
             elif damage_healt < 0:
                 if target.hp <= 0 and previous_target_hp > 0:
@@ -667,7 +667,7 @@ class BattleController:
                 shake_animation = ShakeAnimation(
                     sprite=target
                 )
-                self.effects_list.append(shake_animation)
+                self.sprites_and_effects_collection.effects.append(shake_animation)
                 arcade.play_sound(self.hurt_sound)
 
             if target.hp >= target.max_hp:
@@ -686,8 +686,8 @@ class BattleController:
 
             self.update_hp_on_player_card(target, damage_healt)
 
-            self.effects_list.append(damage_healed_animation)
-            self.effects_sprite_list.append(damage_healed_animation.sprite)
+            self.sprites_and_effects_collection.effects.append(damage_healed_animation)
+            self.sprites_and_effects_collection.effects_sprites.append(damage_healed_animation.sprite)
 
         if player_healed:
             arcade.play_sound(self.heal_sound)
@@ -719,8 +719,8 @@ class BattleController:
         self.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
                                          self.state, 1)
         new_focus_animation = self.focus_stack.get_highest_member().get_focused_widget().enemy.focus()
-        self.effects_list.append(new_focus_animation)
-        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        self.sprites_and_effects_collection.effects.append(new_focus_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
 
     def move_focus_between_enemies_in_enemy_select(self, previously_focused_widget, currently_focused_widget):
         """
@@ -730,8 +730,8 @@ class BattleController:
         :return:
         """
         new_focus_animation = currently_focused_widget.enemy.focus()
-        self.effects_list.append(new_focus_animation)
-        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        self.sprites_and_effects_collection.effects.append(new_focus_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
         previously_focused_widget.enemy.unfocus()
 
     def open_player_select_menu(self):
@@ -744,8 +744,8 @@ class BattleController:
         self.focus_stack.push(player_list_full_layout, player_list_interactive_layout,
                                          self.state, 1)
         new_focus_animation = self.focus_stack.get_highest_member().get_focused_widget().player.focus()
-        self.effects_list.append(new_focus_animation)
-        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        self.sprites_and_effects_collection.effects.append(new_focus_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
 
     def move_focus_between_players_in_player_select(self, previously_focused_widget, currently_focused_widget):
         """
@@ -755,8 +755,8 @@ class BattleController:
         :return:
         """
         new_focus_animation = currently_focused_widget.player.focus()
-        self.effects_list.append(new_focus_animation)
-        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        self.sprites_and_effects_collection.effects.append(new_focus_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
         previously_focused_widget.player.unfocus()
 
     def initialize_sorted_action_queue(self):

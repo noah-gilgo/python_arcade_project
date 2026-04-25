@@ -1,4 +1,5 @@
 from bullet_patterns import RainingDiamondBulletPattern
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
 class EnemyIndividualAttack:
@@ -9,13 +10,14 @@ class EnemyIndividualAttack:
     contribution that an enemy can make to a combo attack.
     """
 
-    def __init__(self, attacker, attackers: list):
+    def __init__(self, attacker, attackers: list, sprites_and_effects_collection: SpritesAndEffectsCollection):
         """
         Initializes the initial conditions for the attack.
         :param attacker: the enemy doing the attack.
         :param attackers: the enemies attacking. Can be used to modify the behavior of the attack depending on the
         unique number/types of enemies.
         """
+        self.sprites_and_effects_collection = sprites_and_effects_collection
         self.attacker = attacker
         self.attackers = attackers
         self.time = 0.0
@@ -35,8 +37,8 @@ class DefaultAttack(EnemyIndividualAttack):
     """
     Default enemy attack.
     """
-    def __init__(self, attacker, attackers: list):
-        super().__init__(attacker, attackers)
+    def __init__(self, attacker, attackers: list, sprites_and_effects_collection):
+        super().__init__(attacker, attackers, sprites_and_effects_collection)
         self.bullet_patterns = [RainingDiamondBulletPattern()]
 
     def update_animation(self, delta_time: float):
