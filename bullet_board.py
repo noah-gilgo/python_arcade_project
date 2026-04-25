@@ -101,12 +101,12 @@ class BulletBoard:
         """ Loads the bullet board sprite. """
         self.load_bullet_board_animation_playing = True
         # TODO: Load a hitbox the same size as the bullet board.
-        if self not in controller.effects_list:
-            controller.effects_list.append(self)
+        if self not in controller.sprites_and_effects_collection.effects:
+            controller.sprites_and_effects_collection.effects.append(self)
         if self.bullet_board_sprites_not_loaded:
             for sprite in self.bullet_board_loading_animation_sprites:
-                if sprite not in controller.effects_sprite_list:
-                    controller.effects_sprite_list.append(sprite)
+                if sprite not in controller.sprites_and_effects_collection.effects_sprites:
+                    controller.sprites_and_effects_collection.effects_sprites.append(sprite)
 
             self.bullet_board_sprites_not_loaded = False
 
@@ -120,7 +120,7 @@ class BulletBoard:
         # TODO: Unload the bullet board hitbox.
         if self.bullet_board_sprites_not_loaded:
             for sprite in self.bullet_board_loading_animation_sprites:
-                controller.effects_sprite_list.append(sprite)
+                controller.sprites_and_effects_collection.effects_sprites.append(sprite)
 
             self.bullet_board_sprites_not_loaded = False
 

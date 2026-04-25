@@ -60,9 +60,11 @@ class BattleController:
                  player_characters: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
                  sprites_and_effects_collection: SpritesAndEffectsCollection,
-                 tp_meter: battle_widgets.TPMeter,
-                 soul_sprites: SpriteList):
+                 tp_meter: battle_widgets.TPMeter):
         # TODO: move most of these parameters into the BattleController.
+
+        # Sprite lists that need to be accessed for animations.
+        self.sprites_and_effects_collection = sprites_and_effects_collection
 
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
@@ -107,9 +109,6 @@ class BattleController:
         self.actions_queue = ActionsQueue()
         self.sorted_actions_queue = {}
 
-        # Sprite lists that need to be accessed for animations.
-        self.sprites_and_effects_collection = sprites_and_effects_collection
-
         self.items = items.initialize_default_items()
 
         self.fight_box_sprites_array = []
@@ -128,9 +127,8 @@ class BattleController:
         self.enemy_hit_sound_player = None
 
         self.bullet_board = BulletBoard()
-        self.soul_sprites = soul_sprites
         self.soul = Soul(self.player_characters[0], self)
-        self.soul_sprites.append(self.soul)
+        self.sprites_and_effects_collection.soul_sprites.append(self.soul)
 
         self.sprites_and_effects_collection.effects.append(RainingDiamondBulletPattern(self.sprites_and_effects_collection,
                                                                                        self.bullet_board))

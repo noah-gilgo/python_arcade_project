@@ -133,8 +133,8 @@ class SpellAction(Action):
                  controller):
         super().__init__(actor, targets, controller)
         self.spell = spell
-        self.sprite_list = self.controller.effects_sprite_list
-        self.animation_list = self.controller.effects_list
+        self.sprite_list = self.controller.sprites_and_effects_collection.effects_sprites
+        self.animation_list = self.controller.sprites_and_effects_collection.effects
 
     def execute(self):
         # Casts the spell.
@@ -223,12 +223,12 @@ class ItemAction(Action):
                 total_duration=0.3
             )
 
-            self.controller.effects_list.append(tp_gain_sparkles_animation)
+            self.controller.sprites_and_effects_collection.effects.append(tp_gain_sparkles_animation)
             for sprite in tp_gain_sparkles_animation.get_sprites():
-                self.controller.effects_sprite_list.append(sprite)
+                self.controller.sprites_and_effects_collection.effects_sprites.append(sprite)
 
-            self.controller.effects_list.append(color_filter_animation)
-            self.controller.effects_sprite_list.append(color_filter_animation.filter_sprite)
+            self.controller.sprites_and_effects_collection.effects.append(color_filter_animation)
+            self.controller.sprites_and_effects_collection.effects_sprites.append(color_filter_animation.filter_sprite)
 
         else:
             self.actor.set_animation_state("battle_item_ready")
@@ -289,14 +289,14 @@ class SpareAction(Action):
             )
 
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.effects_list.append(fade_in_out_animation), 0.5)
+                lambda dt: self.controller.sprites_and_effects_collection.effects.append(fade_in_out_animation), 0.5)
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.effects_sprite_list.append(fade_in_out_animation.filter_sprite), 0.5)
+                lambda dt: self.controller.sprites_and_effects_collection.effects_sprites.append(fade_in_out_animation.filter_sprite), 0.5)
 
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.effects_list.append(spare_percent_number_animation), 0.55)
+                lambda dt: self.controller.sprites_and_effects_collection.effects.append(spare_percent_number_animation), 0.55)
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.effects_sprite_list.append(spare_percent_number_animation.sprite), 0.55)
+                lambda dt: self.controller.sprites_and_effects_collection.effects_sprites.append(spare_percent_number_animation.sprite), 0.55)
             pyglet.clock.schedule_once(
                 lambda dt: self.controller.mercy_add_sound.play(), 0.55)
         else:
@@ -305,10 +305,10 @@ class SpareAction(Action):
             spare_animation_sprites = spare_animation.get_sprites()
 
             pyglet.clock.schedule_once(
-                lambda dt: self.controller.effects_list.append(spare_animation), 0.5)
+                lambda dt: self.controller.sprites_and_effects_collection.effects.append(spare_animation), 0.5)
             for spare_animation_sprite in spare_animation_sprites:
                 pyglet.clock.schedule_once(
-                    lambda dt, sprite=spare_animation_sprite: self.controller.effects_sprite_list.append(sprite), 0.5)
+                    lambda dt, sprite=spare_animation_sprite: self.controller.sprites_and_effects_collection.effects_sprites.append(sprite), 0.5)
 
             # Play the spare sound.
             pyglet.clock.schedule_once(

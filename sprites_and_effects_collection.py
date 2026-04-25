@@ -1,4 +1,5 @@
 from arcade import Camera2D, SpriteList
+from arcade.gui import UIManager
 
 
 class SpritesAndEffectsCollection:
@@ -8,10 +9,11 @@ class SpritesAndEffectsCollection:
     This will be passed into any objects that require rendering stuff on the screen
     """
 
-    def __init__(self, camera: Camera2D):
+    def __init__(self, camera: Camera2D, manager: UIManager):
         self.camera = camera
 
         self.effects = []
+        self.manager = manager
 
         self.background_sprites = SpriteList()  # Background sprites, like the animated background in battle.
         self.character_sprites = SpriteList()  # Character sprites, like for player characters/non player characters
@@ -24,6 +26,7 @@ class SpritesAndEffectsCollection:
         with self.camera.activate():
             self.background_sprites.draw(pixelated=True)
             self.character_sprites.draw(pixelated=True)
+            self.manager.draw()
             self.bullet_sprites.draw(pixelated=True)
             self.effects_sprites.draw(pixelated=True)
             for effect in self.effects:

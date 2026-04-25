@@ -30,9 +30,6 @@ class GameView(arcade.View):
         # Setup camera stuff
         self.camera = arcade.Camera2D()
 
-        # Holds all main sprite lists used by the system
-        self.sprites_and_effects_collection = SpritesAndEffectsCollection(self.camera)
-
         # Set up the player info
         self.player_one = None
         self.player_two = None
@@ -72,6 +69,9 @@ class GameView(arcade.View):
         self.tp_meter = None
         self.battle_hud_container = None
         self.battle_player_character_cards = None
+
+        # Holds all main sprite lists used by the system
+        self.sprites_and_effects_collection = SpritesAndEffectsCollection(self.camera, self.manager)
 
         self._dialog = [
             dialogue_box.TextBoxDialog(
@@ -120,7 +120,6 @@ class GameView(arcade.View):
 
         self.battle_controller = None
 
-        self.soul_sprites = SpriteList()
         self.soul = None
 
         # Initializes the starting positions of the player characters and enemy characters.
@@ -294,8 +293,7 @@ class GameView(arcade.View):
             player_characters=self.player_characters,
             enemies=self.enemies,
             sprites_and_effects_collection=self.sprites_and_effects_collection,
-            tp_meter=self.tp_meter,
-            soul_sprites=self.soul_sprites
+            tp_meter=self.tp_meter
         )
 
     def on_draw(self):
@@ -303,7 +301,6 @@ class GameView(arcade.View):
         self.clear()
 
         self.sprites_and_effects_collection.draw()
-        self.manager.draw()
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -331,7 +328,7 @@ class GameView(arcade.View):
             else:
                 effect.update_animation(delta_time)
 
-        for soul_sprite in self.soul_sprites:
+        for soul_sprite in self.sprites_and_effects_collection.soul_sprites:
             soul_sprite.update(delta_time)
 
         self.battle_controller.update_clocks(delta_time)
