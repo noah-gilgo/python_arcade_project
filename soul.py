@@ -1,3 +1,5 @@
+import random
+
 import arcade
 from arcade.hitbox import HitBox
 
@@ -48,7 +50,17 @@ class Soul(arcade.Sprite):
         self.total_distance_to_move_soul_y = 1
         self.moving_soul_to_bullet_board_animation_time = 0.0
 
+        # Controls whether or not the player can move the soul by pressing the directional buttons.
         self.soul_movement_enabled = False
+
+        # The default invincibility duration after the soul gets hit.
+        self.invincibility_after_taking_damage_duration = 1.2
+
+        # A timer tracking how much longer the soul should remain invincible after taking damage.
+        self.invincibility_after_taking_damage_time = 0.0
+
+        # The player hurt sound.
+        self.player_hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
 
     def enable_soul_movement(self):
         self.soul_movement_enabled = True
@@ -106,3 +118,44 @@ class Soul(arcade.Sprite):
         else: # The default movement for the soul.
             if self.soul_movement_enabled:
                 self.update_soul_speed()
+
+        # Checks if the soul is colliding with any bullets.
+        # If the soul is invincible, don't bother checking the collision.
+        if self.invincibility_after_taking_damage_time <= 0.0:
+            bullets_colliding = self.collides_with_list(self.controller.sprites_and_effects_collection.bullet_sprites)
+            if len(bullets_colliding) > 0:
+                self.invincibility_after_taking_damage_time = self.invincibility_after_taking_damage_duration
+                # The first bullet in the list of bullets overlapping the soul will be considered the first to hit it
+                colliding_bullet = bullets_colliding[0]
+                players_not_knocked = []
+                for player in self.controller.players:
+                    if player.hp > 0:
+                        players_not_knocked.append(player)
+                if len(players_not_knocked) > 0:
+                    if colliding_bullet.targets_multiple_players:
+                        base_damage_to_each_player = colliding_bullet.base_damage / 3
+                        for player in players_not_knocked:
+                            player.damage(
+                                damage_dealt=base_damage_to_each_player,
+                                element_id=colliding_bullet.element_id,
+                                play_hurt_sound=False
+                            )
+                        self.player_hurt_sound.play()
+                    else:
+                        player = players_not_knocked[random.randint(0, len(players_not_knocked) - 1)]
+                        player.damage(colliding_bullet.base_damage, colliding_bullet.element_id)
+                else:
+                    self.player_hurt_sound.play()
+
+        else:
+            # Decrement the invincibility timer if it is above zero.
+            self.invincibility_after_taking_damage_time -= delta_time
+            if self.invincibility_after_taking_damage_time <= 0.0:
+                self.invincibility_after_taking_damage_time = 0.0
+            else:
+                # Animate the soul in its invincibility frame state.
+                soul_sprite_is_translucent = int(self.invincibility_after_taking_damage_time / 0.1) % 2
+                if soul_sprite_is_translucent:
+                    self.alpha = 192
+                else:
+                    self.alpha = 255

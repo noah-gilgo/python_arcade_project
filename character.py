@@ -51,33 +51,30 @@ class Character(arcade.Sprite):
 
         self.times_struck_this_turn = 0
 
-        self.not_idle = False
         self.non_idle_timer = 0.0
 
-        self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_laz_c.wav", False)
+        self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
 
     def set_animation_to_not_idle(self, duration: float = 1.0, animation_state: str = "battle_idle"):
         """
         Starts a timer that eventually sets the character back to a battle_idle animation state.
         Used in situations where the character receives a temporary animation state.
         :param duration: The amount of time the character is meant to not be idle.
+        :param animation_state: The animation state that the character is meant to be temporarily set to.
         :return: None
         """
-        self.not_idle = True
         self.non_idle_timer = duration
-        self.set_animation_state(animation_state)
+        self.set_animation_state(animation_state, is_temporary=True)
 
     def update(self, delta_time: float = 1 / 60, **kwargs):
         """ Helps the player do things.
         :param delta_time: the amount of time in seconds that the player updates
         :param **kwargs:
         """
-        if self.not_idle and self.non_idle_timer > 0.0:
+        if self.non_idle_timer > 0.0:
             self.non_idle_timer -= delta_time
             if self.non_idle_timer <= 0.0:
-                self.not_idle = False
                 self.set_animation_state("battle_idle")
-        pass
 
     def update_animation(self, delta_time=1/60, **kwargs):
         """ Cycles through textures based on the player state.
@@ -97,11 +94,12 @@ class Character(arcade.Sprite):
                 self.current_texture_index = (self.current_texture_index + 1) % len(self.current_animation)
                 self.texture = self.current_animation[self.current_texture_index]
 
-    def set_animation_state(self, state: str = "default"):
+    def set_animation_state(self, state: str = "default", is_temporary: bool = False):
         """
         Sets the animation state of the PlayerCharacter instance. Throws an error if no such state exists in
         self._animations_by_state.
         :param state: The name of the state, in the form of a string.
+        :param is_temporary: Internal variable used to determine whether the animation change was temporary.
         :return: None
         """
         if state in self._animations_by_state:
@@ -110,7 +108,8 @@ class Character(arcade.Sprite):
             self.current_animation_timer = 0.0
             self.current_texture_index = 0
             self.texture = self.current_animation[0]
-
+            if not is_temporary:
+                self.non_idle_timer = 0.0
         else:
             raise ValueError("set_animation_state was given a state that is not present in self._animations_by_state.")
 

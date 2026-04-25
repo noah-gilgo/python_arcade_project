@@ -31,6 +31,8 @@ class PlayerCharacter(character.Character):
         icon_texture_path = "assets/sprites/player_characters/" + self.sprite_folder_name + "/battle_hud/hud_default_face_icon.png"
         icon_hurt_texture_path = "assets/sprites/player_characters/" + self.sprite_folder_name + "/battle_hud/hud_default_hurt_icon.png"
 
+        self.player_hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
+
         image = Image.open(icon_texture_path)
         hurt_image = Image.open(icon_hurt_texture_path)
         self.normal_icon_texture = arcade.Texture(
@@ -92,7 +94,7 @@ class PlayerCharacter(character.Character):
 
             "battle_hurt": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_hurt",
-                frame_duration=0.6,
+                frame_duration=0.1,
                 loop_animation=False
             ),
 
@@ -177,18 +179,26 @@ class PlayerCharacter(character.Character):
         if self._animations_by_state["battle_defend"]:
             self.set_animation_state("battle_idle")
 
-    def take_damage(self, damage_dealt: float = 0, element_id = 0):
-        """ Damages the player character, removing some of their HP. """
+    def damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):
+        """
+        Damages the player character, removing some of their HP.
+        :param damage_dealt: The base amount of damage dealt
+        :param element_id: The element id of the attack
+        :param play_hurt_sound: Controls whether to play the hurt sound
+        :return: None
+        """
+        damage_dealt = int(damage_dealt)
         damage_dealt_text = str(damage_dealt)
         damage_dealt_color = arcade.color.WHITE
-        previous_hp = self.hp
+        previous_hp = int(self.hp)
 
         if damage_dealt <= 0:
             damage_dealt_text = "MISS"
-            self.set_animation_state("battle_attack")
 
         else:
-            self.hurt_sound.play()
+            self.hp -= damage_dealt
+            if play_hurt_sound:
+                self.player_hurt_sound.play()
 
             # If the attack reduces the enemy HP to 0
             if self.hp <= 0:
@@ -198,27 +208,18 @@ class PlayerCharacter(character.Character):
                     self.set_animation_state("battle_downed")
                     self.hp = -80
             else:
-                self.hp -= damage_dealt
+                self.set_animation_to_not_idle(1.2, "battle_hurt")
 
                 shake_animation = ShakeAnimation(
                     sprite=self
                 )
                 self.sprites_and_effects_collection.effects.append(shake_animation)
-                self.set_animation_to_not_idle(1.5, "battle_hurt")
 
-                damage_dealt_animation = NumberBounceAnimation(
-                    text=damage_dealt_text,
-                    color=damage_dealt_color,
-                    target=self
-                )
+            damage_dealt_animation = NumberBounceAnimation(
+                text=damage_dealt_text,
+                color=damage_dealt_color,
+                target=self
+            )
 
-                self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
-                self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
-
-            # TODO: This currently makes the damage numbers above the enemies disappear.
-            """
-            if is_crit:
-                self.add_tp_to_meter(6.0)
-            else:
-                self.add_tp_to_meter(attack_damage_multiplier * 4.0)
-            """
+            self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
+            self.sprites_and_effects_collection.effects.append(damage_dealt_animation)

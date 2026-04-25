@@ -204,9 +204,8 @@ class BattleHUDCharacterHPText(UILabel):
             multiline=False
         )
         self.focus_mode = FocusMode(0)
-        self.update_hp_on_character_card()
 
-    def update_hp_on_character_card(self):
+    def on_update(self, dt):
         self.text = str(self.character.hp)
         if 0 < self.character.hp < self.character.max_hp / 4:
             self.update_font(font_color=arcade.color.YELLOW)
@@ -241,9 +240,8 @@ class BattleHUDCharacterMaxHPText(UILabel):
             multiline=False
         )
         self.focus_mode = FocusMode(0)
-        self.update_max_hp_on_character_card()
 
-    def update_max_hp_on_character_card(self):
+    def on_update(self, dt):
         self.text = str(self.character.max_hp)
         if 0 < self.character.hp < self.character.max_hp / 4:
             self.update_font(font_color=arcade.color.YELLOW)
@@ -251,7 +249,6 @@ class BattleHUDCharacterMaxHPText(UILabel):
             self.update_font(font_color=arcade.color.RED)
         else:
             self.update_font(font_color=arcade.color.WHITE)
-
 
 class BattleHUDCharacterHP(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
@@ -324,8 +321,7 @@ class BattleHUDHPMeter(UIWidget):
             self.color,
         )
 
-    def update_hp(self):
-        """ Updates the HP meter to accurately reflect the current HP of the player character. """
+    def on_update(self, dt):
         self.value = self.player_character.hp / self.player_character.max_hp
 
 

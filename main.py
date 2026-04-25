@@ -290,7 +290,7 @@ class GameView(arcade.View):
             ui_manager=self.manager,
             battle_player_character_cards=self.battle_player_character_cards,
             battle_textbox=self.text_box,
-            player_characters=self.player_characters,
+            players=self.player_characters,
             enemies=self.enemies,
             sprites_and_effects_collection=self.sprites_and_effects_collection,
             tp_meter=self.tp_meter
@@ -317,6 +317,7 @@ class GameView(arcade.View):
         # Update the player's animation.
         for player in self.player_characters:
             player.update_animation(delta_time)
+            player.update(delta_time)
 
         for enemy in self.enemies:
             enemy.update_animation(delta_time)

@@ -57,7 +57,7 @@ class BattleController:
     def __init__(self, ui_manager: UIManager,
                  battle_player_character_cards: UILayout,
                  battle_textbox: UIWidget,
-                 player_characters: list[player_character.PlayerCharacter],
+                 players: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
                  sprites_and_effects_collection: SpritesAndEffectsCollection,
                  tp_meter: battle_widgets.TPMeter):
@@ -70,7 +70,7 @@ class BattleController:
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
         self.tp_meter = tp_meter
-        self.player_characters = player_characters
+        self.players = players
         self.enemies = enemies
 
         self.current_player_index = 0
@@ -127,7 +127,7 @@ class BattleController:
         self.enemy_hit_sound_player = None
 
         self.bullet_board = BulletBoard()
-        self.soul = Soul(self.player_characters[0], self)
+        self.soul = Soul(self.players[0], self)
         self.sprites_and_effects_collection.soul_sprites.append(self.soul)
 
         self.sprites_and_effects_collection.effects.append(RainingDiamondBulletPattern(self.sprites_and_effects_collection,
@@ -567,7 +567,6 @@ class BattleController:
                 self.sprites_and_effects_collection.effects.append(strike_enemy_animation)
                 self.sprites_and_effects_collection.effects_sprites.append(strike_enemy_animation.sprite)
                 self.battle_idle_target = target
-                self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
                 target.set_animation_to_not_idle(1.5, "battle_hurt")
 
             # TODO: This currently makes the damage numbers above the enemies disappear.
@@ -682,8 +681,6 @@ class BattleController:
                 target=target
             )
 
-            self.update_hp_on_player_card(target, damage_healt)
-
             self.sprites_and_effects_collection.effects.append(damage_healed_animation)
             self.sprites_and_effects_collection.effects_sprites.append(damage_healed_animation.sprite)
 
@@ -691,21 +688,6 @@ class BattleController:
             arcade.play_sound(self.heal_sound)
         if player_damaged:
             arcade.play_sound(self.hurt_sound)
-
-    def update_hp_on_player_card(self, character: player_character.PlayerCharacter, hp_affected: float):
-        """
-        Updates the hp of the provided player.
-        :param character: the player to have their HP modified
-        :return:
-        """
-
-        for character_card in self.battle_player_character_cards.children:
-            if character_card.player_character == character:
-                character_card.children[1].children[1].children[0].children[0].update_hp_on_character_card()
-                character_card.children[1].children[1].children[0].children[2].update_max_hp_on_character_card()
-                character_card.children[1].children[1].children[1].children[1].update_hp()
-                if hp_affected < 0:
-                    character_card.children[1].children[0].children[0].change_to_hurt_icon()
 
     def open_enemy_select_menu(self):
         """
@@ -737,7 +719,7 @@ class BattleController:
         Opens the player select menu.
         :return: None
         """
-        player_list_full_layout = battle_widgets.PlayerSelect(self.player_characters)
+        player_list_full_layout = battle_widgets.PlayerSelect(self.players)
         player_list_interactive_layout = player_list_full_layout
         self.focus_stack.push(player_list_full_layout, player_list_interactive_layout,
                                          self.state, 1)
@@ -943,7 +925,7 @@ class SelectCommand(Command):
                     current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                     item_action = ItemAction(
                         actor=current_player_character,
-                        targets=self.controller.player_characters,
+                        targets=self.controller.players,
                         controller=self.controller,
                         item=item,
                         item_index=item_index

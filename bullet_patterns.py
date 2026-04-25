@@ -34,7 +34,7 @@ class BulletPattern:
         self.bullets_sprite_list.append(bullet)
 
         self.sprites_and_effects_collection.effects.append(bullet)
-        self.sprites_and_effects_collection.effects_sprites.append(bullet)
+        self.sprites_and_effects_collection.bullet_sprites.append(bullet)
 
     def spawn_bullets(self, bullets: list[Bullet]):
         """
@@ -46,7 +46,7 @@ class BulletPattern:
             self.bullets_sprite_list.append(bullet)
 
             self.sprites_and_effects_collection.effects.append(bullet)
-            self.sprites_and_effects_collection.effects_sprite.append(bullet)
+            self.sprites_and_effects_collection.bullet_sprites.append(bullet)
 
 
 class RainingDiamondBulletPattern(BulletPattern):
