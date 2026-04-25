@@ -11,11 +11,16 @@ class Soul(arcade.Sprite):
     """ SOUL Class """
     def __init__(self, player_with_soul: player_character.PlayerCharacter, battle_controller):
         super().__init__(
-            path_or_texture="assets/sprites/soul/soul.png",
             center_x=player_with_soul.center_x,
             center_y=player_with_soul.center_y,
             scale=2.0
         )
+        self.textures = [
+            arcade.load_texture("assets/sprites/soul/battle_soul.png"),
+            arcade.load_texture("assets/sprites/soul/battle_soul_damaged.png")
+        ]
+
+        self.set_texture(0)
 
         self.hit_box = HitBox(
             points=[
@@ -155,7 +160,4 @@ class Soul(arcade.Sprite):
             else:
                 # Animate the soul in its invincibility frame state.
                 soul_sprite_is_translucent = int(self.invincibility_after_taking_damage_time / 0.1) % 2
-                if soul_sprite_is_translucent:
-                    self.alpha = 192
-                else:
-                    self.alpha = 255
+                self.set_texture(soul_sprite_is_translucent)
