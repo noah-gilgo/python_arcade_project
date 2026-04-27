@@ -26,14 +26,23 @@ class Soul(arcade.Sprite):
 
         self.set_texture(0)
 
+        # Load the graze sprite and all of its child textures
         self.graze_sprite = Sprite(
-            path_or_texture="assets/sprites/soul/soul_graze.png",
             scale=2.0,
             center_x=self.center_x,
             center_y=self.center_y,
         )
 
-        self.graze_sprite.alpha = 0
+        self.graze_sprite.textures = [
+            arcade.load_texture("assets/sprites/soul/graze/soul_graze_1.png"),
+            arcade.load_texture("assets/sprites/soul/graze/soul_graze_2.png"),
+            arcade.load_texture("assets/sprites/soul/graze/soul_graze_3.png"),
+            arcade.load_texture("assets/sprites/soul/graze/soul_graze_4.png")
+        ]
+
+        self.graze_sprite.set_texture(0)
+
+        self.graze_sprite.visible = False
 
         self.controller.sprites_and_effects_collection.soul_sprites.append(self.graze_sprite)
 
@@ -76,8 +85,19 @@ class Soul(arcade.Sprite):
         # A timer tracking how much longer the soul should remain invincible after taking damage.
         self.invincibility_after_taking_damage_time = 0.0
 
-        # The player hurt sound.
+        # A timer tracking the amount of time that has passed since the last successful graze.
+        self.time_since_last_graze = 1.0
+
+        # A variable tracking if the graze area is still in range of previously grazed bullets.
+        # If so, the graze sprite should remain visible.
+        self.graze_hitbox_still_touching_grazed_bullets = False
+
+        # A variable tracking if the graze area left the area of grazed bullets and is only touching previously grazed bullets.
+        self.graze_hitbox_touching_grazed_bullets_after_leaving_them = False
+
+        # Load sounds used by soul events.
         self.player_hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
+        self.graze_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_graze.wav", False)
 
     def enable_soul_movement(self):
         self.soul_movement_enabled = True
@@ -95,7 +115,7 @@ class Soul(arcade.Sprite):
         self.total_distance_to_move_soul_y = self.bullet_board_center_coordinates[1] - \
                                              self.player_with_soul_coordinates[1]
 
-    def update_soul_speed(self):
+    def move_soul_with_player_controls(self):
         # Calculate speed based on the keys pressed
         self.change_x = 0
         self.change_y = 0
@@ -122,10 +142,11 @@ class Soul(arcade.Sprite):
         Checks if soul is colliding with bullets.
         If it is, damage a random player depending on the programming of the bullet and make the soul temporarily
         invincible, if the soul isn't temporarily invincible already.
+        :param delta_time: the amount of time elapsed since the last frame
         :return: None
         """
 
-        # Only check if bullets are colliding with the soul/graze area if the soul is not invincible.
+        # Only check if bullets are colliding with the soul if the soul is not invincible.
         if self.invincibility_after_taking_damage_time <= 0.0:
             bullets_colliding = self.collides_with_list(self.controller.sprites_and_effects_collection.bullet_sprites)
             if len(bullets_colliding) > 0:
@@ -147,8 +168,8 @@ class Soul(arcade.Sprite):
                             )
                         self.player_hurt_sound.play()
                     else:
-                        player = players_not_knocked[random.randint(0, len(players_not_knocked) - 1)]
-                        player.damage(colliding_bullet.base_damage, colliding_bullet.element_id)
+                        player_to_be_damaged = players_not_knocked[random.randint(0, len(players_not_knocked) - 1)]
+                        player_to_be_damaged.damage(colliding_bullet.base_damage, colliding_bullet.element_id)
                 else:
                     self.player_hurt_sound.play()
 
@@ -161,6 +182,71 @@ class Soul(arcade.Sprite):
                 # Animate the soul in its invincibility frame state.
                 soul_sprite_is_translucent = int(self.invincibility_after_taking_damage_time / 0.1) % 2
                 self.set_texture(soul_sprite_is_translucent)
+
+    def set_texture_for_graze_sprite(self):
+        """
+        Sets the texture for the graze sprite depending on the time since the last successful graze.
+        :return: None
+        """
+        if self.graze_hitbox_touching_grazed_bullets_after_leaving_them:
+            self.graze_sprite.visible = True
+            self.graze_sprite.set_texture(3)
+            return
+
+        if self.time_since_last_graze < 0.1:
+            self.graze_sprite.visible = True
+            self.graze_sprite.set_texture(0)
+        elif 0.1 < self.time_since_last_graze < 0.13:
+            self.graze_sprite.visible = True
+            self.graze_sprite.set_texture(1)
+        elif 0.13 < self.time_since_last_graze < 0.16:
+            self.graze_sprite.visible = True
+            self.graze_sprite.set_texture(2)
+        elif 0.16 < self.time_since_last_graze < 0.19:
+            self.graze_sprite.visible = True
+            self.graze_sprite.set_texture(3)
+        else:
+            self.graze_sprite.visible = False
+
+    def check_if_graze_area_is_colliding_with_bullets(self, delta_time):
+        """
+        Check if the graze area is colliding with bullets.
+        If it is, add the sum of the TP from the bullets to the TP meter, set them all to have been grazed and play
+        the graze sound effect.
+        :param delta_time: the amount of time elapsed since the last frame
+        :return: None
+        """
+        tp_gained = 0
+        touching_bullets = False
+
+        # Only check if bullets are colliding with the graze area if the soul is not invincible.
+        if self.invincibility_after_taking_damage_time <= 0.0:
+            bullets_colliding = self.graze_sprite.collides_with_list(self.controller.sprites_and_effects_collection.bullet_sprites)
+            if len(bullets_colliding) > 0:
+                touching_bullets = True
+                # Add up the total TP from the non-grazed bullets.
+                for bullet in bullets_colliding:
+                    if not bullet.has_been_grazed:
+                        tp_gained += bullet.tp_gain_when_grazed
+                        bullet.has_been_grazed = True
+                # If the total TP from the grazing exceeds 0, add it to the meter and play the graze sound.
+                if tp_gained > 0:
+                    self.controller.add_tp_to_meter(tp_gained)
+                    self.graze_sound.play()
+                    self.time_since_last_graze = 0.0
+                    self.graze_hitbox_still_touching_grazed_bullets = True
+                    self.set_texture_for_graze_sprite()
+                if not self.graze_hitbox_still_touching_grazed_bullets:
+                    self.graze_hitbox_touching_grazed_bullets_after_leaving_them = True
+            else:
+                self.graze_hitbox_still_touching_grazed_bullets = False
+                self.graze_hitbox_touching_grazed_bullets_after_leaving_them = False
+            self.set_texture_for_graze_sprite()
+
+        if not touching_bullets:
+            self.graze_hitbox_still_touching_grazed_bullets = False
+            self.graze_hitbox_touching_grazed_bullets_after_leaving_them = False
+            self.set_texture_for_graze_sprite()
 
     def update(self, delta_time):
         if self.moving_soul_to_bullet_board: # If the soul is being moved to/from the bullet board
@@ -176,14 +262,18 @@ class Soul(arcade.Sprite):
                 self.center_y = self.bullet_board_center_coordinates[1]
                 self.moving_soul_to_bullet_board = False
                 self.enable_soul_movement()
-            return
         else: # The default movement for the soul.
             if self.soul_movement_enabled:
-                self.update_soul_speed()
+                self.move_soul_with_player_controls()
 
-        # Perform collision checking
-        self.check_if_soul_is_colliding_with_bullets(delta_time)
+            # Perform collision checking
+            self.check_if_soul_is_colliding_with_bullets(delta_time)
+            self.check_if_graze_area_is_colliding_with_bullets(delta_time)
 
         # Set the center of the graze sprite to the center of the soul sprite
         self.graze_sprite.center_x = self.center_x
         self.graze_sprite.center_y = self.center_y
+
+        # Increment the time since last graze timer if it is less than 1 second.
+        if self.time_since_last_graze < 1.0 and not self.graze_hitbox_still_touching_grazed_bullets:
+            self.time_since_last_graze += delta_time

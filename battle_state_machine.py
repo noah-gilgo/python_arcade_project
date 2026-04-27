@@ -570,12 +570,12 @@ class BattleController:
                 target.set_animation_to_not_idle(1.5, "battle_hurt")
 
             # TODO: This currently makes the damage numbers above the enemies disappear.
-            """
+
             if is_crit:
                 self.add_tp_to_meter(6.0)
             else:
                 self.add_tp_to_meter(attack_damage_multiplier * 4.0)
-            """
+
 
         target.hp -= damage_dealt
 

@@ -22,7 +22,7 @@ class Bullet(Sprite):
         self.lifetime = lifetime
         self.kill_bullet_when_offscreen = kill_bullet_when_offscreen
         self.base_damage = base_damage # The base damage that the bullet should deal to its target.
-        self.tp_gain = tp_gain  # The amount of TP gained when the soul grazes the bullet
+        self.tp_gain_when_grazed = tp_gain  # The amount of TP gained when the soul grazes the bullet
         self.has_been_grazed = False  # Whether the bullet has been grazed yet
         self.element_id = element_id # The element ID of the bullet. Defaults to 0
         self.targets_multiple_players = targets_multiple_players # Determines if the bullet should damage multiple players
@@ -80,4 +80,4 @@ class BlackDiamondBullet(Bullet):
         if self.alpha < 255:
             self.alpha = min(self.alpha + (delta_time * 512), 255)
 
-        self.center_y = self.center_y - (2 * (self.time ** 2) - 1)
+        self.center_y = self.center_y - ((2 * (self.time ** 2) - 1) / 8)
