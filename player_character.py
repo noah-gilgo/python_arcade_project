@@ -11,6 +11,7 @@ from animations.common_animations import ShakeAnimation
 from graphics_methods import make_texture_solid_color
 from items.armor_items import ArmorItem
 from items.weapon_items import WeaponItem
+from non_player_character import NonPlayerCharacter
 from spells import Spell
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -35,6 +36,7 @@ class PlayerCharacter(character.Character):
         icon_hurt_texture_path = "assets/sprites/player_characters/" + self.sprite_folder_name + "/battle_hud/hud_default_hurt_icon.png"
 
         self.player_hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
+        self.player_attack_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_laz_c.wav", False)
 
         image = Image.open(icon_texture_path)
         hurt_image = Image.open(icon_hurt_texture_path)
@@ -239,19 +241,74 @@ class PlayerCharacter(character.Character):
         :param element_id: The element ID of the attack.
         :return:
         """
+        damage_dealt = base_damage
+
+        # Add the base player defense with their equipment defense to get their total defense
+        player_defense = self.defense
+
+        if self.weapon_slot:
+            player_defense += self.weapon_slot.defense_points
+        if self.armor_slot_1:
+            player_defense += self.armor_slot_1.defense_points
+        if self.armor_slot_2:
+            player_defense += self.armor_slot_2.defense_points
+
+        # Subtract a certain amount of damage from the base damage based on the defense stat.
+        if base_damage >= self.max_hp / 5:
+            damage_dealt -= player_defense * 3
+        elif self.max_hp / 5 > base_damage > self.max_hp / 8:
+            damage_dealt -= player_defense * 2
+        else:
+            damage_dealt -= player_defense
+
+        # If the player character is defending, multiply their damage taken by 2/3
+        if self.is_defending:
+            damage_dealt = int((2 * damage_dealt)/3)
+
+        # Apply elemental damage reductions
+        for armor in self.armor_slot_1, self.armor_slot_2:
+            if armor:
+                if element_id and armor.element_id:
+                    for element in default_data.ELEMENTAL_PAIRS:
+                        if element.element_id == armor.element_id:
+                            if element_id in element.resistant_to:
+                                damage_dealt *= 0.66
+
+                            #if element_id in element.weak_to:
+                            #    damage_dealt *= 2.5
+
+        # If, somehow, the enemy's attack damage gets reduced below 1, set it to 1.
+        if damage_dealt < 1:
+            damage_dealt = 1
+
+        # Convert the damage dealt to an int before returning it.
+        return int(damage_dealt)
+
+
+    def attack_enemy(self, enemy: NonPlayerCharacter, attack_damage_multiplier: float = 1.0):
         """
-        if self.element_id:
+        Makes the player character attack the supplied non-player character.
+        :param enemy: The enemy to be attacked.
+        :param attack_damage_multiplier: The attack multiplier returned by the fight bar in the FIGHT act.
+        :return: None
+        """
+
+        # Play the attack animation/sound
+        self.set_animation_to_not_idle(animation_state="battle_attack", duration=1.0)
+
+        damage_dealt = int(self.attack * 20 * attack_damage_multiplier) # This is not exactly how it's calculated in the
+        if self.weapon_slot.element_id:                                 # original game, but it's close
             for element in default_data.ELEMENTAL_PAIRS:
-                if element.element_id == actor.element_id:
-                    if target.element_id in element.resistant_to:
+                if element.element_id == self.weapon_slot.element_id:
+                    if enemy.element_id in element.resistant_to:
                         damage_dealt *= 0.66
-                    if target.element_id in element.weak_to:
+                    if enemy.element_id in element.weak_to:
                         damage_dealt *= 1.5
-        """
-        pass
+
+        return damage_dealt
 
 
-    def damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):
+    def receive_damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):
         """
         Damages the player character, removing some of their HP.
         :param damage_dealt: The base amount of damage dealt
@@ -259,7 +316,7 @@ class PlayerCharacter(character.Character):
         :param play_hurt_sound: Controls whether to play the hurt sound
         :return: None
         """
-        damage_dealt = int(damage_dealt)
+        damage_dealt = self.calculate_received_damage(damage_dealt, element_id)
         damage_dealt_text = str(damage_dealt)
         damage_dealt_color = arcade.color.WHITE
         previous_hp = int(self.hp)
