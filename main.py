@@ -264,18 +264,21 @@ class GameView(arcade.View):
 
         # Create and append the enemies to the SpriteList.
         self.enemy_one = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
-                                                        center_x=self._unholy_arc[0][0], center_y=self._unholy_arc[0][1])
+                                                     center_x=self._unholy_arc[0][0], center_y=self._unholy_arc[0][1],
+                                                     enemies_list=self.enemies)
         self.enemy_one.set_animation_state("battle_idle")
         self.enemies.append(self.enemy_one)
 
         self.enemy_two = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
-                                                        center_x=self._unholy_arc[1][0], center_y=self._unholy_arc[1][1])
+                                                     center_x=self._unholy_arc[1][0], center_y=self._unholy_arc[1][1],
+                                                     enemies_list=self.enemies)
         self.enemy_two.set_animation_state("battle_idle")
         self.enemy_two.mercy = 100
         self.enemies.append(self.enemy_two)
 
         self.enemy_three = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
-                                                        center_x=self._unholy_arc[2][0], center_y=self._unholy_arc[2][1])
+                                                       center_x=self._unholy_arc[2][0], center_y=self._unholy_arc[2][1],
+                                                       enemies_list=self.enemies)
         self.enemy_three.set_animation_state("battle_idle")
         self.enemy_three.tired = 100
         self.enemies.append(self.enemy_three)

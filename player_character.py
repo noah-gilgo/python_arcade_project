@@ -11,7 +11,6 @@ from animations.common_animations import ShakeAnimation
 from graphics_methods import make_texture_solid_color
 from items.armor_items import ArmorItem
 from items.weapon_items import WeaponItem
-from non_player_character import NonPlayerCharacter
 from spells import Spell
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -285,7 +284,7 @@ class PlayerCharacter(character.Character):
         return int(damage_dealt)
 
 
-    def attack_enemy(self, enemy: NonPlayerCharacter, attack_damage_multiplier: float = 1.0):
+    def attack_enemy(self, enemy, attack_damage_multiplier: float = 1.0):
         """
         Makes the player character attack the supplied non-player character.
         :param enemy: The enemy to be attacked.
@@ -337,7 +336,8 @@ class PlayerCharacter(character.Character):
                     self.set_animation_state("battle_downed")
                     self.hp = min(-self.max_hp / 2, -80)
             else:
-                self.set_animation_to_not_idle(1.2, "battle_hurt")
+                if not self.is_defending:
+                    self.set_animation_to_not_idle(1.2, "battle_hurt")
 
                 shake_animation = ShakeAnimation(
                     sprite=self

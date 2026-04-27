@@ -527,74 +527,15 @@ class BattleController:
             target = self.enemies[0]
 
         damage_dealt = int(actor.attack * 10 * attack_damage_multiplier)
-        if actor.element_id:
-            for element in default_data.ELEMENTAL_PAIRS:
-                if element.element_id == actor.element_id:
-                    if target.element_id in element.resistant_to:
-                        damage_dealt *= 0.66
-                    if target.element_id in element.weak_to:
-                        damage_dealt *= 1.5
+        target.receive_damage(damage_dealt, actor)
 
-        damage_dealt_text = str(damage_dealt)
-
-        if damage_dealt <= 0:
-            damage_dealt_text = "MISS"
-            damage_dealt_color = arcade.color.WHITE
-            self.player_attack_sound.play()
-            temp_actor = actor
-            temp_actor.set_animation_state("battle_attack")
-
+        # TODO: This currently makes the damage numbers above the enemies disappear.
+        """
+        if is_crit:
+            self.add_tp_to_meter(6.0)
         else:
-            self.enemy_hit_sound.play()
-            damage_dealt_color = Color.from_iterable([
-                int((actor.battle_ui_color.r + 255) / 2),
-                int((actor.battle_ui_color.g + 255) / 2),
-                int((actor.battle_ui_color.b + 255) / 2),
-                int(actor.battle_ui_color.a)
-            ])
-
-            # If the attack reduces the enemy HP to 0
-            if target.hp <= 0:
-                damage_dealt_text = "LOST"
-                damage_dealt_color = arcade.color.RED
-                self.enemy_flee_sound.play()
-                enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
-                self.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)
-                for sprite in enemy_fleeing_animation.get_sprites():
-                    self.sprites_and_effects_collection.effects_sprites.append(sprite)
-                self.enemies.remove(target)
-            else:
-                shake_animation = ShakeAnimation(
-                    sprite=target
-                )
-                self.sprites_and_effects_collection.effects.append(shake_animation)
-                strike_enemy_animation = StrikeEnemyAnimation(
-                    actor=actor,
-                    target=target
-                )
-                self.sprites_and_effects_collection.effects.append(strike_enemy_animation)
-                self.sprites_and_effects_collection.effects_sprites.append(strike_enemy_animation.sprite)
-                self.battle_idle_target = target
-                target.set_animation_to_not_idle(1.5, "battle_hurt")
-
-            # TODO: This currently makes the damage numbers above the enemies disappear.
-
-            if is_crit:
-                self.add_tp_to_meter(6.0)
-            else:
-                self.add_tp_to_meter(attack_damage_multiplier * 4.0)
-
-
-        target.hp -= damage_dealt
-
-        damage_dealt_animation = NumberBounceAnimation(
-            text=damage_dealt_text,
-            color=damage_dealt_color,
-            target=target
-        )
-
-        self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
-        self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
+            self.add_tp_to_meter(attack_damage_multiplier * 4.0)
+        """
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):

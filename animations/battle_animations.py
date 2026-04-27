@@ -4,12 +4,9 @@ import arcade
 import pyglet
 from PIL import Image, ImageDraw
 from arcade import Sprite, Texture, LRBT
-from arcade.easing import ease_in
 from arcade.types import Color
 
 import character
-import non_player_character
-import player_character
 import settings
 import texture_methods
 from animations.common_animations import SparkleAnimation
