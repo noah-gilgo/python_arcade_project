@@ -15,7 +15,7 @@ import non_player_character
 import player_character
 import settings
 from graphics_methods import ease_out, make_texture_solid_color
-from items import Item, ConsumableItem
+from items.consumable_items import ConsumableItem
 from spells import Spell
 
 

@@ -11,7 +11,7 @@ import player_character
 from animations.battle_animations import NumberBounceAnimation, EnemySparedAnimation, TPGainAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation
 from dialogue_box import TextBoxDialog
-from items import ConsumableItem
+from items.consumable_items import ConsumableItem
 from spells import Spell
 
 """

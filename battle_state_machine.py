@@ -22,7 +22,7 @@ from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySele
 from bullet_patterns import RainingDiamondBulletPattern
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
-from items import Item, ConsumableItem
+from items.consumable_items import ConsumableItem
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
@@ -109,7 +109,7 @@ class BattleController:
         self.actions_queue = ActionsQueue()
         self.sorted_actions_queue = {}
 
-        self.items = items.initialize_default_items()
+        self.items = items.consumable_items.initialize_default_consumable_items()
 
         self.fight_box_sprites_array = []
         self.fight_crit_box_sprites_array = []

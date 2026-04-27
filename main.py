@@ -12,6 +12,10 @@ import graphics_methods
 import dialogue_box
 import battle_widgets
 from battle_state_machine import BattleController
+import items.armor_items
+from items import armor_items
+from items.armor_items import PrincessRbn, TennaTie, ShadowMantle, Jevilstail, WhiteRibbon, WaferGuard, RoyalPin, \
+    MysticBand
 from soul import Soul
 from spells import Spell, IceShock
 from sprites_and_effects_collection import SpritesAndEffectsCollection
@@ -145,6 +149,8 @@ class GameView(arcade.View):
                                                            fight_box_color=Color(0, 0, 255, 255),
                                                            fight_crit_box_color=Color(0, 162, 232, 255),
                                                            knows_magic=False)
+        self.player_one.equip_armor_to_slot_1(PrincessRbn())
+        self.player_one.equip_armor_to_slot_2(TennaTie())
         self.player_one.set_animation_state("battle_idle")
         self.player_characters.append(self.player_one)
 
@@ -166,6 +172,8 @@ class GameView(arcade.View):
                                                            battle_ui_icon_color=Color(234, 121, 200, 255),  # Sprite initialization
                                                            fight_box_color = Color(128, 0, 128, 255),
                                                            fight_crit_box_color=Color(234, 121, 200, 255))
+        self.player_two.equip_armor_to_slot_1(ShadowMantle())
+        self.player_two.equip_armor_to_slot_2(Jevilstail())
         self.player_two.set_animation_state("battle_idle")
         self.player_characters.append(self.player_two)
 
@@ -185,6 +193,8 @@ class GameView(arcade.View):
                                                              battle_ui_icon_color=Color(181, 230, 29, 255), # Sprite initialization
                                                              fight_box_color=Color(0, 255, 0, 255),
                                                              fight_crit_box_color=Color(181, 230, 29, 255))
+        self.player_three.equip_armor_to_slot_1(WhiteRibbon())
+        self.player_three.equip_armor_to_slot_2(WaferGuard())
         self.player_three.set_animation_state("battle_idle")
         self.player_characters.append(self.player_three)
 
@@ -241,6 +251,8 @@ class GameView(arcade.View):
                                                                     is_aoe_spell=True
                                                                 )
                                                             ])
+        self.player_four.equip_armor_to_slot_1(RoyalPin())
+        self.player_four.equip_armor_to_slot_2(MysticBand())
         self.player_four.set_animation_state("battle_idle")
         self.player_characters.append(self.player_four)
 

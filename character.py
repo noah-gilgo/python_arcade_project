@@ -55,6 +55,17 @@ class Character(arcade.Sprite):
 
         self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
 
+    def calculate_received_damage(self, base_damage: float, element_id: int = 0):
+        """
+        Takes the base damage of the attacker's attack and modifies it based on the characteristics of the receiver
+        (ex. defense, element_id, etc.)
+        Since player characters/non player characters are a bit different on the back end, this is just a stub.
+        :param base_damage: The base damage of the attacker's attack. This function modifies this value
+        :param element_id: The element ID of the attack.
+        :return:
+        """
+        pass
+
     def set_animation_to_not_idle(self, duration: float = 1.0, animation_state: str = "battle_idle"):
         """
         Starts a timer that eventually sets the character back to a battle_idle animation state.

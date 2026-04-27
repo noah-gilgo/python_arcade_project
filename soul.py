@@ -196,13 +196,13 @@ class Soul(arcade.Sprite):
         if self.time_since_last_graze < 0.1:
             self.graze_sprite.visible = True
             self.graze_sprite.set_texture(0)
-        elif 0.1 < self.time_since_last_graze < 0.13:
+        elif 0.1 < self.time_since_last_graze < 0.14:
             self.graze_sprite.visible = True
             self.graze_sprite.set_texture(1)
-        elif 0.13 < self.time_since_last_graze < 0.16:
+        elif 0.14 < self.time_since_last_graze < 0.16:
             self.graze_sprite.visible = True
             self.graze_sprite.set_texture(2)
-        elif 0.16 < self.time_since_last_graze < 0.19:
+        elif 0.16 < self.time_since_last_graze < 0.18:
             self.graze_sprite.visible = True
             self.graze_sprite.set_texture(3)
         else:

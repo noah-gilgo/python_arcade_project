@@ -8,6 +8,7 @@ import graphics_objects
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
 from graphics_methods import make_texture_solid_color
+from items.armor_items import ArmorItem
 from spells import Spell
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -47,6 +48,11 @@ class PlayerCharacter(character.Character):
         self.fight_box_color = fight_box_color
         self.fight_crit_box_color = fight_crit_box_color
         self.is_defending = False
+
+        # The equipment slots for the player character.
+        self.weapon_slot = None
+        self.armor_slot_1 = None
+        self.armor_slot_2 = None
 
 
         self._animations_by_state.update({
@@ -178,6 +184,54 @@ class PlayerCharacter(character.Character):
         self.is_defending = False
         if self._animations_by_state["battle_defend"]:
             self.set_animation_state("battle_idle")
+
+    def equip_armor_to_slot_1(self, armor: ArmorItem | None):
+        """
+        Equips the supplied armor to armor slot 1.
+        :param armor: The armor being equipped.
+        :return: The armor that was previously in the slot, if there was armor in said slot.
+        """
+        armor_previously_in_slot_1 = None
+        if self.armor_slot_1:
+            armor_previously_in_slot_1 = self.armor_slot_1
+        self.armor_slot_1 = armor
+
+        # If there was already armor in that slot, return it.
+        return armor_previously_in_slot_1
+
+    def equip_armor_to_slot_2(self, armor: ArmorItem | None):
+        """
+        Equips the supplied armor to armor slot 2.
+        :param armor: The armor being equipped.
+        :return: The armor that was previously in the slot, if there was armor in said slot.
+        """
+        armor_previously_in_slot_2 = None
+        if self.armor_slot_2:
+            armor_previously_in_slot_2 = self.armor_slot_2
+        self.armor_slot_2 = armor
+
+        # If there was already armor in that slot, return it.
+        return armor_previously_in_slot_2
+
+
+    def calculate_received_damage(self, base_damage: float, element_id: int = 0):
+        """
+        Takes the base damage of the attacker's attack and modifies it based on the characteristics of the receiver
+        (ex. defense, element_id, etc.)
+        Since player characters/non player characters are a bit different on the back end, this is just a stub.
+        :param base_damage: The base damage of the attacker's attack. This function modifies this value
+        :param element_id: The element ID of the attack.
+        :return:
+        """
+        """
+        if self.element_id:
+            for element in default_data.ELEMENTAL_PAIRS:
+                if element.element_id == actor.element_id:
+                    if target.element_id in element.resistant_to:
+                        damage_dealt *= 0.66
+                    if target.element_id in element.weak_to:
+                        damage_dealt *= 1.5
+        """
 
     def damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):
         """
