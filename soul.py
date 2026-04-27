@@ -235,6 +235,7 @@ class Soul(arcade.Sprite):
                     self.graze_sound.play()
                     self.time_since_last_graze = 0.0
                     self.graze_hitbox_still_touching_grazed_bullets = True
+                    self.graze_hitbox_touching_grazed_bullets_after_leaving_them = False
                     self.set_texture_for_graze_sprite()
                 if not self.graze_hitbox_still_touching_grazed_bullets:
                     self.graze_hitbox_touching_grazed_bullets_after_leaving_them = True

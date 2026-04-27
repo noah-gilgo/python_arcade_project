@@ -114,8 +114,8 @@ class BattleController:
         self.fight_box_sprites_array = []
         self.fight_crit_box_sprites_array = []
         self.icon_and_press_sprites_array = []
-        self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
         self.blue_divider_lines_sprites_array = []
+        self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
         self.fight_hit_markers = []
 
         # All of the clocks used by the BattleController.
@@ -340,6 +340,9 @@ class BattleController:
         if len(self.icon_and_press_sprites_array) > 0:
             for sprite in self.icon_and_press_sprites_array:
                 sprite.kill()
+        if len(self.blue_divider_lines_sprites_array) > 0:
+            for sprite in self.blue_divider_lines_sprites_array:
+                sprite.kill()
 
         self.start_fight_bar_clock()
 
@@ -444,6 +447,11 @@ class BattleController:
             sprite.kill()
         for sprite in self.blue_divider_lines_sprites_array:
             sprite.kill()
+
+        self.fight_box_sprites_array.clear()
+        self.fight_crit_box_sprites_array.clear()
+        self.icon_and_press_sprites_array.clear()
+        self.blue_divider_lines_sprites_array.clear()
 
     def attempt_to_hit_enemy(self):
         """
@@ -781,7 +789,9 @@ class BattleController:
         else:
             self.state = BattleState.ENEMY_ATTACK
             self.load_bullet_board()
+            self.despawn_fight_bars()
             self.battle_textbox.load_dialog(TextBoxDialog(text=""))
+            return
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """
