@@ -4,11 +4,13 @@ from arcade import Sprite, Texture
 from arcade.types import Color
 
 import character
+import default_data
 import graphics_objects
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
 from graphics_methods import make_texture_solid_color
 from items.armor_items import ArmorItem
+from items.weapon_items import WeaponItem
 from spells import Spell
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -185,6 +187,20 @@ class PlayerCharacter(character.Character):
         if self._animations_by_state["battle_defend"]:
             self.set_animation_state("battle_idle")
 
+    def equip_weapon(self, weapon: WeaponItem | None):
+        """
+        Equips the supplied weapon to the weapon slot.
+        :param weapon: The weapon being equipped.
+        :return: The weapon that was previously in the slot, if there was weapon in said slot.
+        """
+        weapon_previously_in_slot = None
+        if self.weapon_slot:
+            weapon_previously_in_slot = self.weapon_slot
+        self.weapon_slot = weapon
+
+        # If there was already armor in that slot, return it.
+        return weapon_previously_in_slot
+
     def equip_armor_to_slot_1(self, armor: ArmorItem | None):
         """
         Equips the supplied armor to armor slot 1.
@@ -232,6 +248,8 @@ class PlayerCharacter(character.Character):
                     if target.element_id in element.weak_to:
                         damage_dealt *= 1.5
         """
+        pass
+
 
     def damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):
         """
