@@ -255,6 +255,7 @@ class BattleController:
 
     def load_bullet_board(self):
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
+        print("bullet board loaded")
         self.bullet_board.load_bullet_board(self)
         self.soul.move_to_bullet_board()
 
@@ -804,11 +805,29 @@ class BattleController:
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
         self.stop_enemy_attack_clock()
+        # self.change_all_player_icons_to_default()
+        # self.set_animation_state_of_all_players("battle_idle")
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """
         self.battle_player_character_cards.children[self.current_player_index].change_icon(icon_path)
 
+    def change_all_player_icons_to_default(self):
+        """ Changes the icon of all players to their default icon. """
+        for battle_player_character_card in self.battle_player_character_cards.children:
+            battle_player_character_card.change_icon()
+
+    def set_animation_state_of_all_players(self, animation_state: str):
+        """
+        Sets the animation state of all players to the provided animation state. Defaults to battle idle.
+        :param animation_state: The animation state to give the players.
+        :return: None
+        """
+        if not animation_state:
+            animation_state = "battle_idle"
+
+        for player in self.players:
+            player.set_animation_state(animation_state)
 
 class Command:
     """ The default command object. Represents the Command design pattern. """

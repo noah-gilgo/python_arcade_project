@@ -339,8 +339,10 @@ class Soul(arcade.Sprite):
                 # Make the soul invisible
                 self.visible = False
 
-                # Select the first character in the battle UI.
+                # Reverts the battle UI to its original state.z
                 self.controller.move_to_first_player_card()
+                self.controller.change_all_player_icons_to_default()
+                self.controller.set_animation_state_of_all_players("battle_idle")
 
         else: # The default movement for the soul.
             if self.soul_movement_enabled:
