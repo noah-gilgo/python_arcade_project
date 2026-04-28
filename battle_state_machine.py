@@ -119,8 +119,14 @@ class BattleController:
         self.fight_hit_markers = []
 
         # All of the clocks used by the BattleController.
+        # The clock used by the fight bars.
         self.fight_bar_clock = 0.0
         self.fight_bar_clock_is_updating = False
+
+        # The timer used by the enemy attack.
+        self.enemy_attack_time = 0.0
+        self.enemy_attack_duration = 6.0
+        self.enemy_is_attacking = False
 
         self.battle_idle_callback = None
         self.battle_idle_target = None
@@ -130,8 +136,8 @@ class BattleController:
         self.soul = Soul(self.players[0], self)
         self.sprites_and_effects_collection.soul_sprites.append(self.soul)
 
-        self.sprites_and_effects_collection.effects.append(RainingDiamondBulletPattern(self.sprites_and_effects_collection,
-                                                                                       self.bullet_board))
+        #self.sprites_and_effects_collection.effects.append(RainingDiamondBulletPattern(self.sprites_and_effects_collection,
+        #                                                                               self.bullet_board))
 
         # Tracks which keys are pressed down. Used for situations where controls requires multiple keys.
         self.z_pressed = False
@@ -208,11 +214,19 @@ class BattleController:
         if self.fight_bar_clock_is_updating:
             self.fight_bar_clock += delta_time
 
+        if self.enemy_is_attacking:
+            self.enemy_attack_time += delta_time
+
+            if self.enemy_attack_time > self.enemy_attack_duration:
+                self.enemy_is_attacking = False
+                self.end_enemy_attack()
+
     def start_fight_bar_clock(self):
         """
         Starts the clock used to move the attack bars used during the FIGHT act.
         :return: None
         """
+        self.fight_bar_clock = 0.0
         self.fight_bar_clock_is_updating = True
 
     def stop_fight_bar_clock(self):
@@ -223,14 +237,32 @@ class BattleController:
         self.fight_bar_clock_is_updating = False
         self.fight_bar_clock = 0.0
 
+    def start_enemy_attack_clock(self):
+        """
+        Starts the clock used to track the elapsed time of the enemy attack.
+        :return: None
+        """
+        self.enemy_attack_time = 0.0
+        self.enemy_is_attacking = True
+
+    def stop_enemy_attack_clock(self):
+        """
+        Stops the clock used to track the elapsed time of the enemy attack.
+        :return: None
+        """
+        self.enemy_attack_time = 0.0
+        self.enemy_is_attacking = False
+
     def load_bullet_board(self):
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
         self.bullet_board.load_bullet_board(self)
-        self.soul.move_to_bullet_board(self.bullet_board)
+        self.soul.move_to_bullet_board()
 
     def unload_bullet_board(self):
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
+        print("bullet board unloaded")
         self.bullet_board.unload_bullet_board(self)
+        self.soul.move_to_player_with_soul()
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -323,6 +355,23 @@ class BattleController:
             self.menu_move_sound.play()
             self.battle_player_character_cards.children[
                 self.current_player_index].change_icon()
+
+    def move_to_first_player_card(self):
+        """
+        Moves to the first player card in the HUD. Executed after the enemy turn completes.
+        :return:
+        """
+        if len(self.players) > 0:
+            self.state = BattleState.PLAYER_COMMAND
+
+            self.current_player_index = 0
+            self.battle_player_character_cards.children[self.current_player_index].focus()
+            self.focus_stack.push(
+                self.battle_player_character_cards,
+                self.battle_player_character_cards.children[self.current_player_index].children[0],
+                self.state,
+                5
+            )
 
     def spawn_fight_bars(self, players_fighting: list[PlayerCharacter], enemy_targets: list[character.Character]):
         """
@@ -530,12 +579,10 @@ class BattleController:
         target.receive_damage(damage_dealt, actor)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
-        """
         if is_crit:
             self.add_tp_to_meter(6.0)
         else:
             self.add_tp_to_meter(attack_damage_multiplier * 4.0)
-        """
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):
@@ -728,11 +775,35 @@ class BattleController:
             self.spawn_fight_bars(fighting_players, enemy_targets)
             return
         else:
-            self.state = BattleState.ENEMY_ATTACK
-            self.load_bullet_board()
-            self.despawn_fight_bars()
-            self.battle_textbox.load_dialog(TextBoxDialog(text=""))
+            # Start the enemy attack.
+            self.start_enemy_attack()
             return
+
+    def start_enemy_attack(self):
+        """
+        Starts the enemy attack.
+        :return: None
+        """
+        print("enemy attack started")
+        # Clear any text from the battle textbox.
+        self.battle_textbox.load_dialog(TextBoxDialog(text=""))
+
+        # Begin the enemy attack
+        self.state = BattleState.ENEMY_ATTACK
+        self.load_bullet_board()
+        self.despawn_fight_bars()
+        self.start_enemy_attack_clock()
+
+    def end_enemy_attack(self):
+        """
+        Ends the enemy attack.
+        :return:
+        """
+        print("enemy attack ended")
+
+        # Return the state of the battle back to the starting state.
+        self.unload_bullet_board()
+        self.stop_enemy_attack_clock()
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """

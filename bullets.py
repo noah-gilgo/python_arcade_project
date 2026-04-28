@@ -80,4 +80,4 @@ class BlackDiamondBullet(Bullet):
         if self.alpha < 255:
             self.alpha = min(self.alpha + (delta_time * 512), 255)
 
-        self.center_y = self.center_y - ((2 * (self.time ** 2) - 1) / 8)
+        self.center_y = self.center_y - ((2 * (self.time ** 2) - 1))

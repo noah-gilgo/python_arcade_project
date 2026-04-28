@@ -35,9 +35,13 @@ class SpritesAndEffectsCollection:
                     effect.draw()
             self.soul_sprites.draw(pixelated=True)
 
+
             """
             for sprite in self.effects_sprites:
                 sprite.draw_hit_box(color=arcade.color.GREEN)
             for sprite in self.soul_sprites:
                 sprite.draw_hit_box(color=arcade.color.GREEN)
+            for sprite in self.bullet_sprites:
+                sprite.draw_hit_box(color=arcade.color.GREEN)
             """
+

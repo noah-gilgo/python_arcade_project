@@ -2,10 +2,10 @@ import random
 
 import arcade
 from arcade import Sprite
+from arcade.geometry import is_point_in_polygon
 from arcade.hitbox import HitBox
 
 import player_character
-from bullet_board import BulletBoard
 
 
 class Soul(arcade.Sprite):
@@ -16,6 +16,8 @@ class Soul(arcade.Sprite):
             center_y=player_with_soul.center_y,
             scale=2.0
         )
+
+        self.player_with_soul = player_with_soul
 
         self.controller = battle_controller
 
@@ -48,14 +50,14 @@ class Soul(arcade.Sprite):
 
         self.hit_box = HitBox(
             points=[
-                (-4.14, -10.0),
-                ( 4.14, -10.0),
-                (10.0, -4.14),
-                (10.0,  4.14),
-                ( 4.14, 10.0),
-                (-4.14, 10.0),
-                (-10.0,  4.14),
-                (-10.0, -4.14),
+                (-5.382, -13.0),
+                (5.382, -13.0),
+                (13.0, -5.382),
+                (13.0, 5.382),
+                (5.382, 13.0),
+                (-5.382, 13.0),
+                (-13.0, 5.382),
+                (-13.0, -5.382),
             ],
             position=(
                 self.center_x,
@@ -68,7 +70,7 @@ class Soul(arcade.Sprite):
         self.visible = False
 
         # Variables used by the animation that moves the soul to the center of the bullet board.
-        self.player_with_soul_coordinates = (self.center_x, self.center_y)
+        self.player_with_soul_coordinates = (self.player_with_soul.center_x, self.player_with_soul.center_y)
         self.bullet_board_center_coordinates = (0.0, 0.0)
         self.moving_soul_to_bullet_board = False
         self.moving_soul_to_bullet_board_animation_duration = 0.6
@@ -76,8 +78,16 @@ class Soul(arcade.Sprite):
         self.total_distance_to_move_soul_y = 1
         self.moving_soul_to_bullet_board_animation_time = 0.0
 
+        # Variables used by the animation that moves the soul back into its owner player character.
+        self.moving_soul_to_player = False
+        self.moving_soul_to_player_animation_duration = 0.6
+        self.moving_soul_to_player_animation_time = 0.0
+
         # Controls whether or not the player can move the soul by pressing the directional buttons.
         self.soul_movement_enabled = False
+
+        # Tracks whether or not the soul is meant to be inside the bullet board.
+        self.soul_should_be_in_bullet_board = False
 
         # The default invincibility duration after the soul gets hit.
         self.invincibility_after_taking_damage_duration = 1.2
@@ -105,15 +115,27 @@ class Soul(arcade.Sprite):
     def disable_soul_movement(self):
         self.soul_movement_enabled = False
 
-    def move_to_bullet_board(self, bullet_board: BulletBoard):
+    def move_to_bullet_board(self):
+        # Move the soul from it's owner to the bullet board.
         self.moving_soul_to_bullet_board = True
         self.moving_soul_to_bullet_board_animation_time = 0.0
-        self.bullet_board_center_coordinates = bullet_board.get_center_coordinates()
+        self.bullet_board_center_coordinates = self.controller.bullet_board.get_center_coordinates()
         self.visible = True
         self.total_distance_to_move_soul_x = self.bullet_board_center_coordinates[0] - \
-                                             self.player_with_soul_coordinates[0]
+                                             self.player_with_soul.center_x
         self.total_distance_to_move_soul_y = self.bullet_board_center_coordinates[1] - \
-                                             self.player_with_soul_coordinates[1]
+                                             self.player_with_soul.center_y
+
+    def move_to_player_with_soul(self):
+        # Move the soul from its current position back to its owner.
+        self.soul_should_be_in_bullet_board = False
+        self.moving_soul_to_player = True
+        self.moving_soul_to_player_animation_time = 0.0
+        self.total_distance_to_move_soul_x = self.player_with_soul.center_x - self.center_x
+        self.total_distance_to_move_soul_y = self.player_with_soul.center_y - self.center_y
+
+        # Prevent the player from manually moving the soul
+        self.soul_movement_enabled = False
 
     def move_soul_with_player_controls(self):
         # Calculate speed based on the keys pressed
@@ -134,8 +156,14 @@ class Soul(arcade.Sprite):
         elif self.controller.right_pressed and not self.controller.left_pressed:
             self.change_x = movement_speed
 
-        self.center_x += self.change_x
-        self.center_y += self.change_y
+        # Ensure that the soul is inside the bullet board
+        # TODO: A version of this will probably have to be implemented for moving the bullet board.
+        if self.soul_should_be_in_bullet_board:
+            collision_check = self.check_if_new_soul_position_is_inside_bullet_board(self.change_x, self.change_y)
+            if collision_check[0]:  # New x coordinate is okay
+                self.center_x += self.change_x
+            if collision_check[1]:  # New y coordinate is okay
+                self.center_y += self.change_y
 
     def check_if_soul_is_colliding_with_bullets(self, delta_time):
         """
@@ -147,7 +175,7 @@ class Soul(arcade.Sprite):
         """
 
         # Only check if bullets are colliding with the soul if the soul is not invincible.
-        if self.invincibility_after_taking_damage_time <= 0.0:
+        if self.soul_should_be_in_bullet_board and self.invincibility_after_taking_damage_time <= 0.0:
             bullets_colliding = self.collides_with_list(self.controller.sprites_and_effects_collection.bullet_sprites)
             if len(bullets_colliding) > 0:
                 self.invincibility_after_taking_damage_time = self.invincibility_after_taking_damage_duration
@@ -220,7 +248,7 @@ class Soul(arcade.Sprite):
         touching_bullets = False
 
         # Only check if bullets are colliding with the graze area if the soul is not invincible.
-        if self.invincibility_after_taking_damage_time <= 0.0:
+        if self.soul_should_be_in_bullet_board and self.invincibility_after_taking_damage_time <= 0.0:
             bullets_colliding = self.graze_sprite.collides_with_list(self.controller.sprites_and_effects_collection.bullet_sprites)
             if len(bullets_colliding) > 0:
                 touching_bullets = True
@@ -249,8 +277,33 @@ class Soul(arcade.Sprite):
             self.graze_hitbox_touching_grazed_bullets_after_leaving_them = False
             self.set_texture_for_graze_sprite()
 
+    def check_if_new_soul_position_is_inside_bullet_board(self, change_x: float, change_y: float):
+        """
+        Checks if any of the points in the soul hitbox are outside the bullet board hitbox.
+        This should ideally work regardless of the shape of the bullet board hitbox.
+        :param change_x: The change in the x coordinate to be made to the soul.
+        :param change_y: The change in the y coordinate to be made to the soul.
+        :return: A bool tuple representing if the x change is okay and/or the y change is okay.
+        """
+        x_change_is_okay = True
+        y_change_is_okay = True
+
+        for point in self.hit_box.points:
+            old_x = point[0] + self.center_x
+            old_y = point[1] + self.center_y
+            new_x = old_x + change_x
+            new_y = old_y + change_y
+
+            if not is_point_in_polygon(new_x, old_y, self.controller.bullet_board.bullet_board_sprite.hit_box.points):
+                x_change_is_okay = False
+            if not is_point_in_polygon(old_x, new_y, self.controller.bullet_board.bullet_board_sprite.hit_box.points):
+                y_change_is_okay = False
+
+        return x_change_is_okay, y_change_is_okay
+
     def update(self, delta_time):
-        if self.moving_soul_to_bullet_board: # If the soul is being moved to/from the bullet board
+        # If the soul is being moved to/from the bullet board
+        if self.moving_soul_to_bullet_board:
             self.moving_soul_to_bullet_board_animation_time += delta_time
             distance_ratio = delta_time / self.moving_soul_to_bullet_board_animation_duration
             distance_to_move_soul_x = self.total_distance_to_move_soul_x * distance_ratio
@@ -262,12 +315,38 @@ class Soul(arcade.Sprite):
                 self.center_x = self.bullet_board_center_coordinates[0]
                 self.center_y = self.bullet_board_center_coordinates[1]
                 self.moving_soul_to_bullet_board = False
+
+                # Enable player soul movement
                 self.enable_soul_movement()
+
+                # Indicate that the soul should be inside the bullet board
+                self.soul_should_be_in_bullet_board = True
+
+        # If the soul is being moved back to the player
+        if self.moving_soul_to_player:
+            self.moving_soul_to_player_animation_time += delta_time
+            distance_ratio = delta_time / self.moving_soul_to_player_animation_duration
+            distance_to_move_soul_x = self.total_distance_to_move_soul_x * distance_ratio
+            distance_to_move_soul_y = self.total_distance_to_move_soul_y * distance_ratio
+            self.center_x += distance_to_move_soul_x
+            self.center_y += distance_to_move_soul_y
+            if self.moving_soul_to_player_animation_time >= self.moving_soul_to_player_animation_duration:
+                # Terminate the soul movement animation
+                self.center_x = self.player_with_soul.center_x
+                self.center_y = self.player_with_soul.center_y
+                self.moving_soul_to_player = False
+
+                # Make the soul invisible
+                self.visible = False
+
+                # Select the first character in the battle UI.
+                self.controller.move_to_first_player_card()
+
         else: # The default movement for the soul.
             if self.soul_movement_enabled:
                 self.move_soul_with_player_controls()
 
-            # Perform collision checking
+            # Perform bullet collision checking with soul/graze area
             self.check_if_soul_is_colliding_with_bullets(delta_time)
             self.check_if_graze_area_is_colliding_with_bullets(delta_time)
 

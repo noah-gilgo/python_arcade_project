@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw
 from arcade import Texture, Sprite
+from arcade.hitbox import HitBox
 
 import settings
 
@@ -51,6 +52,16 @@ class BulletBoard:
 
         self.is_terminated = False
 
+        # Load the hitbox
+        self.bullet_board_sprite.hit_box = HitBox(
+            points=[
+                (self.bullet_board_sprite.left, self.bullet_board_sprite.top),
+                (self.bullet_board_sprite.right, self.bullet_board_sprite.top),
+                (self.bullet_board_sprite.right, self.bullet_board_sprite.bottom),
+                (self.bullet_board_sprite.left, self.bullet_board_sprite.bottom)
+            ]
+        )
+
     def get_center_coordinates(self):
         """ Get the center coordinates of the bullet board. """
         return (self.bullet_board_sprite.center_x, self.bullet_board_sprite.center_y)
@@ -100,7 +111,7 @@ class BulletBoard:
     def load_bullet_board(self, controller):
         """ Loads the bullet board sprite. """
         self.load_bullet_board_animation_playing = True
-        # TODO: Load a hitbox the same size as the bullet board.
+
         if self not in controller.sprites_and_effects_collection.effects:
             controller.sprites_and_effects_collection.effects.append(self)
         if self.bullet_board_sprites_not_loaded:
@@ -117,7 +128,6 @@ class BulletBoard:
         for sprite in self.bullet_board_loading_animation_sprites:
             sprite.alpha = 128
 
-        # TODO: Unload the bullet board hitbox.
         if self.bullet_board_sprites_not_loaded:
             for sprite in self.bullet_board_loading_animation_sprites:
                 controller.sprites_and_effects_collection.effects_sprites.append(sprite)
