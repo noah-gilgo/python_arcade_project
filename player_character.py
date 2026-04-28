@@ -163,6 +163,10 @@ class PlayerCharacter(character.Character):
 
             self.spells = spells
 
+        # Set the animation state to battle_idle, if it exists
+        if "battle_idle" in self._animations_by_state:
+            self.set_animation_state("battle_idle")
+
     def is_player_defending(self):
         """
         Returns whether or not the player is defending.
@@ -295,8 +299,10 @@ class PlayerCharacter(character.Character):
         # Play the attack animation/sound
         self.set_animation_to_not_idle(animation_state="battle_attack", duration=1.0)
 
-        damage_dealt = int(self.attack * 20 * attack_damage_multiplier) # This is not exactly how it's calculated in the
-        if self.weapon_slot.element_id:                                 # original game, but it's close
+        attack = self.attack + self.weapon_slot.attack_points + self.armor_slot_1.attack_points + self.armor_slot_2.attack_points
+
+        damage_dealt = int(attack * 20 * attack_damage_multiplier) # This is not exactly how it's calculated in the
+        if self.weapon_slot.element_id:                            # original game, but it's close
             for element in default_data.ELEMENTAL_PAIRS:
                 if element.element_id == self.weapon_slot.element_id:
                     if enemy.element_id in element.resistant_to:

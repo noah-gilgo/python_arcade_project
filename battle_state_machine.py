@@ -576,7 +576,7 @@ class BattleController:
         if target not in self.enemies:
             target = self.enemies[0]
 
-        damage_dealt = int(actor.attack * 10 * attack_damage_multiplier)
+        damage_dealt = actor.attack_enemy(target, attack_damage_multiplier)
         target.receive_damage(damage_dealt, actor)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.

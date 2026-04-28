@@ -153,7 +153,6 @@ class GameView(arcade.View):
         self.player_one.equip_weapon(JingleBlade())
         self.player_one.equip_armor_to_slot_1(PrincessRbn())
         self.player_one.equip_armor_to_slot_2(TennaTie())
-        self.player_one.set_animation_state("battle_idle")
         self.player_characters.append(self.player_one)
 
         self._animation_states = self.player_one.get_valid_animation_states()
@@ -177,7 +176,6 @@ class GameView(arcade.View):
         self.player_two.equip_weapon(JusticeAxe())
         self.player_two.equip_armor_to_slot_1(ShadowMantle())
         self.player_two.equip_armor_to_slot_2(Jevilstail())
-        self.player_two.set_animation_state("battle_idle")
         self.player_characters.append(self.player_two)
 
 
@@ -199,7 +197,6 @@ class GameView(arcade.View):
         self.player_three.equip_weapon(ScarfMark())
         self.player_three.equip_armor_to_slot_1(WhiteRibbon())
         self.player_three.equip_armor_to_slot_2(WaferGuard())
-        self.player_three.set_animation_state("battle_idle")
         self.player_characters.append(self.player_three)
 
 
@@ -257,7 +254,6 @@ class GameView(arcade.View):
         self.player_four.equip_weapon(SnowRing())
         self.player_four.equip_armor_to_slot_1(RoyalPin())
         self.player_four.equip_armor_to_slot_2(MysticBand())
-        self.player_four.set_animation_state("battle_idle")
         self.player_characters.append(self.player_four)
 
         self.player_four.get_valid_animation_states()
@@ -266,24 +262,19 @@ class GameView(arcade.View):
         self.enemy_one = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                      center_x=self._unholy_arc[0][0], center_y=self._unholy_arc[0][1],
                                                      enemies_list=self.enemies)
-        self.enemy_one.set_animation_state("battle_idle")
         self.enemies.append(self.enemy_one)
 
         self.enemy_two = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                      center_x=self._unholy_arc[1][0], center_y=self._unholy_arc[1][1],
                                                      enemies_list=self.enemies)
-        self.enemy_two.set_animation_state("battle_idle")
         self.enemy_two.mercy = 100
         self.enemies.append(self.enemy_two)
 
         self.enemy_three = non_player_character.Rudinn(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                        center_x=self._unholy_arc[2][0], center_y=self._unholy_arc[2][1],
                                                        enemies_list=self.enemies)
-        self.enemy_three.set_animation_state("battle_idle")
         self.enemy_three.tired = 100
         self.enemies.append(self.enemy_three)
-
-        # self._animation_states = self.enemy_one.get_valid_animation_states()
 
         # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", True)

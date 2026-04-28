@@ -65,6 +65,10 @@ class NonPlayerCharacter(character.Character):
         # Meant to contain all of the random dialogue that non player characters say right before they do battle
         self.witty_banter = []
 
+        # Set the animation state to battle_idle, if it exists
+        if "battle_idle" in self._animations_by_state:
+            self.set_animation_state("battle_idle")
+
     def get_hp_percentage_as_string(self):
         """ Returns the whole number HP percentage of the NPC. """
         return str(int((self.hp / self.max_hp) * 100)) + "%"
