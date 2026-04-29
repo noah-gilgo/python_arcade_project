@@ -1118,75 +1118,91 @@ class LeftCommand(Command):
 class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """
 
-    def execute(self):
+    def attempt_to_move_up_in_ui(self):
+        """
+        Attempt to move focus up in a widget container.
+        :return: The newly focused widget above the previously focused widget.
+        """
         previously_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
         if self.controller.focus_stack.get_highest_member().move_up():
             currently_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
-            match self.controller.state:
-                case BattleState.PLAYER_MAGIC_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    )
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ATTACK_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_SPARE_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ITEM_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                    )
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ITEM_PLAYER_SELECT:
-                    self.controller.move_focus_between_players_in_player_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
+            self.controller.menu_move_sound.play()
+            return previously_focused_widget, currently_focused_widget
+        return None
+
+    def execute(self):
+        match self.controller.state:
+            case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
+                 BattleState.PLAYER_SPARE_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
+                self.controller.move_focus_between_enemies_in_enemy_select(
+                    previously_focused_widget,
+                    currently_focused_widget
+                )
+            case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
+
+                self.controller.move_focus_between_players_in_player_select(
+                    previously_focused_widget,
+                    currently_focused_widget
+                )
+            case BattleState.PLAYER_MAGIC_SELECT:
+                self.attempt_to_move_up_in_ui()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
+            case BattleState.PLAYER_ITEM_SELECT:
+                self.attempt_to_move_up_in_ui()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                )
 
 
 class DownCommand(Command):
     """
-    A command object representing the user pressing down (usually pressing the down arrow key in the original game.)
+    A command object representing the user pressing down
+    (usually pressing the down arrow key in the original game.)
     """
 
-    def execute(self):
+    def attempt_to_move_down_in_ui(self):
+        """
+        Attempt to move focus down in a widget container.
+        """
         previously_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
         if self.controller.focus_stack.get_highest_member().move_down():
             currently_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
-            match self.controller.state:
-                case BattleState.PLAYER_MAGIC_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    )
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ATTACK_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_SPARE_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ITEM_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                    )
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ITEM_PLAYER_SELECT:
-                    self.controller.move_focus_between_players_in_player_select(previously_focused_widget,
-                                                                                currently_focused_widget)
-                    self.controller.menu_move_sound.play()
+            self.controller.menu_move_sound.play()
+            return previously_focused_widget, currently_focused_widget
+        return None
+
+    def execute(self):
+        match self.controller.state:
+            case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
+                 BattleState.PLAYER_SPARE_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
+                self.controller.move_focus_between_enemies_in_enemy_select(
+                    previously_focused_widget,
+                    currently_focused_widget
+                )
+            case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
+
+                self.controller.move_focus_between_players_in_player_select(
+                    previously_focused_widget,
+                    currently_focused_widget
+                )
+            case BattleState.PLAYER_MAGIC_SELECT:
+                self.attempt_to_move_down_in_ui()
+
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
+            case BattleState.PLAYER_ITEM_SELECT:
+                self.attempt_to_move_down_in_ui()
+
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                )
 
 def set_animation_state_to_battle_idle(self, target: character.Character):
     """

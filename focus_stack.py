@@ -75,19 +75,23 @@ class FocusStackMember:
                 else:
                     return False
             case Direction.UP:
-                if self.row_count > 1:
+                if self.row_count > 1 or wrap:
                     new_index = self.focused_widget_index - self.column_count
                     if new_index >= 0 or wrap:
-                        self.focused_widget_index = new_index
+                        self.focused_widget_index = new_index % len(self.widgets)
                     else:
                         return False
+                else:
+                    return False
             case Direction.DOWN:
                 if self.row_count > 1 or wrap:
                     new_index = self.focused_widget_index + self.column_count
                     if new_index < len(self.widgets):
-                        self.focused_widget_index = new_index
+                        self.focused_widget_index = new_index % len(self.widgets)
                     else:
                         return False
+                else:
+                    return False
         old_focused_widget.focused = False
         self.focused_widget = self.widgets[self.focused_widget_index]
         self.focused_widget.focused = True

@@ -293,7 +293,7 @@ class PlayerCharacter(character.Character):
         Makes the player character attack the supplied non-player character.
         :param enemy: The enemy to be attacked.
         :param attack_damage_multiplier: The attack multiplier returned by the fight bar in the FIGHT act.
-        :return: None
+        :return: The base damage dealt to the enemy before their defense/elemental resistances come into play
         """
 
         # Play the attack animation/sound
