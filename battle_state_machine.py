@@ -1203,11 +1203,3 @@ class DownCommand(Command):
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().item
                 )
-
-def set_animation_state_to_battle_idle(self, target: character.Character):
-    """
-    Scheduled cancellable function that sets the target's animation state to battle_idle.
-    :param target: The target having its animation state changed.
-    :return:
-    """
-    target.set_animation_state("battle_idle")
