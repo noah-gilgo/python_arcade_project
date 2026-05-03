@@ -350,7 +350,9 @@ class Soul(arcade.Sprite):
 
             # Perform bullet collision checking with soul/graze area
             self.check_if_soul_is_colliding_with_bullets(delta_time)
-            self.check_if_graze_area_is_colliding_with_bullets(delta_time)
+
+        # Update the graze sprite and check if it's colliding with bullets
+        self.check_if_graze_area_is_colliding_with_bullets(delta_time)
 
         # Set the center of the graze sprite to the center of the soul sprite
         self.graze_sprite.center_x = self.center_x

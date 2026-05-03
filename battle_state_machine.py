@@ -791,7 +791,6 @@ class BattleController:
         Starts the enemy attack.
         :return: None
         """
-        print("enemy attack started")
         # Clear any text from the battle textbox.
         self.battle_textbox.load_dialog(TextBoxDialog(text=""))
 
