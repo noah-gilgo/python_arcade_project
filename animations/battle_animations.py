@@ -365,8 +365,8 @@ class FightHitBar(SingleSpriteAnimation):
             if self.time_since_hit_registered > 1:
                 self.terminate_animation()
 
-        if len(self.controller.fight_hit_markers) == 0 and not self.load_bullet_board_called:
-            self.load_bullet_board_called = True
+        if len(self.controller.fight_hit_markers) == 0 and not self.controller.load_bullet_board_called_for_this_turn:
+            self.controller.load_bullet_board_called_for_this_turn = True
             pyglet.clock.schedule_once(lambda dt: self.controller.start_enemy_attack(), 1.5)
 
     def get_bar_sprite(self) -> Sprite:

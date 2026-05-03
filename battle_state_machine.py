@@ -125,19 +125,23 @@ class BattleController:
 
         # The timer used by the enemy attack.
         self.enemy_attack_time = 0.0
-        self.enemy_attack_duration = 6.0
+        self.enemy_attack_duration = 10.0
         self.enemy_is_attacking = False
 
         self.battle_idle_callback = None
         self.battle_idle_target = None
         self.enemy_hit_sound_player = None
 
+        # The bullet board used during the enemy attack.
         self.bullet_board = BulletBoard()
+
+        # The SOUL the player moves around during enemy attacks.
         self.soul = Soul(self.players[0], self)
         self.sprites_and_effects_collection.soul_sprites.append(self.soul)
 
-        #self.sprites_and_effects_collection.effects.append(RainingDiamondBulletPattern(self.sprites_and_effects_collection,
-        #                                                                               self.bullet_board))
+        # A variable tracking whether the bullet board has been loaded for the current turn.
+        # Used by logic in the HitBar class used to load an enemy attack after the player finishes the FIGHT act.
+        self.load_bullet_board_called_for_this_turn = False
 
         # Tracks which keys are pressed down. Used for situations where controls requires multiple keys.
         self.z_pressed = False
@@ -580,10 +584,12 @@ class BattleController:
         target.receive_damage(damage_dealt, actor)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
+        """
         if is_crit:
             self.add_tp_to_meter(6.0)
         else:
             self.add_tp_to_meter(attack_damage_multiplier * 4.0)
+        """
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):
@@ -794,6 +800,11 @@ class BattleController:
         self.load_bullet_board()
         self.despawn_fight_bars()
         self.start_enemy_attack_clock()
+        self.sprites_and_effects_collection.effects.append(
+            RainingDiamondBulletPattern(self.sprites_and_effects_collection,
+                                        self.bullet_board))
+
+        self.load_bullet_board_called_for_this_turn = True
 
     def end_enemy_attack(self):
         """
@@ -805,6 +816,7 @@ class BattleController:
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
         self.stop_enemy_attack_clock()
+        self.load_bullet_board_called_for_this_turn = False
         # self.change_all_player_icons_to_default()
         # self.set_animation_state_of_all_players("battle_idle")
 
@@ -828,6 +840,16 @@ class BattleController:
 
         for player in self.players:
             player.set_animation_state(animation_state)
+
+    def reset_player_animation_states_before_next_turn(self):
+        """
+        Resets all non-downed players to have the battle_idle animation state.
+        :return: None
+        """
+
+        for player in self.players:
+            if player.current_animation_state != "battle_downed":
+                player.set_animation_state("battle_idle")
 
 class Command:
     """ The default command object. Represents the Command design pattern. """

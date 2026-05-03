@@ -84,9 +84,6 @@ class BulletBoard:
                 sprite_index -= 1
 
             if self.time >= self.load_bullet_board_animation_total_duration * 1.6:
-                # for sprite in self.bullet_board_loading_animation_sprites[1:]:
-                #     sprite.visible = False
-                # self.bullet_board_sprite.alpha = 255
                 self.load_bullet_board_animation_playing = False
                 self.time = 0.0
 

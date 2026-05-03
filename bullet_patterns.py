@@ -55,7 +55,7 @@ class RainingDiamondBulletPattern(BulletPattern):
 
         self.bullet_board = bullet_board
         self.time_since_last_diamond_spawned = 0.0
-        self.diamond_frequency = 0.5
+        self.diamond_frequency = 0.2
 
     def update_animation(self, delta_time: float):
         super().update_animation(delta_time)

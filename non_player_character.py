@@ -6,6 +6,7 @@ import default_data
 import graphics_objects
 from animations.battle_animations import EnemyFleeingAnimation, StrikeEnemyAnimation, NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
+from bullet_patterns import RainingDiamondBulletPattern
 from enemy_attacks import EnemyIndividualAttack, DefaultAttack
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -76,6 +77,14 @@ class NonPlayerCharacter(character.Character):
     def get_mercy_percentage_as_string(self):
         """ Returns the whole number HP percentage of the NPC. """
         return str(self.mercy) + "%"
+
+    def execute_attack(self, frequency: float = 1.0):
+        """
+        Executes an attack depending on the number of other enemies in the battle.
+        :param frequency: Can modify the frequency of the attack's bullet spawn rate.
+        :return: None
+        """
+        pass
 
     def receive_damage(self, damage_dealt: float, attacker):
         damage_dealt_text = str(damage_dealt)
@@ -155,3 +164,11 @@ class Rudinn(NonPlayerCharacter):
             attacks=[DefaultAttack],
             enemies_list=enemies_list
         )
+
+    def execute_attack(self, frequency: float = 1.0):
+        """
+        Executes an attack depending on the number of other enemies in the battle.
+        :param frequency: Can modify the frequency of the attack's bullet spawn rate.
+        :return: None
+        """
+

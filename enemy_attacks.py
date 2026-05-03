@@ -39,7 +39,7 @@ class DefaultAttack(EnemyIndividualAttack):
     """
     def __init__(self, attacker, attackers: list, sprites_and_effects_collection):
         super().__init__(attacker, attackers, sprites_and_effects_collection)
-        self.bullet_patterns = [RainingDiamondBulletPattern()]
+        self.bullet_patterns = [RainingDiamondBulletPattern(sprites_and_effects_collection)]
 
     def update_animation(self, delta_time: float):
         super().update_animation(delta_time)

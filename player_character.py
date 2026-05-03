@@ -19,11 +19,11 @@ PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 
 class PlayerCharacter(character.Character):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection,
-                 scale: float, center_x: float, center_y: float, angle: float,
-                 sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int, magic: int,
-                 battle_ui_color: Color, battle_ui_icon_color: Color, fight_box_color: Color = arcade.color.GRAY,
-                 fight_crit_box_color: Color = arcade.color.WHITE,
-                 element_id: int = 0, knows_magic: bool = True, spells: list[Spell] = []):
+                 scale: float, center_x: float, center_y: float, angle: float, sprite_folder_name: str, name: str,
+                 max_hp: int, attack: int, defense: int, magic: int, battle_ui_color: Color,
+                 battle_ui_icon_color: Color, fight_box_color: Color = arcade.color.GRAY,
+                 fight_crit_box_color: Color = arcade.color.WHITE, element_id: int = 0, knows_magic: bool = True,
+                 spells: list[Spell] = []):
 
         self._sprite_pack_path = PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -301,7 +301,7 @@ class PlayerCharacter(character.Character):
 
         attack = self.attack + self.weapon_slot.attack_points + self.armor_slot_1.attack_points + self.armor_slot_2.attack_points
 
-        damage_dealt = int(attack * 20 * attack_damage_multiplier) # This is not exactly how it's calculated in the
+        damage_dealt = int(attack * 10 * attack_damage_multiplier) # This is not exactly how it's calculated in the
         if self.weapon_slot.element_id:                            # original game, but it's close
             for element in default_data.ELEMENTAL_PAIRS:
                 if element.element_id == self.weapon_slot.element_id:

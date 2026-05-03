@@ -342,7 +342,7 @@ class Soul(arcade.Sprite):
                 # Reverts the battle UI to its original state.z
                 self.controller.move_to_first_player_card()
                 self.controller.change_all_player_icons_to_default()
-                self.controller.set_animation_state_of_all_players("battle_idle")
+                self.controller.reset_player_animation_states_before_next_turn()
 
         else: # The default movement for the soul.
             if self.soul_movement_enabled:
