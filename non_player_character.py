@@ -87,9 +87,9 @@ class NonPlayerCharacter(character.Character):
         The behavior of attacking enemies often depends heavily on the other enemies also present in the battle: combo
         attacks are highly prevalent in Deltarune.
         :param enemies: The enemies currently present in battle.
-        :return: None
+        :return: the duration of the attack (in seconds)
         """
-        pass
+        return 10.0
 
     def terminate_attack(self):
         """
@@ -186,7 +186,7 @@ class Rudinn(NonPlayerCharacter):
         Only execute the Rudinn's attack if it's the first Rudinn on the board.
         Modify the bullet frequency depending on the amount of non_rudinns in the battle.
         :param enemies: The enemies currently present in battle.
-        :return: None
+        :return: The duration of the attack (in seconds)
         """
         # Find the number of unique enemy types in battle.
         enemy_types_in_battle = []
@@ -206,3 +206,5 @@ class Rudinn(NonPlayerCharacter):
                     self.bullet_patterns.append(raining_diamond_bullet_pattern)
                 else:
                     break
+
+        return 10.0

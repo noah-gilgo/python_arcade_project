@@ -799,12 +799,17 @@ class BattleController:
         self.state = BattleState.ENEMY_ATTACK
         self.load_bullet_board()
         self.despawn_fight_bars()
-        self.start_enemy_attack_clock()
 
-        # Execute the enemy attack depending on all the enemies in the battle
+        # Execute the enemy attack depending on all the enemies in the battle and calculate the duration of the attack
+        sum_of_attack_durations = 0.0
         if len(self.enemies) > 0:
             for enemy in self.enemies:
-                enemy.execute_attack(self.enemies)
+                attack_duration = enemy.execute_attack(self.enemies)
+                sum_of_attack_durations += attack_duration
+
+        # Set the duration of the attack and start the attack clock.
+        self.enemy_attack_duration = sum_of_attack_durations / len(self.enemies)
+        self.start_enemy_attack_clock()
 
         self.load_bullet_board_called_for_this_turn = True
 
