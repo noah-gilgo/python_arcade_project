@@ -50,12 +50,13 @@ class BulletPattern:
 
 
 class RainingDiamondBulletPattern(BulletPattern):
-    def __init__(self, sprites_and_effects_collection, bullet_board: BulletBoard, total_duration: float = 999.0):
+    def __init__(self, sprites_and_effects_collection, bullet_board: BulletBoard, total_duration: float = 20.0,
+                 frequency: float = 1.0):
         super().__init__(sprites_and_effects_collection, total_duration)
 
         self.bullet_board = bullet_board
         self.time_since_last_diamond_spawned = 0.0
-        self.diamond_frequency = 0.2
+        self.diamond_frequency = frequency / 4  # The amount of time in seconds between each diamond spawn
 
     def update_animation(self, delta_time: float):
         super().update_animation(delta_time)

@@ -296,7 +296,11 @@ class PlayerCharacter(character.Character):
         :return: The base damage dealt to the enemy before their defense/elemental resistances come into play
         """
 
-        # Play the attack animation/sound
+        # Play the attack animation/sound if the attack was a miss
+        if attack_damage_multiplier == 0.0:
+            self.player_attack_sound.play()
+
+        # Temporarily set the player animation state to battle_idle
         self.set_animation_to_not_idle(animation_state="battle_attack", duration=1.0)
 
         attack = self.attack + self.weapon_slot.attack_points + self.armor_slot_1.attack_points + self.armor_slot_2.attack_points
@@ -310,7 +314,7 @@ class PlayerCharacter(character.Character):
                     if enemy.element_id in element.weak_to:
                         damage_dealt *= 1.5
 
-        return damage_dealt
+        enemy.receive_damage(damage_dealt, self)
 
 
     def receive_damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):

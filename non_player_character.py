@@ -70,6 +70,9 @@ class NonPlayerCharacter(character.Character):
         if "battle_idle" in self._animations_by_state:
             self.set_animation_state("battle_idle")
 
+        # All the active bullet patterns spawned by the enemy
+        self.bullet_patterns = []
+
     def get_hp_percentage_as_string(self):
         """ Returns the whole number HP percentage of the NPC. """
         return str(int((self.hp / self.max_hp) * 100)) + "%"
@@ -78,13 +81,23 @@ class NonPlayerCharacter(character.Character):
         """ Returns the whole number HP percentage of the NPC. """
         return str(self.mercy) + "%"
 
-    def execute_attack(self, frequency: float = 1.0):
+    def execute_attack(self, enemies: list):
         """
         Executes an attack depending on the number of other enemies in the battle.
-        :param frequency: Can modify the frequency of the attack's bullet spawn rate.
+        The behavior of attacking enemies often depends heavily on the other enemies also present in the battle: combo
+        attacks are highly prevalent in Deltarune.
+        :param enemies: The enemies currently present in battle.
         :return: None
         """
         pass
+
+    def terminate_attack(self):
+        """
+        Terminates all bullet patterns spawned by the enemy and kills their sprites.
+        :return: None
+        """
+        for bullet_pattern in self.bullet_patterns:
+            bullet_pattern.terminate_animation()
 
     def receive_damage(self, damage_dealt: float, attacker):
         damage_dealt_text = str(damage_dealt)
@@ -147,7 +160,7 @@ class NonPlayerCharacter(character.Character):
 
 class Rudinn(NonPlayerCharacter):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, enemies_list: list,
-                 center_x: float, center_y: float, scale: float = 4.0, angle: float = 0):
+                 center_x: float, center_y: float, bullet_board, scale: float = 4.0, angle: float = 0):
         super().__init__(
             sprites_and_effects_collection=sprites_and_effects_collection,
             center_x=center_x,
@@ -165,10 +178,31 @@ class Rudinn(NonPlayerCharacter):
             enemies_list=enemies_list
         )
 
-    def execute_attack(self, frequency: float = 1.0):
+        self.bullet_board = bullet_board
+
+    def execute_attack(self, enemies: list[NonPlayerCharacter]):
         """
         Executes an attack depending on the number of other enemies in the battle.
-        :param frequency: Can modify the frequency of the attack's bullet spawn rate.
+        Only execute the Rudinn's attack if it's the first Rudinn on the board.
+        Modify the bullet frequency depending on the amount of non_rudinns in the battle.
+        :param enemies: The enemies currently present in battle.
         :return: None
         """
+        # Find the number of unique enemy types in battle.
+        enemy_types_in_battle = []
+        for enemy in enemies:
+            if type(enemy) not in enemy_types_in_battle:
+                enemy_types_in_battle.append(type(enemy))
 
+        for enemy in enemies:
+            if type(enemy) is Rudinn:
+                if enemy is self:
+                    raining_diamond_bullet_pattern = RainingDiamondBulletPattern(
+                        sprites_and_effects_collection=self.sprites_and_effects_collection,
+                        bullet_board=self.bullet_board,
+                        frequency=1/len(enemy_types_in_battle)
+                    )
+                    self.sprites_and_effects_collection.effects.append(raining_diamond_bullet_pattern)
+                    self.bullet_patterns.append(raining_diamond_bullet_pattern)
+                else:
+                    break

@@ -552,8 +552,8 @@ class BattleController:
                     temp_attack_multiplier = attack_multiplier
                     temp_is_crit = is_crit
                     pyglet.clock.schedule_once(
-                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier, is_crit=temp_is_crit:
-                        self.attack_target(actor, target, mult, is_crit),
+                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier:
+                        self.attack_target(actor, target, mult),
                         0.4
                     )
                     if is_crit:
@@ -570,7 +570,7 @@ class BattleController:
                 self.player_critical_hit_sound.play()
 
     def attack_target(self, actor: player_character.PlayerCharacter, target: character.Character,
-                      attack_damage_multiplier: float = 1.0, is_crit: bool = False):
+                      attack_damage_multiplier: float = 1.0):
         """ Decreases the targets health by a calculated amount and animates the target taking damage. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
 
@@ -580,8 +580,8 @@ class BattleController:
         if target not in self.enemies:
             target = self.enemies[0]
 
-        damage_dealt = actor.attack_enemy(target, attack_damage_multiplier)
-        target.receive_damage(damage_dealt, actor)
+        actor.attack_enemy(target, attack_damage_multiplier)
+        # target.receive_damage(damage_dealt, actor)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
         """
@@ -800,9 +800,11 @@ class BattleController:
         self.load_bullet_board()
         self.despawn_fight_bars()
         self.start_enemy_attack_clock()
-        self.sprites_and_effects_collection.effects.append(
-            RainingDiamondBulletPattern(self.sprites_and_effects_collection,
-                                        self.bullet_board))
+
+        # Execute the enemy attack depending on all the enemies in the battle
+        if len(self.enemies) > 0:
+            for enemy in self.enemies:
+                enemy.execute_attack(self.enemies)
 
         self.load_bullet_board_called_for_this_turn = True
 
@@ -811,7 +813,10 @@ class BattleController:
         Ends the enemy attack.
         :return:
         """
-        print("enemy attack ended")
+        # Terminate all the currently active enemy attacks
+        if len(self.enemies) > 0:
+            for enemy in self.enemies:
+                enemy.terminate_attack()
 
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
