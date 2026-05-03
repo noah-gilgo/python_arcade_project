@@ -8,7 +8,8 @@ import settings
 
 class Bullet(Sprite):
     def __init__(self, path_or_texture: Texture | str, center_x: float = 0.0, center_y: float = 0.0, angle: float = 0.0,
-                 scale: float = 1.0, lifetime: float = 10.0, kill_bullet_when_offscreen: bool = True, tp_gain = 0.5):
+                 scale: float = 1.0, lifetime: float = 10.0, kill_bullet_when_offscreen: bool = True,
+                 base_damage: float = 50.0 ,tp_gain = 0.5, element_id: int = 0, targets_multiple_players: bool = False):
         super().__init__(
             path_or_texture=path_or_texture,
             center_x=center_x,
@@ -20,7 +21,11 @@ class Bullet(Sprite):
         self.time = 0.0
         self.lifetime = lifetime
         self.kill_bullet_when_offscreen = kill_bullet_when_offscreen
-        self.tp_gain = tp_gain  # The amount of TP gained when the soul grazes the bullet
+        self.base_damage = base_damage # The base damage that the bullet should deal to its target.
+        self.tp_gain_when_grazed = tp_gain  # The amount of TP gained when the soul grazes the bullet
+        self.has_been_grazed = False  # Whether the bullet has been grazed yet
+        self.element_id = element_id # The element ID of the bullet. Defaults to 0
+        self.targets_multiple_players = targets_multiple_players # Determines if the bullet should damage multiple players
 
         self.lower_limit = -self.height
         self.upper_limit = settings.WINDOW_HEIGHT + self.height
@@ -75,4 +80,4 @@ class BlackDiamondBullet(Bullet):
         if self.alpha < 255:
             self.alpha = min(self.alpha + (delta_time * 512), 255)
 
-        self.center_y = self.center_y - (2 * (self.time ** 2) - 1)
+        self.center_y = self.center_y - ((2 * (self.time ** 2) - 1))

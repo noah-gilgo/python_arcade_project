@@ -15,7 +15,7 @@ import non_player_character
 import player_character
 import settings
 from graphics_methods import ease_out, make_texture_solid_color
-from items import Item, ConsumableItem
+from items.consumable_items import ConsumableItem
 from spells import Spell
 
 
@@ -204,9 +204,8 @@ class BattleHUDCharacterHPText(UILabel):
             multiline=False
         )
         self.focus_mode = FocusMode(0)
-        self.update_hp_on_character_card()
 
-    def update_hp_on_character_card(self):
+    def on_update(self, dt):
         self.text = str(self.character.hp)
         if 0 < self.character.hp < self.character.max_hp / 4:
             self.update_font(font_color=arcade.color.YELLOW)
@@ -241,9 +240,8 @@ class BattleHUDCharacterMaxHPText(UILabel):
             multiline=False
         )
         self.focus_mode = FocusMode(0)
-        self.update_max_hp_on_character_card()
 
-    def update_max_hp_on_character_card(self):
+    def on_update(self, dt):
         self.text = str(self.character.max_hp)
         if 0 < self.character.hp < self.character.max_hp / 4:
             self.update_font(font_color=arcade.color.YELLOW)
@@ -251,7 +249,6 @@ class BattleHUDCharacterMaxHPText(UILabel):
             self.update_font(font_color=arcade.color.RED)
         else:
             self.update_font(font_color=arcade.color.WHITE)
-
 
 class BattleHUDCharacterHP(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter):
@@ -324,8 +321,7 @@ class BattleHUDHPMeter(UIWidget):
             self.color,
         )
 
-    def update_hp(self):
-        """ Updates the HP meter to accurately reflect the current HP of the player character. """
+    def on_update(self, dt):
         self.value = self.player_character.hp / self.player_character.max_hp
 
 
@@ -1157,33 +1153,45 @@ class TPMeterLabel(UIImage):
             width=44,
             height=88,
             texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter_label.png"),
+            size_hint=None,
+            align="bottom"
         )
 
 
 class TPMeterNumber(UILabel):
     def __init__(self):
         super().__init__(
-            width=44,
-            height=40,
+            width=60,
+            height=54,
             font_name="8bitoperator JVE",
             font_size=48,
-            text="0"
+            text="0",
+            size_hint=None,
+            align="center"
         )
 
-        arcade.enable_timings()
+        # Rendered with a very faint background to avoid layouting every time the text is changed
+        self.with_background(color=(0,0,0,1))
 
-    def do_render(self, surface: Surface):
-        super().do_render(surface)
-        self.text = str(int(arcade.get_fps()))
+    def on_update(self, dt):
+        if self.text != str(int(self.parent.parent.visual_tp)):
+            if int(self.parent.parent.visual_tp) == 100 and self.text == "MAX":
+                return
+
+            if str(int(self.parent.parent.visual_tp)) != "100":
+                self.text = str(int(self.parent.parent.visual_tp))
+            else:
+                self.text = "MAX"
+
 
 
 class TPMeterPercentLabel(UILabel):
     def __init__(self):
         super().__init__(
             width=44,
-            height=48,
+            height=54,
             font_name="8bitoperator JVE",
-            font_size=40,
+            font_size=48,
             text="%"
         )
 
@@ -1199,6 +1207,8 @@ class TPMeterTextContainer(UIBoxLayout):
                 TPMeterPercentLabel()
             ]
         )
+
+        self.with_padding(top=72)
 
 
 class TPMeterGraphic(UIImage):
@@ -1223,16 +1233,16 @@ class TPMeterGraphic(UIImage):
 
     def update(self, tp: float = 0.0):
         self.elapsed_time = 0.0
+        self.tp_meter_image.visual_tp = self.tp_meter_image.tp
+        self.tp_meter_image.tp = min(self.tp_meter_image.tp + tp, 100.0)
         if tp > 1.0 or tp < -1.0:
-            self.tp_meter_image.visual_tp = self.tp_meter_image.tp
-            self.tp_meter_image.tp = min(self.tp_meter_image.tp + tp, 100.0)
             self.starting_tp = self.tp_meter_image.visual_tp
             self.ending_tp = self.tp_meter_image.tp
             self.is_updating = True
-        else:
-            self.tp_meter_image.tp = min(self.tp_meter_image.tp + tp, 100.0)
+        else: # If the increase/decrease in TP is less than a certain amount, don't animate the change.
             self.tp_meter_image.visual_tp = self.tp_meter_image.tp
             self.tp_meter_image.render()
+            self.texture = arcade.Texture(self.tp_meter_image.get_image())
 
     def on_update(self, delta_time):
         if self.is_updating:
@@ -1262,9 +1272,14 @@ class TPMeter(UIBoxLayout):
             ]
         )
 
+        self.visual_tp = self.children[1].tp_meter_image.visual_tp
+
     def update_tp_meter(self, tp: float = 0.0):
         tp_meter = self.children[1]
         tp_meter.update(tp)
+
+    def on_update(self, delta_time: float):
+        self.visual_tp = self.children[1].tp_meter_image.visual_tp
 
 
 class ItemOption(UILabel):

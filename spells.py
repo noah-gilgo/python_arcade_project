@@ -92,18 +92,18 @@ class Spell:
                         target.non_idle_timer = 0
                         target.set_animation_state("battle_hurt")
                         freeze_animation = FreezeAnimation(target=target)
-                        controller.effects_list.append(freeze_animation)
+                        controller.sprites_and_effects_collection.effects.append(freeze_animation)
                         for sprite in freeze_animation.get_sprites():
-                            controller.effects_sprite_list.append(sprite)
+                            controller.sprites_and_effects_collection.effects_sprites.append(sprite)
                         controller.enemies.remove(target)
                 else:
                     damage_dealt_text = "LOST"
                     damage_dealt_color = arcade.color.RED
                     controller.enemy_flee_sound.play()
                     enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
-                    controller.effects_list.append(enemy_fleeing_animation)
+                    controller.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)
                     for sprite in enemy_fleeing_animation.get_sprites():
-                        controller.effects_sprite_list.append(sprite)
+                        controller.sprites_and_effects_collection.effects_sprites.append(sprite)
                     controller.enemies.remove(target)
 
             damage_dealt_animation = NumberBounceAnimation(
@@ -122,11 +122,11 @@ class Spell:
             )
 
             target.set_animation_state("battle_hurt")
-            controller.effects_sprite_list.append(damage_dealt_animation.sprite)
-            controller.effects_list.append(damage_dealt_animation)
-            controller.effects_list.append(shake_animation)
-            controller.effects_list.append(color_filter_animation)
-            controller.effects_sprite_list.append(color_filter_animation.filter_sprite)
+            controller.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
+            controller.sprites_and_effects_collection.effects.append(damage_dealt_animation)
+            controller.sprites_and_effects_collection.effects.append(shake_animation)
+            controller.sprites_and_effects_collection.effects.append(color_filter_animation)
+            controller.sprites_and_effects_collection.effects_sprites.append(color_filter_animation.filter_sprite)
             if schedule_battle_idle:
                 pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
 

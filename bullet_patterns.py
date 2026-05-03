@@ -1,12 +1,13 @@
 import random
 
+from bullet_board import BulletBoard
 from bullets import Bullet, BlackDiamondBullet
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
 class BulletPattern:
-    def __init__(self, controller, total_duration: float = 10.0):
-        self.controller = controller
-        self.bullet_board = self.controller.bullet_board
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, total_duration: float = 10.0):
+        self.sprites_and_effects_collection = sprites_and_effects_collection
         self.total_duration = total_duration
 
         self.time = 0
@@ -32,8 +33,8 @@ class BulletPattern:
         """
         self.bullets_sprite_list.append(bullet)
 
-        self.controller.effects_list.append(bullet)
-        self.controller.effects_sprite_list.append(bullet)
+        self.sprites_and_effects_collection.effects.append(bullet)
+        self.sprites_and_effects_collection.bullet_sprites.append(bullet)
 
     def spawn_bullets(self, bullets: list[Bullet]):
         """
@@ -44,16 +45,18 @@ class BulletPattern:
         for bullet in bullets:
             self.bullets_sprite_list.append(bullet)
 
-            self.controller.effects_list.append(bullet)
-            self.controller.effects_sprite_list.append(bullet)
+            self.sprites_and_effects_collection.effects.append(bullet)
+            self.sprites_and_effects_collection.bullet_sprites.append(bullet)
 
 
 class RainingDiamondBulletPattern(BulletPattern):
-    def __init__(self, controller):
-        super().__init__(controller, 999.0)
+    def __init__(self, sprites_and_effects_collection, bullet_board: BulletBoard, total_duration: float = 20.0,
+                 frequency: float = 1.0):
+        super().__init__(sprites_and_effects_collection, total_duration)
 
+        self.bullet_board = bullet_board
         self.time_since_last_diamond_spawned = 0.0
-        self.diamond_frequency = 0.5
+        self.diamond_frequency = frequency / 4  # The amount of time in seconds between each diamond spawn
 
     def update_animation(self, delta_time: float):
         super().update_animation(delta_time)

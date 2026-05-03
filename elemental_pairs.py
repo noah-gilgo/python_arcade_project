@@ -10,7 +10,7 @@ class ElementalPair:
 
 def generate_elemental_pairs():
     """
-    Generates the default elemental pairs used in Deltarune.
+    Generates some of the elemental pairs used in Deltarune.
     NOTE: some of these are non-canonical
     """
     return [

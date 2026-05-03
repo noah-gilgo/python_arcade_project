@@ -22,10 +22,11 @@ from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySele
 from bullet_patterns import RainingDiamondBulletPattern
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
-from items import Item, ConsumableItem
+from items.consumable_items import ConsumableItem
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 """
 This architecture is my attempt at replicating the state architecture recommended by Robert Nystrom in his book
@@ -56,19 +57,20 @@ class BattleController:
     def __init__(self, ui_manager: UIManager,
                  battle_player_character_cards: UILayout,
                  battle_textbox: UIWidget,
-                 player_characters: list[player_character.PlayerCharacter],
+                 players: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
-                 effects_sprite_list: SpriteList,
-                 effects_list: list,
-                 tp_meter: battle_widgets.TPMeter,
-                 soul_sprites: SpriteList):
+                 sprites_and_effects_collection: SpritesAndEffectsCollection,
+                 tp_meter: battle_widgets.TPMeter):
         # TODO: move most of these parameters into the BattleController.
+
+        # Sprite lists that need to be accessed for animations.
+        self.sprites_and_effects_collection = sprites_and_effects_collection
 
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
         self.tp_meter = tp_meter
-        self.player_characters = player_characters
+        self.players = players
         self.enemies = enemies
 
         self.current_player_index = 0
@@ -107,33 +109,39 @@ class BattleController:
         self.actions_queue = ActionsQueue()
         self.sorted_actions_queue = {}
 
-        # Sprite lists that need to be accessed for animations.
-        self.effects_sprite_list = effects_sprite_list
-        self.effects_list = effects_list
-
-        self.items = items.initialize_default_items()
+        self.items = items.consumable_items.initialize_default_consumable_items()
 
         self.fight_box_sprites_array = []
         self.fight_crit_box_sprites_array = []
         self.icon_and_press_sprites_array = []
-        self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
         self.blue_divider_lines_sprites_array = []
+        self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
         self.fight_hit_markers = []
 
         # All of the clocks used by the BattleController.
+        # The clock used by the fight bars.
         self.fight_bar_clock = 0.0
         self.fight_bar_clock_is_updating = False
+
+        # The timer used by the enemy attack.
+        self.enemy_attack_time = 0.0
+        self.enemy_attack_duration = 10.0
+        self.enemy_is_attacking = False
 
         self.battle_idle_callback = None
         self.battle_idle_target = None
         self.enemy_hit_sound_player = None
 
+        # The bullet board used during the enemy attack.
         self.bullet_board = BulletBoard()
-        self.soul_sprites = soul_sprites
-        self.soul = Soul(self.player_characters[0], self)
-        self.soul_sprites.append(self.soul)
 
-        self.effects_list.append(RainingDiamondBulletPattern(self))
+        # The SOUL the player moves around during enemy attacks.
+        self.soul = Soul(self.players[0], self)
+        self.sprites_and_effects_collection.soul_sprites.append(self.soul)
+
+        # A variable tracking whether the bullet board has been loaded for the current turn.
+        # Used by logic in the HitBar class used to load an enemy attack after the player finishes the FIGHT act.
+        self.load_bullet_board_called_for_this_turn = False
 
         # Tracks which keys are pressed down. Used for situations where controls requires multiple keys.
         self.z_pressed = False
@@ -210,11 +218,19 @@ class BattleController:
         if self.fight_bar_clock_is_updating:
             self.fight_bar_clock += delta_time
 
+        if self.enemy_is_attacking:
+            self.enemy_attack_time += delta_time
+
+            if self.enemy_attack_time > self.enemy_attack_duration:
+                self.enemy_is_attacking = False
+                self.end_enemy_attack()
+
     def start_fight_bar_clock(self):
         """
         Starts the clock used to move the attack bars used during the FIGHT act.
         :return: None
         """
+        self.fight_bar_clock = 0.0
         self.fight_bar_clock_is_updating = True
 
     def stop_fight_bar_clock(self):
@@ -225,14 +241,33 @@ class BattleController:
         self.fight_bar_clock_is_updating = False
         self.fight_bar_clock = 0.0
 
+    def start_enemy_attack_clock(self):
+        """
+        Starts the clock used to track the elapsed time of the enemy attack.
+        :return: None
+        """
+        self.enemy_attack_time = 0.0
+        self.enemy_is_attacking = True
+
+    def stop_enemy_attack_clock(self):
+        """
+        Stops the clock used to track the elapsed time of the enemy attack.
+        :return: None
+        """
+        self.enemy_attack_time = 0.0
+        self.enemy_is_attacking = False
+
     def load_bullet_board(self):
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
+        print("bullet board loaded")
         self.bullet_board.load_bullet_board(self)
-        self.soul.move_to_bullet_board(self.bullet_board)
+        self.soul.move_to_bullet_board()
 
     def unload_bullet_board(self):
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
+        print("bullet board unloaded")
         self.bullet_board.unload_bullet_board(self)
+        self.soul.move_to_player_with_soul()
 
     def confirm_command(self):
         SelectCommand(self).execute()
@@ -326,6 +361,23 @@ class BattleController:
             self.battle_player_character_cards.children[
                 self.current_player_index].change_icon()
 
+    def move_to_first_player_card(self):
+        """
+        Moves to the first player card in the HUD. Executed after the enemy turn completes.
+        :return:
+        """
+        if len(self.players) > 0:
+            self.state = BattleState.PLAYER_COMMAND
+
+            self.current_player_index = 0
+            self.battle_player_character_cards.children[self.current_player_index].focus()
+            self.focus_stack.push(
+                self.battle_player_character_cards,
+                self.battle_player_character_cards.children[self.current_player_index].children[0],
+                self.state,
+                5
+            )
+
     def spawn_fight_bars(self, players_fighting: list[PlayerCharacter], enemy_targets: list[character.Character]):
         """
         Creates a FIGHT graphic for the fighting players.
@@ -341,6 +393,9 @@ class BattleController:
                 sprite.kill()
         if len(self.icon_and_press_sprites_array) > 0:
             for sprite in self.icon_and_press_sprites_array:
+                sprite.kill()
+        if len(self.blue_divider_lines_sprites_array) > 0:
+            for sprite in self.blue_divider_lines_sprites_array:
                 sprite.kill()
 
         self.start_fight_bar_clock()
@@ -379,7 +434,7 @@ class BattleController:
             fight_box_sprite = Sprite(Texture(fight_box), center_x=fight_box_center_x, center_y=fight_box_center_y)
 
             self.fight_box_sprites_array.append(fight_box_sprite)
-            self.effects_sprite_list.append(fight_box_sprite)
+            self.sprites_and_effects_collection.effects_sprites.append(fight_box_sprite)
 
             if player_index > 0:
                 length_of_divider_bar = int((settings.WINDOW_WIDTH - fight_box_sprite.right) / 5)
@@ -391,7 +446,7 @@ class BattleController:
                                                   center_y=blue_divider_line_center_y)
 
                 self.blue_divider_lines_sprites_array.append(blue_divider_line_sprite)
-                self.effects_sprite_list.append(blue_divider_line_sprite)
+                self.sprites_and_effects_collection.effects_sprites.append(blue_divider_line_sprite)
 
             draw_fight_crit_box.rectangle(
                 [
@@ -404,15 +459,15 @@ class BattleController:
             fight_crit_box_sprite = Sprite(Texture(fight_crit_box), center_x=fight_crit_box_center_x, center_y=fight_box_center_y)
 
             self.fight_crit_box_sprites_array.append(fight_crit_box_sprite)
-            self.effects_sprite_list.append(fight_crit_box_sprite)
+            self.sprites_and_effects_collection.effects_sprites.append(fight_crit_box_sprite)
 
 
             icon_sprite = Sprite(player.normal_icon_texture, scale=icon_scale, center_x=icon_center_x, center_y=fight_box_center_y)
             press_sprite = Sprite(self.press_texture, scale=2.0, center_x=press_center_x, center_y=fight_box_center_y + ((height_of_fight_bar / 2) - 20))
             self.icon_and_press_sprites_array.append(icon_sprite)
             self.icon_and_press_sprites_array.append(press_sprite)
-            self.effects_sprite_list.append(icon_sprite)
-            self.effects_sprite_list.append(press_sprite)
+            self.sprites_and_effects_collection.effects_sprites.append(icon_sprite)
+            self.sprites_and_effects_collection.effects_sprites.append(press_sprite)
 
             fight_hit_bar_effect = FightHitBar(
                 controller=self,
@@ -427,10 +482,10 @@ class BattleController:
 
         for fight_hit_bar_effect in fight_hit_bar_effects:
             for sprite in fight_hit_bar_effect.get_sprites():
-                self.effects_sprite_list.append(sprite)
+                self.sprites_and_effects_collection.effects_sprites.append(sprite)
 
         for fight_hit_bar_effect in fight_hit_bar_effects:
-            self.effects_list.append(fight_hit_bar_effect)
+            self.sprites_and_effects_collection.effects.append(fight_hit_bar_effect)
 
         for fight_hit_bar_effect in fight_hit_bar_effects:
             fight_hit_bar_effect.time = 0
@@ -446,6 +501,11 @@ class BattleController:
             sprite.kill()
         for sprite in self.blue_divider_lines_sprites_array:
             sprite.kill()
+
+        self.fight_box_sprites_array.clear()
+        self.fight_crit_box_sprites_array.clear()
+        self.icon_and_press_sprites_array.clear()
+        self.blue_divider_lines_sprites_array.clear()
 
     def attempt_to_hit_enemy(self):
         """
@@ -492,15 +552,15 @@ class BattleController:
                     temp_attack_multiplier = attack_multiplier
                     temp_is_crit = is_crit
                     pyglet.clock.schedule_once(
-                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier, is_crit=temp_is_crit:
-                        self.attack_target(actor, target, mult, is_crit),
+                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier:
+                        self.attack_target(actor, target, mult),
                         0.4
                     )
                     if is_crit:
                         critical_hit_sparkle_animation = CriticalHitSparkleAnimation(temp_actor)
-                        self.effects_list.append(critical_hit_sparkle_animation)
+                        self.sprites_and_effects_collection.effects.append(critical_hit_sparkle_animation)
                         for sprite in critical_hit_sparkle_animation.get_sprites():
-                            self.effects_sprite_list.append(sprite)
+                            self.sprites_and_effects_collection.effects_sprites.append(sprite)
 
                 self.fight_hit_markers.remove(hit_marker)
 
@@ -510,7 +570,7 @@ class BattleController:
                 self.player_critical_hit_sound.play()
 
     def attack_target(self, actor: player_character.PlayerCharacter, target: character.Character,
-                      attack_damage_multiplier: float = 1.0, is_crit: bool = False):
+                      attack_damage_multiplier: float = 1.0):
         """ Decreases the targets health by a calculated amount and animates the target taking damage. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
 
@@ -520,77 +580,16 @@ class BattleController:
         if target not in self.enemies:
             target = self.enemies[0]
 
-        damage_dealt = int(actor.attack * 10 * attack_damage_multiplier)
-        if actor.element_id:
-            for element in default_data.ELEMENTAL_PAIRS:
-                if element.element_id == actor.element_id:
-                    if target.element_id in element.resistant_to:
-                        damage_dealt *= 0.66
-                    if target.element_id in element.weak_to:
-                        damage_dealt *= 1.5
+        actor.attack_enemy(target, attack_damage_multiplier)
+        # target.receive_damage(damage_dealt, actor)
 
-        damage_dealt_text = str(damage_dealt)
-
-        if damage_dealt <= 0:
-            damage_dealt_text = "MISS"
-            damage_dealt_color = arcade.color.WHITE
-            self.player_attack_sound.play()
-            temp_actor = actor
-            temp_actor.set_animation_state("battle_attack")
-
+        # TODO: This currently makes the damage numbers above the enemies disappear.
+        """
+        if is_crit:
+            self.add_tp_to_meter(6.0)
         else:
-            self.enemy_hit_sound.play()
-            damage_dealt_color = Color.from_iterable([
-                int((actor.battle_ui_color.r + 255) / 2),
-                int((actor.battle_ui_color.g + 255) / 2),
-                int((actor.battle_ui_color.b + 255) / 2),
-                int(actor.battle_ui_color.a)
-            ])
-
-            # If the attack reduces the enemy HP to 0
-            if target.hp <= 0:
-                damage_dealt_text = "LOST"
-                damage_dealt_color = arcade.color.RED
-                self.enemy_flee_sound.play()
-                enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
-                self.effects_list.append(enemy_fleeing_animation)
-                for sprite in enemy_fleeing_animation.get_sprites():
-                    self.effects_sprite_list.append(sprite)
-                self.enemies.remove(target)
-            else:
-                shake_animation = ShakeAnimation(
-                    sprite=target
-                )
-                self.effects_list.append(shake_animation)
-                strike_enemy_animation = StrikeEnemyAnimation(
-                    actor=actor,
-                    target=target
-                )
-                self.effects_list.append(strike_enemy_animation)
-                self.effects_sprite_list.append(strike_enemy_animation.sprite)
-                self.battle_idle_target = target
-                self.battle_idle_callback = lambda dt: set_animation_state_to_battle_idle(dt, self.battle_idle_target)
-                target.set_animation_to_not_idle(1.5, "battle_hurt")
-
-            # TODO: This currently makes the damage numbers above the enemies disappear.
-            """
-            if is_crit:
-                self.add_tp_to_meter(6.0)
-            else:
-                self.add_tp_to_meter(attack_damage_multiplier * 4.0)
-            """
-
-        target.hp -= damage_dealt
-
-        damage_dealt_animation = NumberBounceAnimation(
-            text=damage_dealt_text,
-            color=damage_dealt_color,
-            target=target
-        )
-
-
-        self.effects_sprite_list.append(damage_dealt_animation.sprite)
-        self.effects_list.append(damage_dealt_animation)
+            self.add_tp_to_meter(attack_damage_multiplier * 4.0)
+        """
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):
@@ -643,16 +642,16 @@ class BattleController:
                     color=arcade.color.WHITE,
                     total_duration=0.3
                 )
-                self.effects_list.append(color_filter_animation)
-                self.effects_sprite_list.append(color_filter_animation.filter_sprite)
+                self.sprites_and_effects_collection.effects.append(color_filter_animation)
+                self.sprites_and_effects_collection.effects_sprites.append(color_filter_animation.filter_sprite)
 
                 sparkle_animation = HealAnimation(
                     target=target
                 )
 
-                self.effects_list.append(sparkle_animation)
+                self.sprites_and_effects_collection.effects.append(sparkle_animation)
                 for sprite in sparkle_animation.get_sprites():
-                    self.effects_sprite_list.append(sprite)
+                    self.sprites_and_effects_collection.effects_sprites.append(sprite)
 
             elif damage_healt < 0:
                 if target.hp <= 0 and previous_target_hp > 0:
@@ -668,7 +667,7 @@ class BattleController:
                 shake_animation = ShakeAnimation(
                     sprite=target
                 )
-                self.effects_list.append(shake_animation)
+                self.sprites_and_effects_collection.effects.append(shake_animation)
                 arcade.play_sound(self.hurt_sound)
 
             if target.hp >= target.max_hp:
@@ -685,30 +684,13 @@ class BattleController:
                 target=target
             )
 
-            self.update_hp_on_player_card(target, damage_healt)
-
-            self.effects_list.append(damage_healed_animation)
-            self.effects_sprite_list.append(damage_healed_animation.sprite)
+            self.sprites_and_effects_collection.effects.append(damage_healed_animation)
+            self.sprites_and_effects_collection.effects_sprites.append(damage_healed_animation.sprite)
 
         if player_healed:
             arcade.play_sound(self.heal_sound)
         if player_damaged:
             arcade.play_sound(self.hurt_sound)
-
-    def update_hp_on_player_card(self, character: player_character.PlayerCharacter, hp_affected: float):
-        """
-        Updates the hp of the provided player.
-        :param character: the player to have their HP modified
-        :return:
-        """
-
-        for character_card in self.battle_player_character_cards.children:
-            if character_card.player_character == character:
-                character_card.children[1].children[1].children[0].children[0].update_hp_on_character_card()
-                character_card.children[1].children[1].children[0].children[2].update_max_hp_on_character_card()
-                character_card.children[1].children[1].children[1].children[1].update_hp()
-                if hp_affected < 0:
-                    character_card.children[1].children[0].children[0].change_to_hurt_icon()
 
     def open_enemy_select_menu(self):
         """
@@ -720,8 +702,8 @@ class BattleController:
         self.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
                                          self.state, 1)
         new_focus_animation = self.focus_stack.get_highest_member().get_focused_widget().enemy.focus()
-        self.effects_list.append(new_focus_animation)
-        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        self.sprites_and_effects_collection.effects.append(new_focus_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
 
     def move_focus_between_enemies_in_enemy_select(self, previously_focused_widget, currently_focused_widget):
         """
@@ -731,8 +713,8 @@ class BattleController:
         :return:
         """
         new_focus_animation = currently_focused_widget.enemy.focus()
-        self.effects_list.append(new_focus_animation)
-        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        self.sprites_and_effects_collection.effects.append(new_focus_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
         previously_focused_widget.enemy.unfocus()
 
     def open_player_select_menu(self):
@@ -740,13 +722,13 @@ class BattleController:
         Opens the player select menu.
         :return: None
         """
-        player_list_full_layout = battle_widgets.PlayerSelect(self.player_characters)
+        player_list_full_layout = battle_widgets.PlayerSelect(self.players)
         player_list_interactive_layout = player_list_full_layout
         self.focus_stack.push(player_list_full_layout, player_list_interactive_layout,
                                          self.state, 1)
         new_focus_animation = self.focus_stack.get_highest_member().get_focused_widget().player.focus()
-        self.effects_list.append(new_focus_animation)
-        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        self.sprites_and_effects_collection.effects.append(new_focus_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
 
     def move_focus_between_players_in_player_select(self, previously_focused_widget, currently_focused_widget):
         """
@@ -756,8 +738,8 @@ class BattleController:
         :return:
         """
         new_focus_animation = currently_focused_widget.player.focus()
-        self.effects_list.append(new_focus_animation)
-        self.effects_sprite_list.append(new_focus_animation.filter_sprite)
+        self.sprites_and_effects_collection.effects.append(new_focus_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
         previously_focused_widget.player.unfocus()
 
     def initialize_sorted_action_queue(self):
@@ -800,14 +782,83 @@ class BattleController:
             self.spawn_fight_bars(fighting_players, enemy_targets)
             return
         else:
-            self.state = BattleState.ENEMY_ATTACK
-            self.load_bullet_board()
-            self.battle_textbox.load_dialog(TextBoxDialog(text=""))
+            # Start the enemy attack.
+            self.start_enemy_attack()
+            return
+
+    def start_enemy_attack(self):
+        """
+        Starts the enemy attack.
+        :return: None
+        """
+        # Clear any text from the battle textbox.
+        self.battle_textbox.load_dialog(TextBoxDialog(text=""))
+
+        # Begin the enemy attack
+        self.state = BattleState.ENEMY_ATTACK
+        self.load_bullet_board()
+        self.despawn_fight_bars()
+
+        # Execute the enemy attack depending on all the enemies in the battle and calculate the duration of the attack
+        sum_of_attack_durations = 0.0
+        if len(self.enemies) > 0:
+            for enemy in self.enemies:
+                attack_duration = enemy.execute_attack(self.enemies)
+                sum_of_attack_durations += attack_duration
+
+        # Set the duration of the attack and start the attack clock.
+        self.enemy_attack_duration = sum_of_attack_durations / len(self.enemies)
+        self.start_enemy_attack_clock()
+
+        self.load_bullet_board_called_for_this_turn = True
+
+    def end_enemy_attack(self):
+        """
+        Ends the enemy attack.
+        :return:
+        """
+        # Terminate all the currently active enemy attacks
+        if len(self.enemies) > 0:
+            for enemy in self.enemies:
+                enemy.terminate_attack()
+
+        # Return the state of the battle back to the starting state.
+        self.unload_bullet_board()
+        self.stop_enemy_attack_clock()
+        self.load_bullet_board_called_for_this_turn = False
+        # self.change_all_player_icons_to_default()
+        # self.set_animation_state_of_all_players("battle_idle")
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """
         self.battle_player_character_cards.children[self.current_player_index].change_icon(icon_path)
 
+    def change_all_player_icons_to_default(self):
+        """ Changes the icon of all players to their default icon. """
+        for battle_player_character_card in self.battle_player_character_cards.children:
+            battle_player_character_card.change_icon()
+
+    def set_animation_state_of_all_players(self, animation_state: str):
+        """
+        Sets the animation state of all players to the provided animation state. Defaults to battle idle.
+        :param animation_state: The animation state to give the players.
+        :return: None
+        """
+        if not animation_state:
+            animation_state = "battle_idle"
+
+        for player in self.players:
+            player.set_animation_state(animation_state)
+
+    def reset_player_animation_states_before_next_turn(self):
+        """
+        Resets all non-downed players to have the battle_idle animation state.
+        :return: None
+        """
+
+        for player in self.players:
+            if player.current_animation_state != "battle_downed":
+                player.set_animation_state("battle_idle")
 
 class Command:
     """ The default command object. Represents the Command design pattern. """
@@ -946,7 +997,7 @@ class SelectCommand(Command):
                     current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                     item_action = ItemAction(
                         actor=current_player_character,
-                        targets=self.controller.player_characters,
+                        targets=self.controller.players,
                         controller=self.controller,
                         item=item,
                         item_index=item_index
@@ -1098,80 +1149,88 @@ class LeftCommand(Command):
 class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """
 
-    def execute(self):
+    def attempt_to_move_up_in_ui(self):
+        """
+        Attempt to move focus up in a widget container.
+        :return: The newly focused widget above the previously focused widget.
+        """
         previously_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
         if self.controller.focus_stack.get_highest_member().move_up():
             currently_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
-            match self.controller.state:
-                case BattleState.PLAYER_MAGIC_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    )
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ATTACK_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_SPARE_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ITEM_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                    )
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ITEM_PLAYER_SELECT:
-                    self.controller.move_focus_between_players_in_player_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
+            self.controller.menu_move_sound.play()
+            return previously_focused_widget, currently_focused_widget
+        return None
+
+    def execute(self):
+        match self.controller.state:
+            case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
+                 BattleState.PLAYER_SPARE_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
+                self.controller.move_focus_between_enemies_in_enemy_select(
+                    previously_focused_widget,
+                    currently_focused_widget
+                )
+            case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
+
+                self.controller.move_focus_between_players_in_player_select(
+                    previously_focused_widget,
+                    currently_focused_widget
+                )
+            case BattleState.PLAYER_MAGIC_SELECT:
+                self.attempt_to_move_up_in_ui()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
+            case BattleState.PLAYER_ITEM_SELECT:
+                self.attempt_to_move_up_in_ui()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                )
 
 
 class DownCommand(Command):
     """
-    A command object representing the user pressing down (usually pressing the down arrow key in the original game.)
+    A command object representing the user pressing down
+    (usually pressing the down arrow key in the original game.)
     """
 
-    def execute(self):
+    def attempt_to_move_down_in_ui(self):
+        """
+        Attempt to move focus down in a widget container.
+        """
         previously_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
         if self.controller.focus_stack.get_highest_member().move_down():
             currently_focused_widget = self.controller.focus_stack.get_highest_member().get_focused_widget()
-            match self.controller.state:
-                case BattleState.PLAYER_MAGIC_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    )
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ATTACK_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_SPARE_SELECT:
-                    self.controller.move_focus_between_enemies_in_enemy_select(previously_focused_widget,
-                                                                               currently_focused_widget)
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ITEM_SELECT:
-                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                        self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                    )
-                    self.controller.menu_move_sound.play()
-                case BattleState.PLAYER_ITEM_PLAYER_SELECT:
-                    self.controller.move_focus_between_players_in_player_select(previously_focused_widget,
-                                                                                currently_focused_widget)
-                    self.controller.menu_move_sound.play()
+            self.controller.menu_move_sound.play()
+            return previously_focused_widget, currently_focused_widget
+        return None
 
-def set_animation_state_to_battle_idle(self, target: character.Character):
-    """
-    Scheduled cancellable function that sets the target's animation state to battle_idle.
-    :param target: The target having its animation state changed.
-    :return:
-    """
-    target.set_animation_state("battle_idle")
+    def execute(self):
+        match self.controller.state:
+            case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
+                 BattleState.PLAYER_SPARE_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
+                self.controller.move_focus_between_enemies_in_enemy_select(
+                    previously_focused_widget,
+                    currently_focused_widget
+                )
+            case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
+
+                self.controller.move_focus_between_players_in_player_select(
+                    previously_focused_widget,
+                    currently_focused_widget
+                )
+            case BattleState.PLAYER_MAGIC_SELECT:
+                self.attempt_to_move_down_in_ui()
+
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                )
+            case BattleState.PLAYER_ITEM_SELECT:
+                self.attempt_to_move_down_in_ui()
+
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                )

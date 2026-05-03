@@ -5,6 +5,7 @@ import graphics_objects
 import settings
 import texture_methods
 from animations.common_animations import FadeInFadeOutColorAnimation
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 SPRITE_SCALING = 1.0
 MOVEMENT_SPEED = 5
@@ -13,10 +14,12 @@ WINDOW_HEIGHT = settings.WINDOW_HEIGHT
 
 
 class Character(arcade.Sprite):
-    def __init__(self, scale: float, center_x: float, center_y: float, angle: float,
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection,
+                 scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int,
                  element_id: int = 0):
         super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle)
+        self.sprites_and_effects_collection = sprites_and_effects_collection
         self.sprite_folder_name = sprite_folder_name
         self.name = name
         self.max_hp = max_hp
@@ -24,6 +27,8 @@ class Character(arcade.Sprite):
         self.attack = attack
         self.defense = defense
         self.element_id = element_id
+
+        self.sprites_and_effects_collection.character_sprites.append(self)
 
         self.current_animation_state = "default"
 
@@ -46,31 +51,41 @@ class Character(arcade.Sprite):
 
         self.times_struck_this_turn = 0
 
-        self.not_idle = False
         self.non_idle_timer = 0.0
+
+        self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
+
+    def calculate_received_damage(self, base_damage: float, element_id: int = 0):
+        """
+        Takes the base damage of the attacker's attack and modifies it based on the characteristics of the receiver
+        (ex. defense, element_id, etc.)
+        Since player characters/non player characters are a bit different on the back end, this is just a stub.
+        :param base_damage: The base damage of the attacker's attack. This function modifies this value
+        :param element_id: The element ID of the attack.
+        :return:
+        """
+        pass
 
     def set_animation_to_not_idle(self, duration: float = 1.0, animation_state: str = "battle_idle"):
         """
         Starts a timer that eventually sets the character back to a battle_idle animation state.
         Used in situations where the character receives a temporary animation state.
         :param duration: The amount of time the character is meant to not be idle.
+        :param animation_state: The animation state that the character is meant to be temporarily set to.
         :return: None
         """
-        self.not_idle = True
         self.non_idle_timer = duration
-        self.set_animation_state(animation_state)
+        self.set_animation_state(animation_state, is_temporary=True)
 
     def update(self, delta_time: float = 1 / 60, **kwargs):
         """ Helps the player do things.
         :param delta_time: the amount of time in seconds that the player updates
         :param **kwargs:
         """
-        if self.not_idle and self.non_idle_timer > 0.0:
+        if self.non_idle_timer > 0.0:
             self.non_idle_timer -= delta_time
             if self.non_idle_timer <= 0.0:
-                self.not_idle = False
                 self.set_animation_state("battle_idle")
-        pass
 
     def update_animation(self, delta_time=1/60, **kwargs):
         """ Cycles through textures based on the player state.
@@ -90,11 +105,12 @@ class Character(arcade.Sprite):
                 self.current_texture_index = (self.current_texture_index + 1) % len(self.current_animation)
                 self.texture = self.current_animation[self.current_texture_index]
 
-    def set_animation_state(self, state: str = "default"):
+    def set_animation_state(self, state: str = "default", is_temporary: bool = False):
         """
         Sets the animation state of the PlayerCharacter instance. Throws an error if no such state exists in
         self._animations_by_state.
         :param state: The name of the state, in the form of a string.
+        :param is_temporary: Internal variable used to determine whether the animation change was temporary.
         :return: None
         """
         if state in self._animations_by_state:
@@ -103,7 +119,8 @@ class Character(arcade.Sprite):
             self.current_animation_timer = 0.0
             self.current_texture_index = 0
             self.texture = self.current_animation[0]
-
+            if not is_temporary:
+                self.non_idle_timer = 0.0
         else:
             raise ValueError("set_animation_state was given a state that is not present in self._animations_by_state.")
 
@@ -146,8 +163,7 @@ class Character(arcade.Sprite):
 
     def unfocus(self):
         """
-        Creates an instance of a repeating FadeInFadeOutColorAnimation. Returns it so it can be added to the
-        animation queue in main.
+        Destroys instance of FadeInFadeOutColorAnimation associated with the focused enemy.
         """
         if self.focus_animation:
             self.focus_animation.is_terminated = True

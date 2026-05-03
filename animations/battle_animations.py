@@ -4,12 +4,9 @@ import arcade
 import pyglet
 from PIL import Image, ImageDraw
 from arcade import Sprite, Texture, LRBT
-from arcade.easing import ease_in
 from arcade.types import Color
 
 import character
-import non_player_character
-import player_character
 import settings
 import texture_methods
 from animations.common_animations import SparkleAnimation
@@ -351,7 +348,7 @@ class FightHitBar(SingleSpriteAnimation):
             self.sprite.visible = False
             self.bar_is_moving = False
             if self.bar_is_not_removed:
-                self.controller.attack_target(self.actor, self.target, 0.0)
+                self.actor.attack_enemy(self.target, 0.0)
                 self.controller.fight_hit_markers.remove(self)
                 self.bar_is_not_removed = False
             pyglet.clock.schedule_once(lambda dt: self.terminate_animation(), 1.0)
@@ -368,9 +365,9 @@ class FightHitBar(SingleSpriteAnimation):
             if self.time_since_hit_registered > 1:
                 self.terminate_animation()
 
-        if len(self.controller.fight_hit_markers) == 0 and not self.load_bullet_board_called:
-            pyglet.clock.schedule_once(lambda dt: self.controller.load_bullet_board(), 1.5)
-            self.load_bullet_board_called = True
+        if len(self.controller.fight_hit_markers) == 0 and not self.controller.load_bullet_board_called_for_this_turn:
+            self.controller.load_bullet_board_called_for_this_turn = True
+            pyglet.clock.schedule_once(lambda dt: self.controller.start_enemy_attack(), 1.5)
 
     def get_bar_sprite(self) -> Sprite:
         """

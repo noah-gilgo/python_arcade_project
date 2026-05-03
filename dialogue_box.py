@@ -56,6 +56,8 @@ class TextBoxText(UILabel):
             multiline=True
         )
 
+        self.with_background(color=arcade.color.BLACK)
+
     def set_text(self, text: str):
         """
         Sets the text within the widget.
