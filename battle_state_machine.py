@@ -760,7 +760,7 @@ class BattleController:
         if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
             return
-        if len(self.sorted_actions_queue["simple_act_actions"]) > 0:
+        elif len(self.sorted_actions_queue["simple_act_actions"]) > 0:
             act_texts = ""
             for action in self.sorted_actions_queue["simple_act_actions"]:
                 act_text = self.sorted_actions_queue["simple_act_actions"].pop().execute()
@@ -807,7 +807,10 @@ class BattleController:
                 sum_of_attack_durations += attack_duration
 
         # Set the duration of the attack and start the attack clock.
-        self.enemy_attack_duration = sum_of_attack_durations / len(self.enemies)
+        if len(self.enemies) > 0:
+            self.enemy_attack_duration = sum_of_attack_durations / len(self.enemies)
+        else:
+            self.enemy_attack_duration = 10.0
         self.start_enemy_attack_clock()
 
         self.load_bullet_board_called_for_this_turn = True

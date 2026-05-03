@@ -184,7 +184,7 @@ class Rudinn(NonPlayerCharacter):
         """
         Executes an attack depending on the number of other enemies in the battle.
         Only execute the Rudinn's attack if it's the first Rudinn on the board.
-        Modify the bullet frequency depending on the amount of non_rudinns in the battle.
+        Modify the bullet frequency depending on the amount of non-rudinns in the battle.
         :param enemies: The enemies currently present in battle.
         :return: The duration of the attack (in seconds)
         """
