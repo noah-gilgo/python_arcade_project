@@ -134,6 +134,10 @@ class Soul(arcade.Sprite):
         self.total_distance_to_move_soul_x = self.player_with_soul.center_x - self.center_x
         self.total_distance_to_move_soul_y = self.player_with_soul.center_y - self.center_y
 
+        # Make the graze sprite invisible
+        self.graze_sprite.visible = False
+        self.time_since_last_graze = 1.0
+
         # Prevent the player from manually moving the soul
         self.soul_movement_enabled = False
 
@@ -351,8 +355,8 @@ class Soul(arcade.Sprite):
             # Perform bullet collision checking with soul/graze area
             self.check_if_soul_is_colliding_with_bullets(delta_time)
 
-        # Update the graze sprite and check if it's colliding with bullets
-        self.check_if_graze_area_is_colliding_with_bullets(delta_time)
+            # Update the graze sprite and check if it's colliding with bullets
+            self.check_if_graze_area_is_colliding_with_bullets(delta_time)
 
         # Set the center of the graze sprite to the center of the soul sprite
         self.graze_sprite.center_x = self.center_x
