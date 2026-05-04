@@ -532,16 +532,8 @@ class BattleController:
         is_crit = False
 
         for hit_marker in self.fight_hit_markers[:]:
-            temp_actor = hit_marker.actor
-            temp_target = hit_marker.target
             if min_hit_marker_center_x - 20 < hit_marker.sprite.center_x < min_hit_marker_center_x + 20 and fight_box_min_x < hit_marker.sprite.center_x < fight_box_max_x:
                 enemy_hit = True
-                temp_actor.set_animation_state("battle_attack")
-                pyglet.clock.unschedule(lambda dt: temp_actor.set_animation_state)
-                pyglet.clock.schedule_once(
-                    lambda dt, actor=temp_actor: actor.set_animation_state("battle_idle"),
-                    1.0
-                )
                 if fight_box_min_x <= hit_marker.sprite.center_x <= fight_box_max_x:
                     if fight_crit_box_min_x <= hit_marker.sprite.center_x <= fight_crit_box_max_x:
                         hit_marker.sprite.center_x = fight_crit_box_center_x
@@ -551,15 +543,11 @@ class BattleController:
                     else:
                         hit_marker.register_hit()
                         attack_multiplier = fight_box_min_x / hit_marker.sprite.center_x
-                    temp_attack_multiplier = attack_multiplier
-                    temp_is_crit = is_crit
-                    pyglet.clock.schedule_once(
-                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier:
-                        self.attack_target(actor, target, mult),
-                        0.4
-                    )
+
+                    self.attack_target(hit_marker.actor, hit_marker.target, attack_multiplier, is_crit)
+
                     if is_crit:
-                        critical_hit_sparkle_animation = CriticalHitSparkleAnimation(temp_actor)
+                        critical_hit_sparkle_animation = CriticalHitSparkleAnimation(hit_marker.actor)
                         self.sprites_and_effects_collection.effects.append(critical_hit_sparkle_animation)
                         for sprite in critical_hit_sparkle_animation.get_sprites():
                             self.sprites_and_effects_collection.effects_sprites.append(sprite)
@@ -572,7 +560,7 @@ class BattleController:
                 self.player_critical_hit_sound.play()
 
     def attack_target(self, actor: player_character.PlayerCharacter, target: character.Character,
-                      attack_damage_multiplier: float = 1.0):
+                      attack_damage_multiplier: float = 1.0, is_crit: bool = False):
         """ Decreases the targets health by a calculated amount and animates the target taking damage. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
 
@@ -583,9 +571,9 @@ class BattleController:
             target = self.enemies[0]
 
         actor.attack_enemy(target, attack_damage_multiplier)
-        # target.receive_damage(damage_dealt, actor)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
+
         """
         if is_crit:
             self.add_tp_to_meter(6.0)

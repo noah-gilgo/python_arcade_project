@@ -1,4 +1,5 @@
 import arcade
+import pyglet.clock
 from PIL import Image
 from arcade import Sprite, Texture
 from arcade.types import Color
@@ -314,7 +315,7 @@ class PlayerCharacter(character.Character):
                     if enemy.element_id in element.weak_to:
                         damage_dealt *= 1.5
 
-        enemy.receive_damage(damage_dealt, self)
+        pyglet.clock.schedule_once(lambda dt: enemy.receive_damage(damage_dealt, self), 0.4)
 
 
     def receive_damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):

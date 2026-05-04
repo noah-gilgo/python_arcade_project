@@ -139,7 +139,8 @@ class NonPlayerCharacter(character.Character):
                 self.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)
                 for sprite in enemy_fleeing_animation.get_sprites():
                     self.sprites_and_effects_collection.effects_sprites.append(sprite)
-                self.enemies_list.remove(self)
+                if self in self.enemies_list:
+                    self.enemies_list.remove(self)
             else:
                 shake_animation = ShakeAnimation(
                     sprite=self
