@@ -1,3 +1,5 @@
+import random
+
 import arcade
 from arcade.types import Color
 
@@ -7,7 +9,7 @@ import graphics_objects
 from animations.battle_animations import EnemyFleeingAnimation, StrikeEnemyAnimation, NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
 from bullet_patterns import RainingDiamondBulletPattern
-from enemy_attacks import EnemyIndividualAttack, DefaultAttack
+from enemy_attacks import RainingDiamondAttack
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/non_player_characters/"
@@ -16,8 +18,8 @@ NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/non_player_characters
 class NonPlayerCharacter(character.Character):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, scale: float, center_x: float,
                  center_y: float, angle: float, sprite_folder_name: str, name: str, hp: int, max_hp: int, attack: int,
-                 defense: int, element_id: int = 0, tired: int = 0, mercy: int = 0,
-                 attacks: list[EnemyIndividualAttack] = [], enemies_list: list = []):
+                 defense: int, element_id: int = 0, tired: int = 0, mercy: int = 0, enemies_list: list = [],
+                 attacks: list = []):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -25,12 +27,12 @@ class NonPlayerCharacter(character.Character):
                          center_y=center_y, angle=angle, sprite_folder_name=sprite_folder_name, name=name,
                          max_hp=max_hp, attack=attack, defense=defense, element_id=element_id)
 
-        self.enemies_list = enemies_list
+        self.enemies_list = enemies_list  # The other enemies present in battle
+        self.attacks = attacks  # The attacks that the enemy is capable of executing
 
         self.hp = hp
         self.tired = tired
         self.mercy = mercy
-        self.attacks = attacks
 
         self.enemy_hit_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_damage.wav",
                                                  False)
@@ -70,8 +72,8 @@ class NonPlayerCharacter(character.Character):
         if "battle_idle" in self._animations_by_state:
             self.set_animation_state("battle_idle")
 
-        # All the active bullet patterns spawned by the enemy
-        self.bullet_patterns = []
+        # The current attack being performed by the enemy
+        self.current_attack = None
 
     def get_hp_percentage_as_string(self):
         """ Returns the whole number HP percentage of the NPC. """
@@ -89,15 +91,20 @@ class NonPlayerCharacter(character.Character):
         :param enemies: The enemies currently present in battle.
         :return: the duration of the attack (in seconds)
         """
-        return 10.0
+        if len(self.attacks) == 0:
+            return 10.0
+        else:
+            attack_index = random.randint(0, len(self.attacks) - 1)
+            self.current_attack = self.attacks[attack_index]
+            return self.current_attack.execute_attack()
 
     def terminate_attack(self):
         """
         Terminates all bullet patterns spawned by the enemy and kills their sprites.
         :return: None
         """
-        for bullet_pattern in self.bullet_patterns:
-            bullet_pattern.terminate_animation()
+        self.current_attack.terminate_attack()
+        self.current_attack = None
 
     def receive_damage(self, damage_dealt: float, attacker):
         damage_dealt_text = str(damage_dealt)
@@ -158,6 +165,20 @@ class NonPlayerCharacter(character.Character):
         self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
 
 
+def get_number_of_unique_enemies_from_enemies_list(enemies_list: list[NonPlayerCharacter]):
+    """
+    Get the number of unique enemies in the enemies list.
+    :param enemies_list: the enemies list to be checked
+    :return: the number of unique enemies in the enemies list
+    """
+    enemy_types_in_battle = []
+    for enemy in enemies_list:
+        if type(enemy) not in enemy_types_in_battle:
+            enemy_types_in_battle.append(type(enemy))
+
+    return len(enemy_types_in_battle)
+
+
 class Rudinn(NonPlayerCharacter):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, enemies_list: list,
                  center_x: float, center_y: float, bullet_board, scale: float = 4.0, angle: float = 0):
@@ -174,11 +195,19 @@ class Rudinn(NonPlayerCharacter):
             attack=10,
             defense=2,
             element_id=0,
-            attacks=[DefaultAttack],
+            attacks=[
+                RainingDiamondAttack(
+                    sprites_and_effects_collection=sprites_and_effects_collection,
+                    bullet_board=bullet_board,
+                    attacker=self,
+                    enemies_list=enemies_list
+                )
+            ],
             enemies_list=enemies_list
         )
 
         self.bullet_board = bullet_board
+
 
     def execute_attack(self, enemies: list[NonPlayerCharacter]):
         """
@@ -188,23 +217,9 @@ class Rudinn(NonPlayerCharacter):
         :param enemies: The enemies currently present in battle.
         :return: The duration of the attack (in seconds)
         """
-        # Find the number of unique enemy types in battle.
-        enemy_types_in_battle = []
-        for enemy in enemies:
-            if type(enemy) not in enemy_types_in_battle:
-                enemy_types_in_battle.append(type(enemy))
-
-        for enemy in enemies:
-            if type(enemy) is Rudinn:
-                if enemy is self:
-                    raining_diamond_bullet_pattern = RainingDiamondBulletPattern(
-                        sprites_and_effects_collection=self.sprites_and_effects_collection,
-                        bullet_board=self.bullet_board,
-                        frequency=1/len(enemy_types_in_battle)
-                    )
-                    self.sprites_and_effects_collection.effects.append(raining_diamond_bullet_pattern)
-                    self.bullet_patterns.append(raining_diamond_bullet_pattern)
-                else:
-                    break
-
-        return 10.0
+        if len(self.attacks) == 0:
+            return 10.0
+        else:
+            attack_index = random.randint(0, len(self.attacks) - 1)
+            self.current_attack = self.attacks[attack_index]
+            return self.current_attack.execute_attack()

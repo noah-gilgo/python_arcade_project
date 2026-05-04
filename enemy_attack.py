@@ -1,33 +1,51 @@
-import non_player_character
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
 class EnemyAttack:
     """
-    The attack that the enemy/combination of enemies do together to create the barrage of bullets the player has to
-    avoid during the enemy turn.
+    An individual enemy attack. Ideally just spawns a bunch of bullet patterns.
 
-    Think of EnemyIndividualAttacks as the individual contribution that each enemy makes to the actual attack they all
-    do together. If a Rudinn and a Hathy attack together, the Hathy conjures a circle of hearts while the Rudinn rains
-    diamonds on the bullet board. Each of them contribute an EnemyIndividualAttack which is controlled by the parameters
-    of the EnemyAttack.
+    NOTE: When spawning bullets/bullet patterns, *add them to self.bullets and self.bullet_patterns, respectively.*
+    If you do this, self.terminate_attack will clean up all the bullets for you once the enemy turn ends.
     """
 
-    def __init__(self, enemies: list[non_player_character.NonPlayerCharacter],
-                 sprites_and_effects_collection: SpritesAndEffectsCollection):
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, duration: float = 10.0):
         """
         Initializes the initial conditions for the attack.
         :param enemies: The enemies present in battle.
         """
-        self.enemies = enemies
+        self.sprites_and_effects_collection = sprites_and_effects_collection
+
+        self.duration = duration
         self.time = 0.0
 
-        # for enemy in self.enemies:
+        # All the active bullets/bullet patterns spawned by the attack
+        self.bullets = []
+        self.bullet_patterns = []
 
-
-    def update_animation(self, delta_time: float):
+    def execute_attack(self):
         """
-        Updates a multitude of bullet patterns. Behavior can be coded to vary based on the number of unique enemies.
+        Starts the attack. This usually sets the initial conditions for the attack.
         :return: None
         """
         pass
+
+    def update_attack(self, delta_time: float):
+        """
+        Updates the attack. This is the meat and potatoes of most complex attacks that don't involve just spawning one
+        or more bullet patterns at the very beginning of the attack.
+        :return: None
+        """
+        self.time += delta_time
+
+    def terminate_attack(self):
+        """
+        Ends the attack.
+        :return: None
+        """
+        for bullet in self.bullets:
+            bullet.kill()
+
+        for bullet_pattern in self.bullet_patterns:
+            bullet_pattern.terminate_animation()
+
