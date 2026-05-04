@@ -632,7 +632,7 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
         super().__init__(
             children=[],
             x=x_offset,
-            y=int(settings.WINDOW_HEIGHT / 5.1),
+            y=int(settings.WINDOW_HEIGHT / 5.1) - 2,
             width=width,
             align="center",
             space_between=self._horizontal_spacing,

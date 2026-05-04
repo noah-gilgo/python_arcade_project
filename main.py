@@ -199,7 +199,7 @@ class GameView(arcade.View):
         self.player_three.equip_armor_to_slot_2(WaferGuard())
         self.player_characters.append(self.player_three)
 
-
+        """
         self.player_four = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                             scale=4.0,
                                                             center_x=self._holy_arc[3][0],
@@ -257,6 +257,7 @@ class GameView(arcade.View):
         self.player_characters.append(self.player_four)
 
         self.player_four.get_valid_animation_states()
+        """
 
         # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", True)

@@ -324,19 +324,21 @@ class BattleController:
             self.battle_player_character_cards.children[self.current_player_index].unfocus()
             self.current_player_index += 1
             self.battle_player_character_cards.children[self.current_player_index].focus()
+            self.menu_select_sound.play()
             self.focus_stack.push(
                 self.battle_player_character_cards,
                 self.battle_player_character_cards.children[self.current_player_index].children[0],
                 self.state,
-                5
+                5,
+                False
             )
-            self.menu_select_sound.play()
         else:
             self.battle_player_character_cards.children[self.current_player_index].unfocus()
             self.focus_stack.pop()
             self.state = BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS
             self.initialize_sorted_action_queue()
             self.execute_queued_player_action()
+
 
     def move_to_previous_player_card(self):
         """
@@ -530,16 +532,8 @@ class BattleController:
         is_crit = False
 
         for hit_marker in self.fight_hit_markers[:]:
-            temp_actor = hit_marker.actor
-            temp_target = hit_marker.target
             if min_hit_marker_center_x - 20 < hit_marker.sprite.center_x < min_hit_marker_center_x + 20 and fight_box_min_x < hit_marker.sprite.center_x < fight_box_max_x:
                 enemy_hit = True
-                temp_actor.set_animation_state("battle_attack")
-                pyglet.clock.unschedule(lambda dt: temp_actor.set_animation_state)
-                pyglet.clock.schedule_once(
-                    lambda dt, actor=temp_actor: actor.set_animation_state("battle_idle"),
-                    1.0
-                )
                 if fight_box_min_x <= hit_marker.sprite.center_x <= fight_box_max_x:
                     if fight_crit_box_min_x <= hit_marker.sprite.center_x <= fight_crit_box_max_x:
                         hit_marker.sprite.center_x = fight_crit_box_center_x
@@ -549,15 +543,11 @@ class BattleController:
                     else:
                         hit_marker.register_hit()
                         attack_multiplier = fight_box_min_x / hit_marker.sprite.center_x
-                    temp_attack_multiplier = attack_multiplier
-                    temp_is_crit = is_crit
-                    pyglet.clock.schedule_once(
-                        lambda dt, actor=temp_actor, target=temp_target, mult=temp_attack_multiplier:
-                        self.attack_target(actor, target, mult),
-                        0.4
-                    )
+
+                    self.attack_target(hit_marker.actor, hit_marker.target, attack_multiplier, is_crit)
+
                     if is_crit:
-                        critical_hit_sparkle_animation = CriticalHitSparkleAnimation(temp_actor)
+                        critical_hit_sparkle_animation = CriticalHitSparkleAnimation(hit_marker.actor)
                         self.sprites_and_effects_collection.effects.append(critical_hit_sparkle_animation)
                         for sprite in critical_hit_sparkle_animation.get_sprites():
                             self.sprites_and_effects_collection.effects_sprites.append(sprite)
@@ -570,7 +560,7 @@ class BattleController:
                 self.player_critical_hit_sound.play()
 
     def attack_target(self, actor: player_character.PlayerCharacter, target: character.Character,
-                      attack_damage_multiplier: float = 1.0):
+                      attack_damage_multiplier: float = 1.0, is_crit: bool = False):
         """ Decreases the targets health by a calculated amount and animates the target taking damage. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
 
@@ -581,9 +571,9 @@ class BattleController:
             target = self.enemies[0]
 
         actor.attack_enemy(target, attack_damage_multiplier)
-        # target.receive_damage(damage_dealt, actor)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
+
         """
         if is_crit:
             self.add_tp_to_meter(6.0)
@@ -700,7 +690,7 @@ class BattleController:
         enemy_list_full_layout = EnemySelect(self.enemies)
         enemy_list_interactive_layout = enemy_list_full_layout.children[1]
         self.focus_stack.push(enemy_list_full_layout, enemy_list_interactive_layout,
-                                         self.state, 1)
+                                         self.state, 1, True)
         new_focus_animation = self.focus_stack.get_highest_member().get_focused_widget().enemy.focus()
         self.sprites_and_effects_collection.effects.append(new_focus_animation)
         self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
@@ -725,7 +715,7 @@ class BattleController:
         player_list_full_layout = battle_widgets.PlayerSelect(self.players)
         player_list_interactive_layout = player_list_full_layout
         self.focus_stack.push(player_list_full_layout, player_list_interactive_layout,
-                                         self.state, 1)
+                                         self.state, 1, True)
         new_focus_animation = self.focus_stack.get_highest_member().get_focused_widget().player.focus()
         self.sprites_and_effects_collection.effects.append(new_focus_animation)
         self.sprites_and_effects_collection.effects_sprites.append(new_focus_animation.filter_sprite)
@@ -760,7 +750,7 @@ class BattleController:
         if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
             return
-        if len(self.sorted_actions_queue["simple_act_actions"]) > 0:
+        elif len(self.sorted_actions_queue["simple_act_actions"]) > 0:
             act_texts = ""
             for action in self.sorted_actions_queue["simple_act_actions"]:
                 act_text = self.sorted_actions_queue["simple_act_actions"].pop().execute()
@@ -807,7 +797,10 @@ class BattleController:
                 sum_of_attack_durations += attack_duration
 
         # Set the duration of the attack and start the attack clock.
-        self.enemy_attack_duration = sum_of_attack_durations / len(self.enemies)
+        if len(self.enemies) > 0:
+            self.enemy_attack_duration = sum_of_attack_durations / len(self.enemies)
+        else:
+            self.enemy_attack_duration = 10.0
         self.start_enemy_attack_clock()
 
         self.load_bullet_board_called_for_this_turn = True
@@ -822,12 +815,14 @@ class BattleController:
             for enemy in self.enemies:
                 enemy.terminate_attack()
 
+        # Set all the defending players to not be defending.
+        for player in self.players:
+            player.undefend()
+
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
         self.stop_enemy_attack_clock()
         self.load_bullet_board_called_for_this_turn = False
-        # self.change_all_player_icons_to_default()
-        # self.set_animation_state_of_all_players("battle_idle")
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """
@@ -893,14 +888,14 @@ class SelectCommand(Command):
                             spell_list_full_layout = SpellSelect(self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character)
                             spell_list_interactive_layout = spell_list_full_layout.children[0]
                             self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout,
-                                                             self.controller.state, 2)
+                                                             self.controller.state, 2, True)
                             return
                     case 2:  # user selects the ITEM button
                         self.controller.state = BattleState.PLAYER_ITEM_SELECT
                         item_list_full_layout = battle_widgets.ItemSelect(self.controller.items)
                         item_list_interactive_layout = item_list_full_layout.children[0]
                         self.controller.focus_stack.push(item_list_full_layout, item_list_interactive_layout,
-                                                         self.controller.state, 2)
+                                                         self.controller.state, 2, True)
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().item
                         )
@@ -924,7 +919,7 @@ class SelectCommand(Command):
                 selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 selected_target_enemy.unfocus()
 
-                self.controller.focus_stack.pop()
+                self.controller.focus_stack.pop(remove_widget=True)
 
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
 
@@ -961,9 +956,9 @@ class SelectCommand(Command):
             case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
                 selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 selected_target_enemy.unfocus()
-                self.controller.focus_stack.pop()
+                self.controller.focus_stack.pop(remove_widget=True)
                 selected_spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                self.controller.focus_stack.pop()
+                self.controller.focus_stack.pop(remove_widget=True)
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
 
                 spell_action = SpellAction(
@@ -980,7 +975,7 @@ class SelectCommand(Command):
                 item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
                 item_index = self.controller.focus_stack.get_highest_member().get_focused_widget_index()
                 if item.tp_restored > 0 and item.hp_restored == 0:  # If item is TP item exclusively
-                    self.controller.focus_stack.pop()
+                    self.controller.focus_stack.pop(remove_widget=True)
                     current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                     item_action = ItemAction(
                         actor=current_player_character,
@@ -993,7 +988,7 @@ class SelectCommand(Command):
                     return
                 if item.heals_all_party_members:  # If item affects all party members
                     # TODO: queue an ItemAction with the item
-                    self.controller.focus_stack.pop()
+                    self.controller.focus_stack.pop(remove_widget=True)
                     current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                     item_action = ItemAction(
                         actor=current_player_character,
@@ -1012,10 +1007,10 @@ class SelectCommand(Command):
             case BattleState.PLAYER_ITEM_PLAYER_SELECT:
                 targeted_player_character = self.controller.focus_stack.get_highest_member().get_focused_widget().player
                 targeted_player_character.unfocus()
-                self.controller.focus_stack.pop()
+                self.controller.focus_stack.pop(remove_widget=True)
                 item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
                 item_index = self.controller.focus_stack.get_highest_member().get_focused_widget_index()
-                self.controller.focus_stack.pop()
+                self.controller.focus_stack.pop(remove_widget=True)
                 player_using_item = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                 item_action = ItemAction(
                     actor=player_using_item,
@@ -1033,7 +1028,7 @@ class SelectCommand(Command):
                 selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 selected_target_enemy.unfocus()
 
-                self.controller.focus_stack.pop()
+                self.controller.focus_stack.pop(remove_widget=True)
 
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
 
@@ -1093,7 +1088,7 @@ class CancelCommand(Command):
         Used a lot in CancelCommand.execute().
         :return: None
         """
-        focus_stack_member = self.controller.focus_stack.pop()
+        focus_stack_member = self.controller.focus_stack.pop(remove_widget=True)
         if focus_stack_member:
             self.controller.state = self.controller.focus_stack.get_highest_member().state
         self.controller.menu_move_sound.play()

@@ -1,46 +1,57 @@
+from bullet_board import BulletBoard
 from bullet_patterns import RainingDiamondBulletPattern
+from enemy_attack import EnemyAttack
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
-class EnemyIndividualAttack:
-    """
-    The attack an individual enemy contributes to an enemy turn.
-    Receives (optionally) the number of active opponents as a parameter to modify the attack based on concurrent
-    attacks. Often contains a multitude of bullet patterns, but it doesn't really have to. It's just a possible
-    contribution that an enemy can make to a combo attack.
-    """
+class RainingDiamondAttack(EnemyAttack):
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, bullet_board: BulletBoard,
+                 attacker, enemies_list: list, frequency: float = 1.0):
+        super().__init__(
+            sprites_and_effects_collection=sprites_and_effects_collection,
+            duration=10.0
+        )
 
-    def __init__(self, attacker, attackers: list, sprites_and_effects_collection: SpritesAndEffectsCollection):
-        """
-        Initializes the initial conditions for the attack.
-        :param attacker: the enemy doing the attack.
-        :param attackers: the enemies attacking. Can be used to modify the behavior of the attack depending on the
-        unique number/types of enemies.
-        """
-        self.sprites_and_effects_collection = sprites_and_effects_collection
+        self.frequency = frequency
+        self.bullet_board = bullet_board
         self.attacker = attacker
-        self.attackers = attackers
-        self.time = 0.0
-        self.bullet_patterns = []
+        self.enemies_list = enemies_list
 
-    def update_animation(self, delta_time: float):
+    def execute_attack(self):
         """
-        Updates a multitude of bullet patterns. Behavior can be coded to vary based on the number of unique enemies.
-        :return: None
+        Starts the attack.
+        :return: the duration of the attack
         """
-        if len(self.bullet_patterns) > 0:
-            for bullet_pattern in self.bullet_patterns:
-                bullet_pattern.update_animation(delta_time)
+        # Find the number of unique enemy types in battle.
+        number_of_unique_enemies_in_battle = get_number_of_unique_enemies_from_enemies_list(self.enemies_list)
+
+        for enemy in self.enemies_list:
+            if type(enemy) is type(self.attacker):
+                if enemy is self.attacker:
+                    raining_diamond_bullet_pattern = RainingDiamondBulletPattern(
+                        sprites_and_effects_collection=self.sprites_and_effects_collection,
+                        bullet_board=self.bullet_board,
+                        frequency=1 / number_of_unique_enemies_in_battle
+                    )
+                    self.sprites_and_effects_collection.effects.append(raining_diamond_bullet_pattern)
+                    self.bullet_patterns.append(raining_diamond_bullet_pattern)
+                else:
+                    break
+
+        return 10.0
 
 
-class DefaultAttack(EnemyIndividualAttack):
+def get_number_of_unique_enemies_from_enemies_list(enemies_list: list):
     """
-    Default enemy attack.
+    Get the number of unique enemies in the enemies list.
+    :param enemies_list: the enemies list to be checked
+    :return: the number of unique enemies in the enemies list
     """
-    def __init__(self, attacker, attackers: list, sprites_and_effects_collection):
-        super().__init__(attacker, attackers, sprites_and_effects_collection)
-        self.bullet_patterns = [RainingDiamondBulletPattern(sprites_and_effects_collection)]
+    enemy_types_in_battle = []
+    for enemy in enemies_list:
+        if type(enemy) not in enemy_types_in_battle:
+            enemy_types_in_battle.append(type(enemy))
 
-    def update_animation(self, delta_time: float):
-        super().update_animation(delta_time)
+    return len(enemy_types_in_battle)
+
 
