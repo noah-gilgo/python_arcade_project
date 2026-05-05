@@ -260,6 +260,8 @@ class SpareAction(Action):
 
     def execute(self):
         # Makes the provided actor attempt to spare the focused enemy.
+        if self.target not in self.controller.enemies:
+            self.target = self.controller.enemies[0]
         self.actor.set_animation_state("battle_spare")
         spare_message = "* " + self.actor.name + " spared " + self.target.name + "! "
 
