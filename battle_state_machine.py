@@ -564,13 +564,15 @@ class BattleController:
         """ Decreases the targets health by a calculated amount and animates the target taking damage. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
 
-        if len(self.enemies) == 0:
-            return
-
-        if target not in self.enemies:
-            target = self.enemies[0]
+        if len(self.enemies) > 0:
+            if target not in self.enemies:
+                target = self.enemies[0]
+        else:
+            target = None
 
         actor.attack_enemy(target, attack_damage_multiplier)
+
+        print("attack_enemy called")
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
 

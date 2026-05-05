@@ -304,18 +304,19 @@ class PlayerCharacter(character.Character):
         # Temporarily set the player animation state to battle_idle
         self.set_animation_to_not_idle(animation_state="battle_attack", duration=1.0)
 
-        attack = self.attack + self.weapon_slot.attack_points + self.armor_slot_1.attack_points + self.armor_slot_2.attack_points
+        if enemy:
+            attack = self.attack + self.weapon_slot.attack_points + self.armor_slot_1.attack_points + self.armor_slot_2.attack_points
 
-        damage_dealt = int(attack * 10 * attack_damage_multiplier) # This is not exactly how it's calculated in the
-        if self.weapon_slot.element_id:                            # original game, but it's close
-            for element in default_data.ELEMENTAL_PAIRS:
-                if element.element_id == self.weapon_slot.element_id:
-                    if enemy.element_id in element.resistant_to:
-                        damage_dealt *= 0.66
-                    if enemy.element_id in element.weak_to:
-                        damage_dealt *= 1.5
+            damage_dealt = int(attack * 10 * attack_damage_multiplier) # This is not exactly how it's calculated in the
+            if self.weapon_slot.element_id:                            # original game, but it's close
+                for element in default_data.ELEMENTAL_PAIRS:
+                    if element.element_id == self.weapon_slot.element_id:
+                        if enemy.element_id in element.resistant_to:
+                            damage_dealt *= 0.66
+                        if enemy.element_id in element.weak_to:
+                            damage_dealt *= 1.5
 
-        pyglet.clock.schedule_once(lambda dt: enemy.receive_damage(damage_dealt, self), 0.4)
+            pyglet.clock.schedule_once(lambda dt: enemy.receive_damage(damage_dealt, self), 0.4)
 
 
     def receive_damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):
