@@ -691,7 +691,7 @@ class SpellListOption(UILabel):
 
 
 class SpellList(UIGridLayout):
-    def __init__(self, character: player_character.PlayerCharacter):
+    def __init__(self, character: player_character.PlayerCharacter, controller):
         super().__init__(
             x=36,
             y=0,
@@ -726,10 +726,14 @@ class SpellList(UIGridLayout):
 
             spell_index = 1
             for spell in character.spells:
+                if controller.tp_meter.get_tp_in_meter() >= spell.tp_cost:
+                    color = arcade.color.WHITE
+                else:
+                    color = arcade.color.GRAY
                 row_index = spell_index // 2
                 col_index = spell_index % 2
                 self.add(
-                    SpellListOption(spell),
+                    SpellListOption(spell, color),
                     column=col_index,
                     row=row_index
                 )
@@ -781,10 +785,10 @@ class SpellDescriptionAndTPCost(UIBoxLayout):
 
 
 class SpellSelect(UIBoxLayout):
-    def __init__(self, character: player_character.PlayerCharacter):
+    def __init__(self, character: player_character.PlayerCharacter, controller):
         view_width = settings.WINDOW_WIDTH - 40
 
-        spell_list = SpellList(character)
+        spell_list = SpellList(character, controller)
         spell_description = SpellDescriptionAndTPCost()
 
         self.space_between = view_width - (spell_list.width + spell_description.width)
@@ -797,8 +801,8 @@ class SpellSelect(UIBoxLayout):
             vertical=False,
             space_between=self.space_between,
             children=[
-                SpellList(character),
-                SpellDescriptionAndTPCost()
+                spell_list,
+                spell_description
             ],
             align="center"
         )
@@ -1280,6 +1284,9 @@ class TPMeter(UIBoxLayout):
 
     def on_update(self, delta_time: float):
         self.visual_tp = self.children[1].tp_meter_image.visual_tp
+
+    def get_tp_in_meter(self):
+        return self.children[1].tp_meter_image.tp
 
 
 class ItemOption(UILabel):
