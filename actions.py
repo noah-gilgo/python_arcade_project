@@ -138,16 +138,22 @@ class SpellAction(Action):
 
     def execute(self):
         # Casts the spell.
+
         targeted_enemies = []
-        for target in self.targets:
-            if target in self.controller.enemies:
-                targeted_enemies.append(target)
+        if len(self.targets) == 1:
+            if self.targets[0] not in self.controller.enemies:
+                if len(self.controller.enemies) > 0:
+                    self.targets[0] = self.controller.enemies[0]
+        else:
+            for target in self.targets:
+                if target in self.controller.enemies:
+                    targeted_enemies.append(target)
 
         # If the spellcasters initial target leaves the battle before they can cast the spell, target another enemy.
-        if len(self.targets) == 1 and len(targeted_enemies) == 0:
+        if len(self.targets) == 1 and len(targeted_enemies) == 0 and len(self.controller.enemies) > 0:
             targeted_enemies.append(self.controller.enemies[0])
 
-        if len(targeted_enemies) > 0:
+        if len(targeted_enemies) > 0 and len(self.controller.enemies) > 0:
             self.actor.set_animation_state("battle_magic")
             self.controller.battle_textbox.load_dialog(TextBoxDialog(
                 text="* " + self.actor.name + " cast " + self.spell.name + "!",
@@ -260,6 +266,8 @@ class SpareAction(Action):
 
     def execute(self):
         # Makes the provided actor attempt to spare the focused enemy.
+        if self.target not in self.controller.enemies:
+            self.target = self.controller.enemies[0]
         self.actor.set_animation_state("battle_spare")
         spare_message = "* " + self.actor.name + " spared " + self.target.name + "! "
 

@@ -172,7 +172,8 @@ class GameView(arcade.View):
                                                            battle_ui_color=Color(255, 0, 255, 255),
                                                            battle_ui_icon_color=Color(234, 121, 200, 255),  # Sprite initialization
                                                            fight_box_color = Color(128, 0, 128, 255),
-                                                           fight_crit_box_color=Color(234, 121, 200, 255))
+                                                           fight_crit_box_color=Color(234, 121, 200, 255),
+                                                           spells=[IceShock()])
         self.player_two.equip_weapon(JusticeAxe())
         self.player_two.equip_armor_to_slot_1(ShadowMantle())
         self.player_two.equip_armor_to_slot_2(Jevilstail())
@@ -193,13 +194,14 @@ class GameView(arcade.View):
                                                              battle_ui_color=Color(0, 255, 0, 255),
                                                              battle_ui_icon_color=Color(181, 230, 29, 255), # Sprite initialization
                                                              fight_box_color=Color(0, 255, 0, 255),
-                                                             fight_crit_box_color=Color(181, 230, 29, 255))
+                                                             fight_crit_box_color=Color(181, 230, 29, 255),
+                                                             spells=[IceShock()])
         self.player_three.equip_weapon(ScarfMark())
         self.player_three.equip_armor_to_slot_1(WhiteRibbon())
         self.player_three.equip_armor_to_slot_2(WaferGuard())
         self.player_characters.append(self.player_three)
 
-        """
+
         self.player_four = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                             scale=4.0,
                                                             center_x=self._holy_arc[3][0],
@@ -257,7 +259,7 @@ class GameView(arcade.View):
         self.player_characters.append(self.player_four)
 
         self.player_four.get_valid_animation_states()
-        """
+
 
         # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", True)

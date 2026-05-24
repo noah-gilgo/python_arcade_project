@@ -107,6 +107,13 @@ class NonPlayerCharacter(character.Character):
         self.current_attack = None
 
     def receive_damage(self, damage_dealt: float, attacker):
+        if len(self.enemies_list) == 0:
+            return
+
+        target = self
+        if self not in self.enemies_list:
+            target = self.enemies_list[0]
+
         damage_dealt_text = str(damage_dealt)
         damage_dealt_color = Color.from_iterable([
             int((attacker.battle_ui_color.r + 255) / 2),
@@ -115,9 +122,9 @@ class NonPlayerCharacter(character.Character):
             int(attacker.battle_ui_color.a)
         ])
 
-        if self.element_id and attacker.weapon_slot.element_id:
+        if target.element_id and attacker.weapon_slot.element_id:
             for element in default_data.ELEMENTAL_PAIRS:
-                if element.element_id == self.element_id:
+                if element.element_id == target.element_id:
                     if attacker.weapon_slot.element_id in element.resistant_to:
                         damage_dealt *= 0.66
                     if attacker.weapon_slot.element_id in element.weak_to:
@@ -128,38 +135,37 @@ class NonPlayerCharacter(character.Character):
             damage_dealt_color = arcade.color.WHITE
 
         else:
-            self.enemy_hit_sound.play()
+            target.hp -= damage_dealt
+            target.enemy_hit_sound.play()
 
             # If the attack reduces the enemy HP to 0
-            if self.hp <= 0:
+            if target.hp <= 0:
+                if target in target.enemies_list:
+                    target.enemies_list.remove(target)
                 damage_dealt_text = "LOST"
                 damage_dealt_color = arcade.color.RED
                 self.enemy_flee_sound.play()
-                enemy_fleeing_animation = EnemyFleeingAnimation(actor=self)
+                enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
                 self.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)
                 for sprite in enemy_fleeing_animation.get_sprites():
                     self.sprites_and_effects_collection.effects_sprites.append(sprite)
-                if self in self.enemies_list:
-                    self.enemies_list.remove(self)
             else:
                 shake_animation = ShakeAnimation(
-                    sprite=self
+                    sprite=target
                 )
                 self.sprites_and_effects_collection.effects.append(shake_animation)
                 strike_enemy_animation = StrikeEnemyAnimation(
                     actor=attacker,
-                    target=self
+                    target=target
                 )
                 self.sprites_and_effects_collection.effects.append(strike_enemy_animation)
                 self.sprites_and_effects_collection.effects_sprites.append(strike_enemy_animation.sprite)
-                self.set_animation_to_not_idle(1.5, "battle_hurt")
-
-        self.hp -= damage_dealt
+                target.set_animation_to_not_idle(1.5, "battle_hurt")
 
         damage_dealt_animation = NumberBounceAnimation(
             text=damage_dealt_text,
             color=damage_dealt_color,
-            target=self
+            target=target
         )
 
         self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
