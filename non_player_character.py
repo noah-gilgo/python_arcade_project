@@ -18,7 +18,7 @@ NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/non_player_characters
 class NonPlayerCharacter(character.Character):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, scale: float, center_x: float,
                  center_y: float, angle: float, sprite_folder_name: str, name: str, hp: int, max_hp: int, attack: int,
-                 defense: int, element_id: int = 0, tired: int = 0, mercy: int = 0, enemies_list: list = [],
+                 defense: int, element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [],
                  attacks: list = []):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
@@ -38,6 +38,8 @@ class NonPlayerCharacter(character.Character):
                                                  False)
         self.enemy_flee_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_defeatrun.wav",
                                                   False)
+        self.mercy_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_mercyadd.wav",
+                                                 False)
 
         self._animations_by_state.update({
             "overworld": graphics_objects.SimpleLoopAnimation(
@@ -170,6 +172,62 @@ class NonPlayerCharacter(character.Character):
 
         self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
         self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
+
+    def receive_mercy(self, mercy_percentage: float = 10.0) -> None:
+        """
+        Adds a certain amount of mercy to the character and plays the appropriate animations.
+        :param mercy_percentage: The amount of mercy to add to the character
+        :return: None
+        """
+
+        # Add the mercy to the non player character's mercy
+        self.mercy = min(100.0, self.mercy + mercy_percentage)
+
+        if self.mercy >= 100.0 and "battle_spared" in self._animations_by_state:
+            self.set_animation_state("battle_spared")
+
+        spare_percent_number_animation = NumberBounceAnimation(
+            target=self,
+            text="+" + str(int(mercy_percentage)) + "%",
+            color=arcade.color.GOLD
+        )
+
+        self.sprites_and_effects_collection.effects.append(spare_percent_number_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(spare_percent_number_animation.sprite)
+        self.mercy_add_sound.play()
+
+    def receive_tired(self, tired_percentage: float = 100.0):
+        """
+        Adds a certain amount of tired to the character and plays the appropriate animations.
+        :param tired_percentage: The amount of mercy to add to the character
+        :return: None
+        """
+
+        # Add the mercy to the non player character's mercy
+        self.tired = min(100.0, self.mercy + tired_percentage)
+
+        if self.tired >= 100.0:
+            if "battle_tired" in self._animations_by_state:
+                self.set_animation_state("battle_tired")
+
+            tired_percent_number_animation = NumberBounceAnimation(
+                target=self,
+                text="TIRED",
+                color=arcade.color.DARK_CYAN
+            )
+
+        else:
+            tired_percent_number_animation = NumberBounceAnimation(
+                target=self,
+                text="+" + str(int(tired_percentage)) + "%",
+                color=arcade.color.DARK_CYAN
+            )
+
+        self.sprites_and_effects_collection.effects.append(tired_percent_number_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(tired_percent_number_animation.sprite)
+        self.mercy_add_sound.play()
+
+
 
 
 def get_number_of_unique_enemies_from_enemies_list(enemies_list: list[NonPlayerCharacter]):

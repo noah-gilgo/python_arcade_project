@@ -10,8 +10,8 @@ class SimpleAct:
     def __init__(self):
         self.name = "Placeholder Act Name"  # The name of the act in the ACT menu.
         self.description_text = "You just performed an act!"  # Dialog box text when the act is performed
-        self.mercy_percentage = 0.1  # Mercy granted to the enemy the act is performed on
-        self.tired_percentage = 0.1  # Tired granted to the enemy the act is performed on
+        self.mercy_percentage = 0.0  # Mercy granted to the enemy the act is performed on (between 0 and 100)
+        self.tired_percentage = 0.0  # Tired granted to the enemy the act is performed on (between 0 and 100)
         self.actor_animation_state = ""  # The animation the actor is briefly given when they perform the act.
 
     def perform_act(self, actor, target, dialogue_box):
@@ -20,9 +20,17 @@ class SimpleAct:
         :return: None
         """
 
+        # If there is an actor animation state associated with the act, set it.
         if self.actor_animation_state:
             actor.set_animation_state(self.actor_animation_state)
 
-        dialogue_box.load_dialog(TextBoxDialog(text=self.description_text))
+        # Load the act dialogue into the dialogue box, if there is any.
+        if self.description_text:
+            dialogue_box.load_dialog(TextBoxDialog(text=self.description_text))
 
+        # If the mercy/tired percentages are greater than zero, have the target receive them.
+        if self.mercy_percentage > 0.0:
+            target.receive_mercy(self.mercy_percentage)
 
+        if self.tired_percentage > 0.0:
+            target.receive_tired(self.mercy_percentage)
