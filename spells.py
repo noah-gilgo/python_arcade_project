@@ -7,11 +7,8 @@ from arcade.types import Color
 
 import character
 import default_data
-import non_player_character
 from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
-from character import Character
-from elemental_pairs import ElementalPair
 from graphics_objects import MultiSpriteAnimation
 from spell_animations import IceShockAnimation, FreezeAnimation
 
