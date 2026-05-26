@@ -1,36 +1,26 @@
-from dialogue_box import TextBoxDialog
+from act import SimpleAct
+from non_player_character import NonPlayerCharacter
 
 
-class SimpleAct:
-    """
-    A simple act. Many acts in Deltarune battles follow a format where text is displayed related to the act and
-    the enemy is granted a certain percentage of mercy/tired. This object encapsulates this simple kind of act, which
-    does not require any additional animations, player interactions or cause any changes to the enemy behavior.
-    """
+class RudinnConvince(SimpleAct):
     def __init__(self):
-        self.name = "Placeholder Act Name"  # The name of the act in the ACT menu.
-        self.description_text = "You just performed an act!"  # Dialog box text when the act is performed
-        self.mercy_percentage = 0.0  # Mercy granted to the enemy the act is performed on (between 0 and 100)
-        self.tired_percentage = 0.0  # Tired granted to the enemy the act is performed on (between 0 and 100)
-        self.actor_animation_state = ""  # The animation the actor is briefly given when they perform the act.
+        super().__init__(
+            name="Convince",
+            description="You told Rudinn to quit fighting.\n* It was utterly swayed.",
+            mercy_percentage=100
+        )
+
+
+class RudinnLecture(SimpleAct):
+    def __init__(self, enemies_list: list[NonPlayerCharacter]):
+        super().__init__(
+            name="Lecture",
+            description="* You lectured the enemies on the importance of kindness.\n* It was utterly swayed."
+        )
+
+        self.enemies_list = enemies_list
 
     def perform_act(self, actor, target, dialogue_box):
-        """
-        Executes the act.
-        :return: None
-        """
-
-        # If there is an actor animation state associated with the act, set it.
-        if self.actor_animation_state:
-            actor.set_animation_state(self.actor_animation_state)
-
-        # Load the act dialogue into the dialogue box, if there is any.
-        if self.description_text:
-            dialogue_box.load_dialog(TextBoxDialog(text=self.description_text))
-
-        # If the mercy/tired percentages are greater than zero, have the target receive them.
-        if self.mercy_percentage > 0.0:
-            target.receive_mercy(self.mercy_percentage)
-
-        if self.tired_percentage > 0.0:
-            target.receive_tired(self.mercy_percentage)
+        super().perform_act(actor, target, dialogue_box)
+        for enemy in self.enemies_list:
+            enemy.receive_tired(100.0)

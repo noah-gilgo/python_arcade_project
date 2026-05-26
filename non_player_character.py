@@ -6,6 +6,8 @@ from arcade.types import Color
 import character
 import default_data
 import graphics_objects
+from act import SimpleAct
+from acts import RudinnConvince, RudinnLecture
 from animations.battle_animations import EnemyFleeingAnimation, StrikeEnemyAnimation, NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
 from bullet_patterns import RainingDiamondBulletPattern
@@ -19,7 +21,7 @@ class NonPlayerCharacter(character.Character):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, scale: float, center_x: float,
                  center_y: float, angle: float, sprite_folder_name: str, name: str, hp: int, max_hp: int, attack: int,
                  defense: int, element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [],
-                 attacks: list = []):
+                 attacks: list = [], acts: list = []):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -29,6 +31,7 @@ class NonPlayerCharacter(character.Character):
 
         self.enemies_list = enemies_list  # The other enemies present in battle
         self.attacks = attacks  # The attacks that the enemy is capable of executing
+        self.acts = acts  # The acts that can be performed on the enemy
 
         self.hp = hp
         self.tired = tired
@@ -41,7 +44,7 @@ class NonPlayerCharacter(character.Character):
         self.mercy_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_mercyadd.wav",
                                                  False)
 
-        self._animations_by_state.update({
+        self.animations_by_state.update({
             "overworld": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/overworld",
                 frame_duration=0.3,
@@ -71,7 +74,7 @@ class NonPlayerCharacter(character.Character):
         self.witty_banter = []
 
         # Set the animation state to battle_idle, if it exists
-        if "battle_idle" in self._animations_by_state:
+        if "battle_idle" in self.animations_by_state:
             self.set_animation_state("battle_idle")
 
         # The current attack being performed by the enemy
@@ -183,7 +186,7 @@ class NonPlayerCharacter(character.Character):
         # Add the mercy to the non player character's mercy
         self.mercy = min(100.0, self.mercy + mercy_percentage)
 
-        if self.mercy >= 100.0 and "battle_spared" in self._animations_by_state:
+        if self.mercy >= 100.0 and "battle_spared" in self.animations_by_state:
             self.set_animation_state("battle_spared")
 
         spare_percent_number_animation = NumberBounceAnimation(
@@ -207,7 +210,7 @@ class NonPlayerCharacter(character.Character):
         self.tired = min(100.0, self.mercy + tired_percentage)
 
         if self.tired >= 100.0:
-            if "battle_tired" in self._animations_by_state:
+            if "battle_tired" in self.animations_by_state:
                 self.set_animation_state("battle_tired")
 
             tired_percent_number_animation = NumberBounceAnimation(
@@ -226,8 +229,6 @@ class NonPlayerCharacter(character.Character):
         self.sprites_and_effects_collection.effects.append(tired_percent_number_animation)
         self.sprites_and_effects_collection.effects_sprites.append(tired_percent_number_animation.sprite)
         self.mercy_add_sound.play()
-
-
 
 
 def get_number_of_unique_enemies_from_enemies_list(enemies_list: list[NonPlayerCharacter]):
@@ -267,6 +268,10 @@ class Rudinn(NonPlayerCharacter):
                     attacker=self,
                     enemies_list=enemies_list
                 )
+            ],
+            acts=[
+                RudinnConvince(),
+                RudinnLecture(enemies_list)
             ],
             enemies_list=enemies_list
         )

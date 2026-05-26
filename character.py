@@ -33,7 +33,7 @@ class Character(arcade.Sprite):
         self.current_animation_state = "default"
 
         # This dictionary maps state names to texture arrays that represent the animations of said state.
-        self._animations_by_state = {
+        self.animations_by_state = {
             "default": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path="assets/sprites/soul",
                 frame_duration=0.15,
@@ -42,7 +42,7 @@ class Character(arcade.Sprite):
         }
 
         self.state = "default"  # This is the default texture state upon game creation, as of right now.
-        self.current_animation = self._animations_by_state["default"]
+        self.current_animation = self.animations_by_state["default"]
         self.current_animation_timer = 0.0
         self.current_texture_index = 0
 
@@ -113,9 +113,9 @@ class Character(arcade.Sprite):
         :param is_temporary: Internal variable used to determine whether the animation change was temporary.
         :return: None
         """
-        if state in self._animations_by_state:
+        if state in self.animations_by_state:
             self.state = state
-            self.current_animation = self._animations_by_state.get(state)
+            self.current_animation = self.animations_by_state.get(state)
             self.current_animation_timer = 0.0
             self.current_texture_index = 0
             self.texture = self.current_animation[0]
@@ -140,7 +140,7 @@ class Character(arcade.Sprite):
         :return: A list of all of the valid animation state strings.
         """
         keys_list = []
-        for key in self._animations_by_state.keys():
+        for key in self.animations_by_state.keys():
             keys_list.append(key)
         return keys_list
 
