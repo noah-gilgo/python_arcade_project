@@ -1,5 +1,4 @@
 from act import SimpleAct
-from non_player_character import NonPlayerCharacter
 
 
 class RudinnConvince(SimpleAct):
@@ -12,7 +11,7 @@ class RudinnConvince(SimpleAct):
 
 
 class RudinnLecture(SimpleAct):
-    def __init__(self, enemies_list: list[NonPlayerCharacter]):
+    def __init__(self, enemies_list: list):
         super().__init__(
             name="Lecture",
             description="* You lectured the enemies on the importance of kindness.\n* It was utterly swayed."
