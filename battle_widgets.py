@@ -14,6 +14,8 @@ from arcade.types.color import Color
 import non_player_character
 import player_character
 import settings
+from act import Act
+from acts import CheckAct
 from graphics_methods import ease_out, make_texture_solid_color
 from items.consumable_items import ConsumableItem
 from spells import Spell
@@ -829,6 +831,8 @@ class SpellSelect(UIBoxLayout):
 
 class EnemySelectInstanceName(UILabel):
     def __init__(self, enemy: non_player_character.NonPlayerCharacter):
+        self.enemy = enemy
+
         text_color = arcade.color.WHITE
         if enemy.tired >= 100:
             text_color = Color(0, 178, 255)
@@ -836,7 +840,7 @@ class EnemySelectInstanceName(UILabel):
             text_color = arcade.color.YELLOW
 
         super().__init__(
-            text="     " + enemy.name,
+            text="     " + self.enemy.name,
             width=240,
             height=56,
             font_name="8bitoperator JVE",
@@ -1617,5 +1621,163 @@ class PlayerSelect(UIBoxLayout):
     def do_layout(self):
         self.center_x = int(settings.WINDOW_WIDTH / 2)
         self.height = int(settings.WINDOW_HEIGHT / 4.2)
+
+        super().do_layout()
+
+
+class ActListOption(UILabel):
+    def __init__(self, act: Act):
+        super().__init__(
+            text="     " + act.name,
+            width=400,
+            height=64,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.WHITE,
+            size_hint=None
+        )
+
+        self.act = act
+        self.focus_mode = FocusMode(2)
+        self.soul_sprite = arcade.Sprite(path_or_texture="assets/sprites/soul/soul.png", scale=1.0)
+
+    def do_render_focus(self, surface: arcade.gui.Surface):
+        arcade.draw_sprite_rect(
+            self.soul_sprite,
+            arcade.XYWH(
+                16,
+                32,
+                32,
+                32
+            ),
+            pixelated=True
+        )
+
+
+class ActList(UIGridLayout):
+    def __init__(self, character: non_player_character.NonPlayerCharacter, controller):
+        super().__init__(
+            x=36,
+            y=0,
+            width=(2 * settings.WINDOW_WIDTH) / 3,
+            height=int(settings.WINDOW_HEIGHT / 4) - 30,
+            row_count=3,
+            column_count=2,
+            align_horizontal="left",
+            alight_vertical="center",
+            horizontal_spacing=100,
+            size_hint=None
+        )
+
+        if character.acts:
+            self.add(
+                ActListOption(
+                    CheckAct(character)
+                ),
+                column=0,
+                row=0
+            )
+
+            act_index = 1
+            for act in character.acts:
+                if controller.tp_meter.get_tp_in_meter() >= act.tp_cost:
+                    color = arcade.color.WHITE
+                else:
+                    color = arcade.color.GRAY
+                row_index = act_index // 2
+                col_index = act_index % 2
+                self.add(
+                    ActListOption(act),
+                    column=col_index,
+                    row=row_index
+                )
+                act_index += 1
+
+
+class ActDescriptionLabel(UILabel):
+    def __init__(self, act_description: str = ""):
+        super().__init__(
+            size_hint=(None, None),
+            width=400,
+            height=212,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.GRAY,
+            text=act_description,
+            multiline=True
+        )
+
+
+class ActTPCostLabel(UILabel):
+    def __init__(self, tp_cost: int = 0):
+        super().__init__(
+            width=400,
+            height=60,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.NEON_CARROT,
+            text="" if not tp_cost else str(tp_cost) + "% TP"
+        )
+
+
+class ActDescriptionAndTPCost(UIBoxLayout):
+    def __init__(self, act: Act = None):
+        super().__init__(
+            width=400,
+            height=300,
+            children=[
+                ActDescriptionLabel("" if not act or not act.description else act.description),
+                ActTPCostLabel(0 if not act or not act.tp_cost else act.tp_cost)
+            ],
+            align="left"
+        )
+
+    def update_act_data(self, act: Act = None):
+        """ Updates the act data shown in the layout. """
+        self.children[0].text = "" if not act or not act.description else act.description
+        self.children[1].text = "" if not act or not act.tp_cost else str(act.tp_cost) + "% TP"
+
+
+class ActSelect(UIBoxLayout):
+    def __init__(self, character: non_player_character.NonPlayerCharacter, controller):
+        view_width = settings.WINDOW_WIDTH - 40
+
+        act_list = ActList(character, controller)
+        act_description = ActDescriptionAndTPCost()
+
+        self.space_between = view_width - (act_list.width + act_description.width)
+
+        super().__init__(
+            x=36,
+            y=0,
+            width=view_width,
+            height=int(settings.WINDOW_HEIGHT / 4),
+            vertical=False,
+            space_between=self.space_between,
+            children=[
+                act_list,
+                act_description
+            ],
+            align="center"
+        )
+
+        self.with_background(color=arcade.color.BLACK)
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
+
+    def update_act_data(self, act: Act = None):
+        """ Updates the act data shown in the layout. """
+        self.children[1].update_act_data(act)
+
+    def calculate_space_between(self):
+        """ Calculate the space between the act list and the act description card. """
+        view_width = self.width
+
+        act_list = self.children[0]
+        act_description = self.children[1]
+
+        self.space_between = view_width - (act_list.width + act_description.width)
+
+    def do_layout(self):
+        self.center_x = int(settings.WINDOW_WIDTH / 2)
 
         super().do_layout()

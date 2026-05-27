@@ -59,7 +59,7 @@ class PlayerCharacter(character.Character):
         self.armor_slot_2 = None
 
 
-        self._animations_by_state.update({
+        self.animations_by_state.update({
             "battle_idle": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_idle",
                 frame_duration=0.15,
@@ -146,7 +146,7 @@ class PlayerCharacter(character.Character):
         })
 
         if self.knows_magic:
-            self._animations_by_state.update(
+            self.animations_by_state.update(
                 {
                     "battle_magic_ready": graphics_objects.SimpleLoopAnimation(
                         sprite_pack_path=self._sprite_pack_path + "/battle_magic_ready",
@@ -165,7 +165,7 @@ class PlayerCharacter(character.Character):
             self.spells = spells
 
         # Set the animation state to battle_idle, if it exists
-        if "battle_idle" in self._animations_by_state:
+        if "battle_idle" in self.animations_by_state:
             self.set_animation_state("battle_idle")
 
     def is_player_defending(self):
@@ -181,7 +181,7 @@ class PlayerCharacter(character.Character):
         :return: None
         """
         self.is_defending = True
-        if self._animations_by_state["battle_defend"]:
+        if self.animations_by_state["battle_defend"]:
             self.set_animation_state("battle_defend")
 
     def undefend(self):
@@ -190,7 +190,7 @@ class PlayerCharacter(character.Character):
         :return: None
         """
         self.is_defending = False
-        if self._animations_by_state["battle_defend"]:
+        if self.animations_by_state["battle_defend"]:
             self.set_animation_state("battle_idle")
 
     def equip_weapon(self, weapon: WeaponItem | None):

@@ -8,6 +8,7 @@ from arcade.gui import UIManager
 import character
 import non_player_character
 import player_character
+from act import Act, SimpleAct
 from animations.battle_animations import NumberBounceAnimation, EnemySparedAnimation, TPGainAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation
 from dialogue_box import TextBoxDialog
@@ -93,10 +94,11 @@ class ActionsQueue:
 
         for action in self.actions:
             if not action.is_immediate:
-                if type(action) == ComplexActAction:
-                    complex_act_actions.insert(0, action)
-                elif type(action) == SimpleActAction:
-                    complex_act_actions.insert(0, action)
+                if type(action) == ActAction:
+                    if issubclass(type(action.act), SimpleAct):
+                        simple_act_actions.insert(0, action)
+                    #elif type(action.act) == ComplexAct:
+                    #    complex_act_actions.insert(0, action)
                 elif type(action) == SpellAction or type(action) == SpareAction or type(action) == ItemAction:
                     magic_spare_item_actions.insert(0, action)
                 elif type(action) == FightAction:
@@ -173,6 +175,40 @@ class SpellAction(Action):
     def cancel_act(self):
         self.controller.add_tp_to_meter(self.spell.tp_cost)
 
+
+class ActAction(Action):
+    def __init__(
+            self,
+            actor: player_character.PlayerCharacter,
+            target: character.Character,
+            act: Act,
+            controller
+    ):
+        super().__init__(actor=actor, controller=controller)
+        self.act = act
+        self.target = target
+
+    def execute(self):
+        # Stub for the execute method used by child classes.
+        self.act.perform_act(
+            actor=self.actor,
+            target=self.target,
+            dialogue_box=self.controller.battle_textbox,
+        )
+        print("act executed")
+
+    def ready_act(self):
+        # Performs code meant to be executed after selecting an act.
+        self.actor.set_animation_state("battle_act_ready")
+        self.controller.change_player_icon("assets/textures/gui_graphics/action_icons/act_icon.png")
+
+    def cancel_act(self):
+        # Performs code meant to be executed after canceling an act.
+        self.actor.set_animation_state("battle_idle")
+        self.controller.change_player_icon()
+
+
+"""
 class SimpleActAction(Action):
     def __init__(self, actor: player_character.PlayerCharacter, targets: list[character.Character], controller,
                  flavor_text: str = "", spare_percentage: int = 10):
@@ -198,6 +234,7 @@ class ComplexActAction(Action):
     def execute(self):
         pass
         # TODO: Add ACT action logic.
+"""
 
 
 class ItemAction(Action):

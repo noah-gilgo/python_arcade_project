@@ -14,7 +14,7 @@ import items
 import non_player_character
 import player_character
 import settings
-from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction
+from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction, ActAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
     StrikeEnemyAnimation, EnemyFleeingAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
@@ -749,15 +749,19 @@ class BattleController:
         Executes the highest priority player action.
         :return: None
         """
+        print(str(len(self.sorted_actions_queue["simple_act_actions"])))
         if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
             return
         elif len(self.sorted_actions_queue["simple_act_actions"]) > 0:
+            """
             act_texts = ""
             for action in self.sorted_actions_queue["simple_act_actions"]:
                 act_text = self.sorted_actions_queue["simple_act_actions"].pop().execute()
                 act_texts += "* " + act_text + "\n"
             self.battle_textbox.load_dialog(TextBoxDialog(act_texts))
+            """
+            self.sorted_actions_queue["simple_act_actions"].pop().execute()
             return
         elif len(self.sorted_actions_queue["magic_spare_item_actions"]) > 0:
             self.sorted_actions_queue["magic_spare_item_actions"].pop().execute()
@@ -873,7 +877,6 @@ class SelectCommand(Command):
     def execute(self):
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
-                # TODO: add functions to open UIs, set character animations
                 self.controller.menu_select_sound.play()
                 match self.controller.focus_stack.get_highest_member().focused_widget_index:
                     case 0:  # user selects ATTACK button
@@ -883,11 +886,14 @@ class SelectCommand(Command):
                     case 1:  # user selects ACT/MAGIC button
                         if self.controller.focus_stack.get_highest_member().get_focused_widget().name == "ACT":  # ACT button
                             self.controller.state = BattleState.PLAYER_ACT_ENEMY_SELECT
-                            # TODO: include code to open an enemy select UI
+                            self.controller.open_enemy_select_menu()
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            spell_list_full_layout = SpellSelect(self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character, self.controller)
+                            spell_list_full_layout = SpellSelect(
+                                self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character,
+                                self.controller
+                            )
                             spell_list_interactive_layout = spell_list_full_layout.children[0]
                             self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout,
                                                              self.controller.state, 2, True)
@@ -917,7 +923,6 @@ class SelectCommand(Command):
                         return
 
             case BattleState.PLAYER_ATTACK_SELECT:
-                # TODO: Make the current player character enter the attack state, queue the attack
                 selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 selected_target_enemy.unfocus()
 
@@ -939,12 +944,36 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_ACT_ENEMY_SELECT:
-                # TODO: select the focused enemy, open the ACT menu for the selected enemy
+                self.controller.state = BattleState.PLAYER_ACT_SELECT
+                act_list_full_layout = battle_widgets.ActSelect(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().enemy,
+                    self.controller)
+                act_list_interactive_layout = act_list_full_layout.children[0]
+                self.controller.focus_stack.push(act_list_full_layout, act_list_interactive_layout,
+                                                 self.controller.state, 2, True)
+                self.controller.menu_select_sound.play()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                )
                 return
 
             case BattleState.PLAYER_ACT_SELECT:
-                # TODO: select the focused act, animate the player character, queue the act
-                # self.controller.move_to_next_player_card()
+                selected_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                self.controller.focus_stack.pop(remove_widget=True)
+                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                selected_target_enemy.unfocus()
+                self.controller.focus_stack.pop(remove_widget=True)
+                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+
+                act_action = ActAction(
+                    actor=current_player_character,
+                    target=selected_target_enemy,
+                    act=selected_act,
+                    controller=self.controller
+                )
+
+                self.controller.move_to_next_player_card(act_action)
+
                 return
 
             case BattleState.PLAYER_MAGIC_SELECT:
@@ -1084,6 +1113,12 @@ class CancelCommand(Command):
                 focused_player = self.controller.focus_stack.get_highest_member().get_focused_widget().player
                 focused_player.unfocus()
                 self.backup_out_of_focus_stack()
+            case BattleState.PLAYER_ACT_ENEMY_SELECT:
+                focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                focused_enemy.unfocus()
+                self.backup_out_of_focus_stack()
+            case BattleState.PLAYER_ACT_SELECT:
+                self.backup_out_of_focus_stack()
 
     def backup_out_of_focus_stack(self):
         """
@@ -1103,7 +1138,7 @@ class RightCommand(Command):
     def execute(self):
         # States that are in the Battle GUI
         if self.controller.state in [BattleState.PLAYER_COMMAND, BattleState.PLAYER_MAGIC_SELECT,
-                                     BattleState.PLAYER_ITEM_SELECT]:
+                                     BattleState.PLAYER_ITEM_SELECT, BattleState.PLAYER_ACT_SELECT]:
             if self.controller.state == BattleState.PLAYER_COMMAND:
                 move_succeeded = self.controller.focus_stack.get_highest_member().move_right(wrap=True)
             else:
@@ -1119,6 +1154,10 @@ class RightCommand(Command):
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().item
                         )
+                    case BattleState.PLAYER_ACT_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                        )
 
 
 class LeftCommand(Command):
@@ -1127,7 +1166,7 @@ class LeftCommand(Command):
     def execute(self):
         # States that are in the Battle GUI
         if self.controller.state in [BattleState.PLAYER_COMMAND, BattleState.PLAYER_MAGIC_SELECT,
-                                     BattleState.PLAYER_ITEM_SELECT]:
+                                     BattleState.PLAYER_ITEM_SELECT, BattleState.PLAYER_ACT_SELECT]:
             if self.controller.state == BattleState.PLAYER_COMMAND:
                 move_succeeded = self.controller.focus_stack.get_highest_member().move_left(wrap=True)
             else:
@@ -1142,6 +1181,10 @@ class LeftCommand(Command):
                     case BattleState.PLAYER_ITEM_SELECT:
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                        )
+                    case BattleState.PLAYER_ACT_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().act
                         )
 
 class UpCommand(Command):
@@ -1162,7 +1205,7 @@ class UpCommand(Command):
     def execute(self):
         match self.controller.state:
             case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
-                 BattleState.PLAYER_SPARE_SELECT:
+                 BattleState.PLAYER_SPARE_SELECT | BattleState.PLAYER_ACT_ENEMY_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
                 self.controller.move_focus_between_enemies_in_enemy_select(
                     previously_focused_widget,
@@ -1184,6 +1227,12 @@ class UpCommand(Command):
                 self.attempt_to_move_up_in_ui()
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                )
+
+            case BattleState.PLAYER_ACT_SELECT:
+                self.attempt_to_move_up_in_ui()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().act
                 )
 
 
@@ -1207,7 +1256,7 @@ class DownCommand(Command):
     def execute(self):
         match self.controller.state:
             case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
-                 BattleState.PLAYER_SPARE_SELECT:
+                 BattleState.PLAYER_SPARE_SELECT | BattleState.PLAYER_ACT_ENEMY_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
                 self.controller.move_focus_between_enemies_in_enemy_select(
                     previously_focused_widget,
@@ -1215,20 +1264,22 @@ class DownCommand(Command):
                 )
             case BattleState.PLAYER_ITEM_PLAYER_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
-
                 self.controller.move_focus_between_players_in_player_select(
                     previously_focused_widget,
                     currently_focused_widget
                 )
             case BattleState.PLAYER_MAGIC_SELECT:
                 self.attempt_to_move_down_in_ui()
-
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 )
             case BattleState.PLAYER_ITEM_SELECT:
                 self.attempt_to_move_down_in_ui()
-
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                )
+            case BattleState.PLAYER_ACT_SELECT:
+                self.attempt_to_move_down_in_ui()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().act
                 )

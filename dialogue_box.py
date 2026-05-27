@@ -40,9 +40,9 @@ class TextBoxText(UILabel):
     def __init__(self,
                  text: str = "* Hell yeah Kris I'm in fortnite",
                  x=72,
-                 y=42,
+                 y=16,
                  width=settings.WINDOW_WIDTH - 144,
-                 height=settings.WINDOW_HEIGHT/4 - 64,
+                 height=settings.WINDOW_HEIGHT/4 - 32,
                  font_name: str = "8bitoperator JVE",
                  font_size: int = 48):
         super().__init__(

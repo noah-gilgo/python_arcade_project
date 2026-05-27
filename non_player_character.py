@@ -6,9 +6,9 @@ from arcade.types import Color
 import character
 import default_data
 import graphics_objects
+from acts import RudinnConvince, RudinnLecture
 from animations.battle_animations import EnemyFleeingAnimation, StrikeEnemyAnimation, NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
-from bullet_patterns import RainingDiamondBulletPattern
 from enemy_attacks import RainingDiamondAttack
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -18,8 +18,8 @@ NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/non_player_characters
 class NonPlayerCharacter(character.Character):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, scale: float, center_x: float,
                  center_y: float, angle: float, sprite_folder_name: str, name: str, hp: int, max_hp: int, attack: int,
-                 defense: int, element_id: int = 0, tired: int = 0, mercy: int = 0, enemies_list: list = [],
-                 attacks: list = []):
+                 defense: int, element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [],
+                 attacks: list = [], acts: list = [], battle_description: str = ""):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -29,6 +29,8 @@ class NonPlayerCharacter(character.Character):
 
         self.enemies_list = enemies_list  # The other enemies present in battle
         self.attacks = attacks  # The attacks that the enemy is capable of executing
+        self.acts = acts  # The acts that can be performed on the enemy
+        self.battle_description = battle_description  # The description of the enemy when checking them in battle
 
         self.hp = hp
         self.tired = tired
@@ -38,8 +40,10 @@ class NonPlayerCharacter(character.Character):
                                                  False)
         self.enemy_flee_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_defeatrun.wav",
                                                   False)
+        self.mercy_add_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_mercyadd.wav",
+                                                 False)
 
-        self._animations_by_state.update({
+        self.animations_by_state.update({
             "overworld": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/overworld",
                 frame_duration=0.3,
@@ -69,7 +73,7 @@ class NonPlayerCharacter(character.Character):
         self.witty_banter = []
 
         # Set the animation state to battle_idle, if it exists
-        if "battle_idle" in self._animations_by_state:
+        if "battle_idle" in self.animations_by_state:
             self.set_animation_state("battle_idle")
 
         # The current attack being performed by the enemy
@@ -81,7 +85,7 @@ class NonPlayerCharacter(character.Character):
 
     def get_mercy_percentage_as_string(self):
         """ Returns the whole number HP percentage of the NPC. """
-        return str(self.mercy) + "%"
+        return str(int(self.mercy)) + "%"
 
     def execute_attack(self, enemies: list):
         """
@@ -171,6 +175,57 @@ class NonPlayerCharacter(character.Character):
         self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
         self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
 
+    def receive_mercy(self, mercy_percentage: float = 10.0) -> None:
+        """
+        Adds a certain amount of mercy to the character and plays the appropriate animations.
+        :param mercy_percentage: The amount of mercy to add to the character
+        :return: None
+        """
+
+        # Add the mercy to the non player character's mercy
+        self.mercy = min(100.0, self.mercy + mercy_percentage)
+
+        if self.mercy >= 100.0 and "battle_spared" in self.animations_by_state:
+            self.set_animation_state("battle_spared")
+
+        spare_percent_number_animation = NumberBounceAnimation(
+            target=self,
+            text="+" + str(int(mercy_percentage)) + "%",
+            color=arcade.color.GOLD
+        )
+
+        self.sprites_and_effects_collection.effects.append(spare_percent_number_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(spare_percent_number_animation.sprite)
+        self.mercy_add_sound.play()
+
+    def receive_tired(self, tired_percentage: float = 100.0):
+        """
+        Adds a certain amount of tired to the character and plays the appropriate animations.
+        :param tired_percentage: The amount of mercy to add to the character
+        :return: None
+        """
+
+        # Add the mercy to the non player character's mercy
+        self.tired = min(100.0, self.mercy + tired_percentage)
+
+        if self.tired >= 100.0:
+            if "battle_tired" in self.animations_by_state:
+                self.set_animation_state("battle_tired")
+
+            number_bounce_text = "TIRED"
+        else:
+            number_bounce_text = "+" + str(int(tired_percentage)) + "%"
+
+        tired_percent_number_animation = NumberBounceAnimation(
+            target=self,
+            text=number_bounce_text,
+            color=Color(0, 178, 255)
+        )
+
+        self.sprites_and_effects_collection.effects.append(tired_percent_number_animation)
+        self.sprites_and_effects_collection.effects_sprites.append(tired_percent_number_animation.sprite)
+        self.mercy_add_sound.play()
+
 
 def get_number_of_unique_enemies_from_enemies_list(enemies_list: list[NonPlayerCharacter]):
     """
@@ -210,10 +265,16 @@ class Rudinn(NonPlayerCharacter):
                     enemies_list=enemies_list
                 )
             ],
+            acts=[
+                RudinnConvince(),
+                RudinnLecture(enemies_list)
+            ],
             enemies_list=enemies_list
         )
 
         self.bullet_board = bullet_board
+        self.battle_description = ("* RUDINN - ATK: " + str(self.attack) + " DEF: " + str(self.defense) +
+                                   "\n* Said to be someone's best friend, but maybe not. \n    Shine on, you lazy diamond!")
 
 
     def execute_attack(self, enemies: list[NonPlayerCharacter]):

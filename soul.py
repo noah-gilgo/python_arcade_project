@@ -73,14 +73,14 @@ class Soul(arcade.Sprite):
         self.player_with_soul_coordinates = (self.player_with_soul.center_x, self.player_with_soul.center_y)
         self.bullet_board_center_coordinates = (0.0, 0.0)
         self.moving_soul_to_bullet_board = False
-        self.moving_soul_to_bullet_board_animation_duration = 0.6
+        self.moving_soul_to_bullet_board_animation_duration = 0.4
         self.total_distance_to_move_soul_x = 1
         self.total_distance_to_move_soul_y = 1
         self.moving_soul_to_bullet_board_animation_time = 0.0
 
         # Variables used by the animation that moves the soul back into its owner player character.
         self.moving_soul_to_player = False
-        self.moving_soul_to_player_animation_duration = 0.6
+        self.moving_soul_to_player_animation_duration = 0.4
         self.moving_soul_to_player_animation_time = 0.0
 
         # Controls whether or not the player can move the soul by pressing the directional buttons.
