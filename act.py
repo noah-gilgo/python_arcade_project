@@ -59,7 +59,7 @@ class SimpleAct(Act):
 
         # Load the act dialogue into the dialogue box, if there is any.
         if self.perform_act_text:
-            dialogue_box.load_dialog(TextBoxDialog(text="* " + self.perform_act_text))
+            dialogue_box.load_dialog(TextBoxDialog(text=self.perform_act_text, rate_of_text=0.04))
 
         # If the mercy/tired percentages are greater than zero, have the target receive them.
         if self.mercy_percentage > 0.0:
@@ -67,3 +67,4 @@ class SimpleAct(Act):
 
         if self.tired_percentage > 0.0:
             target.receive_tired(self.mercy_percentage)
+

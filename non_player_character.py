@@ -6,11 +6,9 @@ from arcade.types import Color
 import character
 import default_data
 import graphics_objects
-from act import SimpleAct
 from acts import RudinnConvince, RudinnLecture
 from animations.battle_animations import EnemyFleeingAnimation, StrikeEnemyAnimation, NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
-from bullet_patterns import RainingDiamondBulletPattern
 from enemy_attacks import RainingDiamondAttack
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -87,7 +85,7 @@ class NonPlayerCharacter(character.Character):
 
     def get_mercy_percentage_as_string(self):
         """ Returns the whole number HP percentage of the NPC. """
-        return str(self.mercy) + "%"
+        return str(int(self.mercy)) + "%"
 
     def execute_attack(self, enemies: list):
         """
@@ -217,14 +215,14 @@ class NonPlayerCharacter(character.Character):
             tired_percent_number_animation = NumberBounceAnimation(
                 target=self,
                 text="TIRED",
-                color=arcade.color.DARK_CYAN
+                color=arcade.color.CYAN
             )
 
         else:
             tired_percent_number_animation = NumberBounceAnimation(
                 target=self,
                 text="+" + str(int(tired_percentage)) + "%",
-                color=arcade.color.DARK_CYAN
+                color=arcade.color.CYAN
             )
 
         self.sprites_and_effects_collection.effects.append(tired_percent_number_animation)
@@ -274,11 +272,12 @@ class Rudinn(NonPlayerCharacter):
                 RudinnConvince(),
                 RudinnLecture(enemies_list)
             ],
-            battle_description="Said to be someone's best friend, but maybe not. Shine on, you lazy diamond!",
             enemies_list=enemies_list
         )
 
         self.bullet_board = bullet_board
+        self.battle_description = ("* RUDINN - ATK: " + str(self.attack) + " DEF: " + str(self.defense) +
+                                   "\n* Said to be someone's best friend, but maybe not. \n    Shine on, you lazy diamond!")
 
 
     def execute_attack(self, enemies: list[NonPlayerCharacter]):

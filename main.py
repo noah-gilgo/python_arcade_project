@@ -308,7 +308,6 @@ class GameView(arcade.View):
             enemies_list=self.enemies,
             bullet_board=self.battle_controller.bullet_board
         )
-        self.enemy_two.mercy = 100
         self.enemies.append(self.enemy_two)
 
         self.enemy_three = non_player_character.Rudinn(
@@ -318,7 +317,6 @@ class GameView(arcade.View):
             enemies_list=self.enemies,
             bullet_board=self.battle_controller.bullet_board
         )
-        self.enemy_three.tired = 100
         self.enemies.append(self.enemy_three)
 
     def on_draw(self):

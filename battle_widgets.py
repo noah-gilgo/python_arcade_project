@@ -15,6 +15,7 @@ import non_player_character
 import player_character
 import settings
 from act import Act
+from acts import CheckAct
 from graphics_methods import ease_out, make_texture_solid_color
 from items.consumable_items import ConsumableItem
 from spells import Spell
@@ -1671,10 +1672,7 @@ class ActList(UIGridLayout):
         if character.acts:
             self.add(
                 ActListOption(
-                    Act(
-                        name="Check",
-                        description="Useless analysis"
-                    )
+                    CheckAct(character)
                 ),
                 column=0,
                 row=0
