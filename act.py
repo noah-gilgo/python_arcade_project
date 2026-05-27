@@ -5,9 +5,11 @@ class Act:
     """
     An abstract Act method. The parent class that all types of acts should inherit from.
     """
-    def __init__(self, name: str = "Placeholder Act Name", description: str = "Performs an act", tp_cost: float = 0.0):
+    def __init__(self, name: str = "Placeholder Act Name", description: str = "Performs an act",
+                 perform_act_text: str = "", tp_cost: float = 0.0):
         self.name = name  # The name of the act in the ACT menu.
         self.description = description  # The description of the act displayed in the ACT menu when hovered over.
+        self.perform_act_text = perform_act_text  # Dialog box text when the act is performed
         self.tp_cost = tp_cost  # It's rare, but some acts have a TP cost.
 
 
@@ -27,8 +29,7 @@ class SimpleAct(Act):
             tired_percentage: float = 0.0,
             actor_animation_state: str = ""
     ):
-        super().__init__(name, description, tp_cost)
-        self.perform_act_text = perform_act_text  # Dialog box text when the act is performed
+        super().__init__(name, description, perform_act_text, tp_cost)
         self.mercy_percentage = mercy_percentage  # Mercy granted to the enemy the act is performed on (between 0 and 100)
         self.tired_percentage = tired_percentage  # Tired granted to the enemy the act is performed on (between 0 and 100)
         self.actor_animation_state = actor_animation_state  # The animation the actor is briefly given when they perform the act.

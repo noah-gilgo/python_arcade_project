@@ -1095,6 +1095,8 @@ class CancelCommand(Command):
                 focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 focused_enemy.unfocus()
                 self.backup_out_of_focus_stack()
+            case BattleState.PLAYER_ACT_SELECT:
+                self.backup_out_of_focus_stack()
 
     def backup_out_of_focus_stack(self):
         """
@@ -1114,7 +1116,7 @@ class RightCommand(Command):
     def execute(self):
         # States that are in the Battle GUI
         if self.controller.state in [BattleState.PLAYER_COMMAND, BattleState.PLAYER_MAGIC_SELECT,
-                                     BattleState.PLAYER_ITEM_SELECT]:
+                                     BattleState.PLAYER_ITEM_SELECT, BattleState.PLAYER_ACT_SELECT]:
             if self.controller.state == BattleState.PLAYER_COMMAND:
                 move_succeeded = self.controller.focus_stack.get_highest_member().move_right(wrap=True)
             else:
@@ -1130,6 +1132,10 @@ class RightCommand(Command):
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().item
                         )
+                    case BattleState.PLAYER_ACT_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                        )
 
 
 class LeftCommand(Command):
@@ -1138,7 +1144,7 @@ class LeftCommand(Command):
     def execute(self):
         # States that are in the Battle GUI
         if self.controller.state in [BattleState.PLAYER_COMMAND, BattleState.PLAYER_MAGIC_SELECT,
-                                     BattleState.PLAYER_ITEM_SELECT]:
+                                     BattleState.PLAYER_ITEM_SELECT, BattleState.PLAYER_ACT_SELECT]:
             if self.controller.state == BattleState.PLAYER_COMMAND:
                 move_succeeded = self.controller.focus_stack.get_highest_member().move_left(wrap=True)
             else:
@@ -1153,6 +1159,10 @@ class LeftCommand(Command):
                     case BattleState.PLAYER_ITEM_SELECT:
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                        )
+                    case BattleState.PLAYER_ACT_SELECT:
+                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                            self.controller.focus_stack.get_highest_member().get_focused_widget().act
                         )
 
 class UpCommand(Command):
@@ -1197,6 +1207,12 @@ class UpCommand(Command):
                     self.controller.focus_stack.get_highest_member().get_focused_widget().item
                 )
 
+            case BattleState.PLAYER_ACT_SELECT:
+                self.attempt_to_move_up_in_ui()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                )
+
 
 class DownCommand(Command):
     """
@@ -1226,20 +1242,22 @@ class DownCommand(Command):
                 )
             case BattleState.PLAYER_ITEM_PLAYER_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
-
                 self.controller.move_focus_between_players_in_player_select(
                     previously_focused_widget,
                     currently_focused_widget
                 )
             case BattleState.PLAYER_MAGIC_SELECT:
                 self.attempt_to_move_down_in_ui()
-
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 )
             case BattleState.PLAYER_ITEM_SELECT:
                 self.attempt_to_move_down_in_ui()
-
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                )
+            case BattleState.PLAYER_ACT_SELECT:
+                self.attempt_to_move_down_in_ui()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().act
                 )

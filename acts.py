@@ -5,6 +5,7 @@ class RudinnConvince(SimpleAct):
     def __init__(self):
         super().__init__(
             name="Convince",
+            perform_act_text="Politely persuade enemy",
             description="You told Rudinn to quit fighting.\n* It was utterly swayed.",
             mercy_percentage=100
         )
@@ -14,6 +15,7 @@ class RudinnLecture(SimpleAct):
     def __init__(self, enemies_list: list):
         super().__init__(
             name="Lecture",
+            perform_act_text="Passionately lecture opponents",
             description="* You lectured the enemies on the importance of kindness.\n* It was utterly swayed."
         )
 
