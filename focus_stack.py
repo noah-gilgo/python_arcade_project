@@ -122,9 +122,9 @@ class FocusStack:
         return self.focus_stack[-1]
 
     # Adds a member to the top of the focus stack. Adds the ui_layout in said member to the ui
-    def push(self, full_ui_layout: UILayout, interactive_ui_layout, state, column_count: int = 0, add_new_widget: bool = False):
+    def push(self, full_ui_layout: UILayout, interactive_ui_layout, state, column_count: int = 0, add_widget: bool = False):
         self.focus_stack.append(FocusStackMember(full_ui_layout, interactive_ui_layout, state, column_count))
-        if add_new_widget:
+        if add_widget:
             self.ui_manager.add(full_ui_layout)
         self.ui_manager.trigger_render()
 

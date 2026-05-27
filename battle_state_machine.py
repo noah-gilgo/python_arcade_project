@@ -14,7 +14,7 @@ import items
 import non_player_character
 import player_character
 import settings
-from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction
+from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction, ActAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
     StrikeEnemyAnimation, EnemyFleeingAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
@@ -749,15 +749,19 @@ class BattleController:
         Executes the highest priority player action.
         :return: None
         """
+        print(str(len(self.sorted_actions_queue["simple_act_actions"])))
         if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
             return
         elif len(self.sorted_actions_queue["simple_act_actions"]) > 0:
+            """
             act_texts = ""
             for action in self.sorted_actions_queue["simple_act_actions"]:
                 act_text = self.sorted_actions_queue["simple_act_actions"].pop().execute()
                 act_texts += "* " + act_text + "\n"
             self.battle_textbox.load_dialog(TextBoxDialog(act_texts))
+            """
+            self.sorted_actions_queue["simple_act_actions"].pop().execute()
             return
         elif len(self.sorted_actions_queue["magic_spare_item_actions"]) > 0:
             self.sorted_actions_queue["magic_spare_item_actions"].pop().execute()
@@ -873,7 +877,6 @@ class SelectCommand(Command):
     def execute(self):
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
-                # TODO: add functions to open UIs, set character animations
                 self.controller.menu_select_sound.play()
                 match self.controller.focus_stack.get_highest_member().focused_widget_index:
                     case 0:  # user selects ATTACK button
@@ -887,7 +890,10 @@ class SelectCommand(Command):
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            spell_list_full_layout = SpellSelect(self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character, self.controller)
+                            spell_list_full_layout = SpellSelect(
+                                self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character,
+                                self.controller
+                            )
                             spell_list_interactive_layout = spell_list_full_layout.children[0]
                             self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout,
                                                              self.controller.state, 2, True)
@@ -917,7 +923,6 @@ class SelectCommand(Command):
                         return
 
             case BattleState.PLAYER_ATTACK_SELECT:
-                # TODO: Make the current player character enter the attack state, queue the attack
                 selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 selected_target_enemy.unfocus()
 
@@ -953,8 +958,22 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_ACT_SELECT:
-                # TODO: select the focused act, animate the player character, queue the act
-                # self.controller.move_to_next_player_card()
+                selected_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                self.controller.focus_stack.pop(remove_widget=True)
+                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                selected_target_enemy.unfocus()
+                self.controller.focus_stack.pop(remove_widget=True)
+                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+
+                act_action = ActAction(
+                    actor=current_player_character,
+                    target=selected_target_enemy,
+                    act=selected_act,
+                    controller=self.controller
+                )
+
+                self.controller.move_to_next_player_card(act_action)
+
                 return
 
             case BattleState.PLAYER_MAGIC_SELECT:

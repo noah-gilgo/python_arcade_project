@@ -12,6 +12,13 @@ class Act:
         self.perform_act_text = perform_act_text  # Dialog box text when the act is performed
         self.tp_cost = tp_cost  # It's rare, but some acts have a TP cost.
 
+    def perform_act(self, actor, target, dialogue_box):
+        """
+        Executes the act. This is a stub for child classes
+        :return: None
+        """
+        pass
+
 
 class SimpleAct(Act):
     """
