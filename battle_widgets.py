@@ -1728,7 +1728,7 @@ class ActDescriptionAndTPCost(UIBoxLayout):
             width=400,
             height=300,
             children=[
-                ActDescriptionLabel("" if not act or not act.perform_act_text else act.perform_act_text),
+                ActDescriptionLabel("" if not act or not act.description else act.description),
                 ActTPCostLabel(0 if not act or not act.tp_cost else act.tp_cost)
             ],
             align="left"
@@ -1736,7 +1736,7 @@ class ActDescriptionAndTPCost(UIBoxLayout):
 
     def update_act_data(self, act: Act = None):
         """ Updates the act data shown in the layout. """
-        self.children[0].text = "" if not act or not act.perform_act_text else act.perform_act_text
+        self.children[0].text = "" if not act or not act.description else act.description
         self.children[1].text = "" if not act or not act.tp_cost else str(act.tp_cost) + "% TP"
 
 

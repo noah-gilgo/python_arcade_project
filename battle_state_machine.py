@@ -947,6 +947,9 @@ class SelectCommand(Command):
                 self.controller.focus_stack.push(act_list_full_layout, act_list_interactive_layout,
                                                  self.controller.state, 2, True)
                 self.controller.menu_select_sound.play()
+                self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                )
                 return
 
             case BattleState.PLAYER_ACT_SELECT:

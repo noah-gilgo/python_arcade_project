@@ -21,7 +21,7 @@ class NonPlayerCharacter(character.Character):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, scale: float, center_x: float,
                  center_y: float, angle: float, sprite_folder_name: str, name: str, hp: int, max_hp: int, attack: int,
                  defense: int, element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [],
-                 attacks: list = [], acts: list = []):
+                 attacks: list = [], acts: list = [], battle_description: str = ""):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -32,6 +32,7 @@ class NonPlayerCharacter(character.Character):
         self.enemies_list = enemies_list  # The other enemies present in battle
         self.attacks = attacks  # The attacks that the enemy is capable of executing
         self.acts = acts  # The acts that can be performed on the enemy
+        self.battle_description = battle_description  # The description of the enemy when checking them in battle
 
         self.hp = hp
         self.tired = tired
@@ -273,6 +274,7 @@ class Rudinn(NonPlayerCharacter):
                 RudinnConvince(),
                 RudinnLecture(enemies_list)
             ],
+            battle_description="Said to be someone's best friend, but maybe not. Shine on, you lazy diamond!",
             enemies_list=enemies_list
         )
 
