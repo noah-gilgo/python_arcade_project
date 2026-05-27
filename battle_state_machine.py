@@ -883,7 +883,7 @@ class SelectCommand(Command):
                     case 1:  # user selects ACT/MAGIC button
                         if self.controller.focus_stack.get_highest_member().get_focused_widget().name == "ACT":  # ACT button
                             self.controller.state = BattleState.PLAYER_ACT_ENEMY_SELECT
-                            # TODO: include code to open an enemy select UI
+                            self.controller.open_enemy_select_menu()
                             return
                         else:  # MAGIC button
                             self.controller.state = BattleState.PLAYER_MAGIC_SELECT
@@ -1084,6 +1084,10 @@ class CancelCommand(Command):
                 focused_player = self.controller.focus_stack.get_highest_member().get_focused_widget().player
                 focused_player.unfocus()
                 self.backup_out_of_focus_stack()
+            case BattleState.PLAYER_ACT_ENEMY_SELECT:
+                focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                focused_enemy.unfocus()
+                self.backup_out_of_focus_stack()
 
     def backup_out_of_focus_stack(self):
         """
@@ -1162,7 +1166,7 @@ class UpCommand(Command):
     def execute(self):
         match self.controller.state:
             case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
-                 BattleState.PLAYER_SPARE_SELECT:
+                 BattleState.PLAYER_SPARE_SELECT | BattleState.PLAYER_ACT_ENEMY_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
                 self.controller.move_focus_between_enemies_in_enemy_select(
                     previously_focused_widget,
@@ -1207,7 +1211,7 @@ class DownCommand(Command):
     def execute(self):
         match self.controller.state:
             case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
-                 BattleState.PLAYER_SPARE_SELECT:
+                 BattleState.PLAYER_SPARE_SELECT | BattleState.PLAYER_ACT_ENEMY_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
                 self.controller.move_focus_between_enemies_in_enemy_select(
                     previously_focused_widget,
