@@ -830,6 +830,8 @@ class SpellSelect(UIBoxLayout):
 
 class EnemySelectInstanceName(UILabel):
     def __init__(self, enemy: non_player_character.NonPlayerCharacter):
+        self.enemy = enemy
+
         text_color = arcade.color.WHITE
         if enemy.tired >= 100:
             text_color = Color(0, 178, 255)
@@ -837,7 +839,7 @@ class EnemySelectInstanceName(UILabel):
             text_color = arcade.color.YELLOW
 
         super().__init__(
-            text="     " + enemy.name,
+            text="     " + self.enemy.name,
             width=240,
             height=56,
             font_name="8bitoperator JVE",
@@ -1687,7 +1689,7 @@ class ActList(UIGridLayout):
                 row_index = act_index // 2
                 col_index = act_index % 2
                 self.add(
-                    ActListOption(act, color),
+                    ActListOption(act),
                     column=col_index,
                     row=row_index
                 )
@@ -1760,6 +1762,8 @@ class ActSelect(UIBoxLayout):
             ],
             align="center"
         )
+
+        self.with_background(color=arcade.color.BLACK)
         self.center_x = int(settings.WINDOW_WIDTH / 2)
 
     def update_act_data(self, act: Act = None):

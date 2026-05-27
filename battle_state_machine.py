@@ -939,7 +939,14 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_ACT_ENEMY_SELECT:
-                # TODO: select the focused enemy, open the ACT menu for the selected enemy
+                self.controller.state = BattleState.PLAYER_ACT_SELECT
+                act_list_full_layout = battle_widgets.ActSelect(
+                    self.controller.focus_stack.get_highest_member().get_focused_widget().enemy,
+                    self.controller)
+                act_list_interactive_layout = act_list_full_layout.children[0]
+                self.controller.focus_stack.push(act_list_full_layout, act_list_interactive_layout,
+                                                 self.controller.state, 2, True)
+                self.controller.menu_select_sound.play()
                 return
 
             case BattleState.PLAYER_ACT_SELECT:
