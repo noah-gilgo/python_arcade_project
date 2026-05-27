@@ -212,18 +212,15 @@ class NonPlayerCharacter(character.Character):
             if "battle_tired" in self.animations_by_state:
                 self.set_animation_state("battle_tired")
 
-            tired_percent_number_animation = NumberBounceAnimation(
-                target=self,
-                text="TIRED",
-                color=arcade.color.CYAN
-            )
-
+            number_bounce_text = "TIRED"
         else:
-            tired_percent_number_animation = NumberBounceAnimation(
-                target=self,
-                text="+" + str(int(tired_percentage)) + "%",
-                color=arcade.color.CYAN
-            )
+            number_bounce_text = "+" + str(int(tired_percentage)) + "%"
+
+        tired_percent_number_animation = NumberBounceAnimation(
+            target=self,
+            text=number_bounce_text,
+            color=Color(0, 178, 255)
+        )
 
         self.sprites_and_effects_collection.effects.append(tired_percent_number_animation)
         self.sprites_and_effects_collection.effects_sprites.append(tired_percent_number_animation.sprite)
