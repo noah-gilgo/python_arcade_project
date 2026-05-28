@@ -157,7 +157,7 @@ class GameView(arcade.View):
 
         self._animation_states = self.player_one.get_valid_animation_states()
 
-
+        """
         self.player_two = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                            scale=4.0,
                                                            center_x=self._holy_arc[1][0],
@@ -178,7 +178,7 @@ class GameView(arcade.View):
         self.player_two.equip_armor_to_slot_1(ShadowMantle())
         self.player_two.equip_armor_to_slot_2(Jevilstail())
         self.player_characters.append(self.player_two)
-
+        """
 
         self.player_three = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
                                                              scale=4.0,

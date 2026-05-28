@@ -978,7 +978,7 @@ class SelectCommand(Command):
 
             case BattleState.PLAYER_MAGIC_SELECT:
                 spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                if spell.tp_cost < self.controller.tp_meter.get_tp_in_meter():
+                if spell.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
                     self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
                     self.controller.tp_meter.update_tp_meter(-spell.tp_cost)
                     self.controller.open_enemy_select_menu()
