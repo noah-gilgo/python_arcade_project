@@ -259,13 +259,11 @@ class BattleController:
 
     def load_bullet_board(self):
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
-        print("bullet board loaded")
         self.bullet_board.load_bullet_board(self)
         self.soul.move_to_bullet_board()
 
     def unload_bullet_board(self):
         """ Loads the bullet board with the SOUL at the beginning of the enemy turn. """
-        print("bullet board unloaded")
         self.bullet_board.unload_bullet_board(self)
         self.soul.move_to_player_with_soul()
 
@@ -749,7 +747,6 @@ class BattleController:
         Executes the highest priority player action.
         :return: None
         """
-        print(str(len(self.sorted_actions_queue["simple_act_actions"])))
         if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
             return

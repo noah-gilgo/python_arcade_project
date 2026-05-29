@@ -195,7 +195,6 @@ class ActAction(Action):
             target=self.target,
             dialogue_box=self.controller.battle_textbox,
         )
-        print("act executed")
 
     def ready_act(self):
         # Performs code meant to be executed after selecting an act.

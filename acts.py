@@ -1,5 +1,7 @@
-from act import SimpleAct
+from act import SimpleAct, MagicUserAct
 
+
+# SimpleActs
 
 class CheckAct(SimpleAct):
     """
@@ -38,3 +40,11 @@ class RudinnLecture(SimpleAct):
         super().perform_act(actor, target, dialogue_box)
         for enemy in self.enemies_list:
             enemy.receive_tired(100.0)
+
+
+# Magic user acts
+
+class NoelleRudinnAction1(MagicUserAct):
+    def __init__(self):
+        super().__init__(
+        )

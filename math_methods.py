@@ -22,7 +22,7 @@ def initialize_holy_arc(number_of_players: int = 3):
     if number_of_players == 1:
         y = starting_y - (delta_y / 2)
         return [(
-            int((((y - settings.WINDOW_HEIGHT * .65) ** 2) / 768) + (settings.WINDOW_WIDTH / 7)),
+            int((((y - settings.WINDOW_HEIGHT * .65) ** 2) / 768) + (settings.WINDOW_WIDTH / 6)),
             y
         )]
 
@@ -30,7 +30,7 @@ def initialize_holy_arc(number_of_players: int = 3):
 
     for i in range(number_of_players):
         position = (
-            int((((y - settings.WINDOW_HEIGHT * .65) ** 2) / 768) + (settings.WINDOW_WIDTH / 7)),
+            int((((y - settings.WINDOW_HEIGHT * .65) ** 2) / 768) + (settings.WINDOW_WIDTH / 6)),
             y
         )
         y -= increment

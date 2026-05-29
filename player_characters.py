@@ -1,0 +1,108 @@
+from arcade.types import Color
+
+from player_character import PlayerCharacter
+from spells import IceShock, Spell
+
+
+class Kris(PlayerCharacter):
+    def __init__(self):
+        super().__init__(
+            sprite_folder_name="kris",
+            name="Kris",
+            max_hp=90,
+            attack=10,
+            defense=2,
+            magic=0,
+            battle_ui_color=Color(0, 255, 255, 255),
+            battle_ui_icon_color=Color(0, 162, 232, 255),
+            fight_box_color=Color(0, 0, 255, 255),
+            fight_crit_box_color=Color(0, 162, 232, 255),
+            knows_magic=False
+        )
+
+
+class Susie(PlayerCharacter):
+    """ The violet tormentor. """
+    def __init__(self):
+        super().__init__(
+            sprite_folder_name="susie",
+            name="Susie",
+            max_hp=110,
+            attack=14,
+            defense=2,
+            magic=1,
+            battle_ui_color=Color(255, 0, 255, 255),
+            battle_ui_icon_color=Color(234, 121, 200, 255),
+            fight_box_color=Color(128, 0, 128, 255),
+            fight_crit_box_color=Color(234, 121, 200, 255),
+            spells=[IceShock()]
+        )
+
+
+class Ralsei(PlayerCharacter):
+    def __init__(self):
+        super().__init__(
+            sprite_folder_name="ralsei",
+            name="Ralsei",
+            max_hp=70,
+            attack=8,
+            defense=2,
+            magic=7,
+            battle_ui_color=Color(0, 255, 0, 255),
+            battle_ui_icon_color=Color(181, 230, 29, 255),
+            fight_box_color=Color(0, 255, 0, 255),
+            fight_crit_box_color=Color(181, 230, 29, 255),
+            spells=[IceShock()]
+        )
+
+
+class Noelle(PlayerCharacter):
+    def __init__(self):
+        super().__init__(
+            sprite_folder_name="noelle",
+            name="Noelle",
+            max_hp=90,
+            attack=3,
+            defense=1,
+            magic=11,
+            battle_ui_color=Color(255, 255, 0, 255),
+            battle_ui_icon_color=Color(255, 255, 0, 255),
+            fight_box_color=Color(255, 255, 0, 255),
+            fight_crit_box_color=Color(254, 254, 255, 255),
+            spells=[
+                Spell(
+                    name="Heal Prayer",
+                    description="Heal Ally",
+                    tp_cost=32,
+                    element_id=2,
+                    base_health_change=30,
+                    is_friendly_spell=True,
+                    is_healing_spell=True,
+                    is_pacifying_spell=False,
+                    is_aoe_spell=False
+                ),
+                Spell(
+                    name="Sleep Mist",
+                    description="Spare TIRED foes",
+                    tp_cost=32,
+                    element_id=8,
+                    base_health_change=0,
+                    is_friendly_spell=False,
+                    is_healing_spell=False,
+                    is_pacifying_spell=True,
+                    is_aoe_spell=True
+                ),
+                IceShock(),
+                Spell(
+                    name="SnowGrave",
+                    description="Fatal",
+                    tp_cost=200,
+                    element_id=8,
+                    base_health_change=1000,
+                    is_friendly_spell=False,
+                    is_healing_spell=False,
+                    is_pacifying_spell=False,
+                    is_aoe_spell=True
+                )
+            ]
+        )

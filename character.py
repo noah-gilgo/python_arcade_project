@@ -28,7 +28,8 @@ class Character(arcade.Sprite):
         self.defense = defense
         self.element_id = element_id
 
-        self.sprites_and_effects_collection.character_sprites.append(self)
+        if self.sprites_and_effects_collection:
+            self.sprites_and_effects_collection.character_sprites.append(self)
 
         self.current_animation_state = "default"
 
@@ -54,6 +55,17 @@ class Character(arcade.Sprite):
         self.non_idle_timer = 0.0
 
         self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
+
+    def set_sprites_and_effects_collection(self, sprites_and_effects_collection: SpritesAndEffectsCollection):
+        """
+        Sets the sprite collection and effects collection to the character.
+        Only works if the sprites and effects collection hasn't already been set.
+        :param sprites_and_effects_collection: the sprites and effects collection.
+        :return: None
+        """
+        if not self.sprites_and_effects_collection:
+            self.sprites_and_effects_collection = sprites_and_effects_collection
+            self.sprites_and_effects_collection.character_sprites.append(self)
 
     def calculate_received_damage(self, base_damage: float, element_id: int = 0):
         """

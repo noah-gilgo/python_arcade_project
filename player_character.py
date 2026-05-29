@@ -19,10 +19,11 @@ PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 
 
 class PlayerCharacter(character.Character):
-    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection,
-                 scale: float, center_x: float, center_y: float, angle: float, sprite_folder_name: str, name: str,
-                 max_hp: int, attack: int, defense: int, magic: int, battle_ui_color: Color,
-                 battle_ui_icon_color: Color, fight_box_color: Color = arcade.color.GRAY,
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection = None,
+                 scale: float = 4.0, center_x: float = 0.0, center_y: float = 0.0, angle: float = 0.0,
+                 sprite_folder_name: str = "kris", name: str = "Kris", max_hp: int = 100, attack: int = 5,
+                 defense: int = 5, magic: int = 5, battle_ui_color: Color = arcade.color.RED,
+                 battle_ui_icon_color: Color = arcade.color.RED, fight_box_color: Color = arcade.color.GRAY,
                  fight_crit_box_color: Color = arcade.color.WHITE, element_id: int = 0, knows_magic: bool = True,
                  spells: list[Spell] = []):
 
