@@ -354,9 +354,20 @@ class BattleController:
         Move to the previous player card.
         :return: None
         """
+        # Check if the next player character is downed. If so, skip over them.
+        previous_character_index_change = 1
+        not_knocked_out_previous_character_found = False
+
+        while (
+                not not_knocked_out_previous_character_found) and self.current_player_index - previous_character_index_change > 0:
+            if self.players[self.current_player_index - previous_character_index_change].hp < 0:
+                previous_character_index_change += 1
+            else:
+                not_knocked_out_previous_character_found = True
+
         if self.current_player_index > 0:
             self.battle_player_character_cards.children[self.current_player_index].unfocus()
-            self.current_player_index -= 1
+            self.current_player_index -= previous_character_index_change
             self.battle_player_character_cards.children[
                 self.current_player_index].focus()
             self.focus_stack.push(
