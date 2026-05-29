@@ -818,7 +818,8 @@ class BattleController:
 
         # Set all the defending players to not be defending.
         for player in self.players:
-            player.undefend()
+            if player.is_defending:
+                player.undefend()
 
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
@@ -853,7 +854,7 @@ class BattleController:
         """
 
         for player in self.players:
-            if player.current_animation_state != "battle_downed":
+            if player.hp > 0:
                 player.set_animation_state("battle_idle")
 
 class Command:

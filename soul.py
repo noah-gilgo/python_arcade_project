@@ -343,7 +343,7 @@ class Soul(arcade.Sprite):
                 # Make the soul invisible
                 self.visible = False
 
-                # Reverts the battle UI to its original state.z
+                # Reverts the battle UI to its original state.
                 self.controller.move_to_first_player_card()
                 self.controller.change_all_player_icons_to_default()
                 self.controller.reset_player_animation_states_before_next_turn()
