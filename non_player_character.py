@@ -251,7 +251,7 @@ class Rudinn(NonPlayerCharacter):
             scale=scale,
             angle=angle,
             sprite_folder_name="rudinn",
-            name="Rudinn 1",
+            name="Rudinn",
             hp=90,
             max_hp=90,
             attack=10,
