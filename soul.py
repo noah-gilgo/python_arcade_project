@@ -1,4 +1,5 @@
 import random
+from math import ceil
 
 import arcade
 from arcade import Sprite
@@ -343,10 +344,13 @@ class Soul(arcade.Sprite):
                 # Make the soul invisible
                 self.visible = False
 
-                # Reverts the battle UI to its original state.z
+                # Reverts the battle UI to its original state.
                 self.controller.move_to_first_player_card()
                 self.controller.change_all_player_icons_to_default()
                 self.controller.reset_player_animation_states_before_next_turn()
+                for player in self.controller.players:
+                    if player.hp < 0:
+                        player.modify_hp(ceil(player.max_hp / 3))
 
         else: # The default movement for the soul.
             if self.soul_movement_enabled:

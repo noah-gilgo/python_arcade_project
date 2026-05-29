@@ -316,11 +316,22 @@ class BattleController:
         :return:
         """
         self.actions_queue.push(action)
-        if self.current_player_index + 1 < self.focus_stack.get_highest_member().get_full_layout_length():
+
+        # Check if the next player character is downed. If so, skip over them.
+        next_character_index_change = 1
+        not_knocked_out_next_character_found = False
+
+        while (not not_knocked_out_next_character_found) and self.current_player_index + next_character_index_change < self.focus_stack.get_highest_member().get_full_layout_length():
+            if self.players[self.current_player_index + next_character_index_change].hp < 0:
+                next_character_index_change += 1
+            else:
+                not_knocked_out_next_character_found = True
+
+        if self.current_player_index + next_character_index_change < self.focus_stack.get_highest_member().get_full_layout_length():
             self.state = BattleState.PLAYER_COMMAND
             self.focus_stack.pop()
             self.battle_player_character_cards.children[self.current_player_index].unfocus()
-            self.current_player_index += 1
+            self.current_player_index += next_character_index_change
             self.battle_player_character_cards.children[self.current_player_index].focus()
             self.menu_select_sound.play()
             self.focus_stack.push(
@@ -343,9 +354,20 @@ class BattleController:
         Move to the previous player card.
         :return: None
         """
+        # Check if the next player character is downed. If so, skip over them.
+        previous_character_index_change = 1
+        not_knocked_out_previous_character_found = False
+
+        while (
+                not not_knocked_out_previous_character_found) and self.current_player_index - previous_character_index_change > 0:
+            if self.players[self.current_player_index - previous_character_index_change].hp < 0:
+                previous_character_index_change += 1
+            else:
+                not_knocked_out_previous_character_found = True
+
         if self.current_player_index > 0:
             self.battle_player_character_cards.children[self.current_player_index].unfocus()
-            self.current_player_index -= 1
+            self.current_player_index -= previous_character_index_change
             self.battle_player_character_cards.children[
                 self.current_player_index].focus()
             self.focus_stack.push(
@@ -818,7 +840,8 @@ class BattleController:
 
         # Set all the defending players to not be defending.
         for player in self.players:
-            player.undefend()
+            if player.is_defending:
+                player.undefend()
 
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
@@ -853,7 +876,7 @@ class BattleController:
         """
 
         for player in self.players:
-            if player.current_animation_state != "battle_downed":
+            if player.hp > 0:
                 player.set_animation_state("battle_idle")
 
 class Command:
