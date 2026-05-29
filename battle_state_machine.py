@@ -972,10 +972,13 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_MAGIC_SELECT:
-                spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                if spell.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
+                if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell"):
+                    spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                else:
+                    spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
                     self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
-                    self.controller.tp_meter.update_tp_meter(-spell.tp_cost)
+                    self.controller.tp_meter.update_tp_meter(-spell_or_act.tp_cost)
                     self.controller.open_enemy_select_menu()
                     self.controller.menu_select_sound.play()
                 return
@@ -984,18 +987,30 @@ class SelectCommand(Command):
                 selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
                 selected_target_enemy.unfocus()
                 self.controller.focus_stack.pop(remove_widget=True)
-                selected_spell = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                is_spell = hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell")
+                if is_spell:
+                    selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                else:
+                    selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
                 self.controller.focus_stack.pop(remove_widget=True)
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
 
-                spell_action = SpellAction(
-                    actor=current_player_character,
-                    targets=[selected_target_enemy],
-                    spell=selected_spell,
-                    controller=self.controller
-                )
+                if is_spell:
+                    spell_or_act_action = SpellAction(
+                        actor=current_player_character,
+                        targets=[selected_target_enemy],
+                        spell=selected_spell_or_act,
+                        controller=self.controller
+                    )
+                else:
+                    spell_or_act_action = ActAction(
+                        actor=current_player_character,
+                        target=selected_target_enemy,
+                        act=selected_spell_or_act,
+                        controller=self.controller
+                    )
 
-                self.controller.move_to_next_player_card(spell_action)
+                self.controller.move_to_next_player_card(spell_or_act_action)
                 return
 
             case BattleState.PLAYER_ITEM_SELECT:
@@ -1142,9 +1157,14 @@ class RightCommand(Command):
                 self.controller.menu_move_sound.play()
                 match self.controller.state:
                     case BattleState.PLAYER_MAGIC_SELECT:
-                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                            self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                        )
+                        if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell"):
+                            self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                                self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                            )
+                        else:
+                            self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                                self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                            )
                     case BattleState.PLAYER_ITEM_SELECT:
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().item
@@ -1170,9 +1190,14 @@ class LeftCommand(Command):
                 self.controller.menu_move_sound.play()
                 match self.controller.state:
                     case BattleState.PLAYER_MAGIC_SELECT:
-                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                            self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                        )
+                        if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell"):
+                            self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                                self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                            )
+                        else:
+                            self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                                self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                            )
                     case BattleState.PLAYER_ITEM_SELECT:
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().item
@@ -1215,9 +1240,14 @@ class UpCommand(Command):
                 )
             case BattleState.PLAYER_MAGIC_SELECT:
                 self.attempt_to_move_up_in_ui()
-                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                )
+                if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell"):
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                    )
+                else:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                    )
             case BattleState.PLAYER_ITEM_SELECT:
                 self.attempt_to_move_up_in_ui()
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
@@ -1265,9 +1295,14 @@ class DownCommand(Command):
                 )
             case BattleState.PLAYER_MAGIC_SELECT:
                 self.attempt_to_move_down_in_ui()
-                self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
-                    self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                )
+                if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell"):
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_spell_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                    )
+                else:
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                    )
             case BattleState.PLAYER_ITEM_SELECT:
                 self.attempt_to_move_down_in_ui()
                 self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(

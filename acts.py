@@ -51,7 +51,7 @@ class NoelleRudinnAction1(MagicUserAct):
         super().__init__(
             player=player,
             enemy_type=Rudinn,
-            description="Traumatize playing card\n SPARE 50%",
+            description="Traumatize playing card\nSPARE 50%",
             perform_act_text="* Noelle cuts Rudinn card paper snowflakes! \n* They are mortified but impressed!",
             mercy_percentage=50
         )
@@ -62,8 +62,8 @@ class RalseiRudinnAction1(MagicUserAct):
 
         super().__init__(
             player=player,
-            enemy_type=Rudinn(),
-            description="Offer relief from duty\n SPARE 50%",
-            perform_act_text="* Ralsei promises that his castle town has suites suited for all sorts of suits.",
+            enemy_type=Rudinn,
+            description="Offer relief from duty\nSPARE 50%",
+            perform_act_text="* Ralsei promises that his castle town has suites suited for all suits.",
             mercy_percentage=50
         )
