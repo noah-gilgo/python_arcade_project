@@ -69,7 +69,7 @@ class SimpleAct(Act):
             target.receive_tired(self.mercy_percentage)
 
 
-class MagicUserAct(Act):
+class MagicUserAct(SimpleAct):
     """
     An act performable by magic users. (ex. S-Action, R-Action, N-Action, etc.)
 
@@ -78,15 +78,16 @@ class MagicUserAct(Act):
     magic user option.
     """
 
-    def __init__(self, player, enemy, name: str = "", description: str = "", perform_act_text: str = "",
-                 tp_cost: float = 0.0, mercy_percentage: float = 0.0, tired_percentage: float = 0.0):
+    def __init__(self, player, enemy_type: type = None, name: str = "", description: str = "",
+                 perform_act_text: str = "", tp_cost: float = 0.0, mercy_percentage: float = 0.0,
+                 tired_percentage: float = 0.0):
 
         if not name:
             name = player.name[0].upper() + "-Action"
         super().__init__(name=name, description=description, perform_act_text=perform_act_text, tp_cost=tp_cost)
 
         self.player = player
-        self.enemy = enemy
+        self.enemy_type = enemy_type
         self.mercy_percentage = mercy_percentage
         self.tired_percentage = tired_percentage
 

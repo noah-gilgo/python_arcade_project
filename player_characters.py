@@ -1,5 +1,6 @@
 from arcade.types import Color
 
+from acts import RalseiRudinnAction1, NoelleRudinnAction1
 from player_character import PlayerCharacter
 from spells import IceShock, Spell
 
@@ -52,7 +53,8 @@ class Ralsei(PlayerCharacter):
             battle_ui_icon_color=Color(181, 230, 29, 255),
             fight_box_color=Color(0, 255, 0, 255),
             fight_crit_box_color=Color(181, 230, 29, 255),
-            spells=[IceShock()]
+            spells=[IceShock()],
+            magic_user_acts=[RalseiRudinnAction1]
         )
 
 
@@ -104,5 +106,6 @@ class Noelle(PlayerCharacter):
                     is_pacifying_spell=False,
                     is_aoe_spell=True
                 )
-            ]
+            ],
+            magic_user_acts=[NoelleRudinnAction1]
         )

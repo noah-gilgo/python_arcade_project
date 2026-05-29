@@ -7,6 +7,7 @@ from arcade.types import Color
 import character
 import default_data
 import graphics_objects
+from act import MagicUserAct
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
 from graphics_methods import make_texture_solid_color
@@ -25,7 +26,7 @@ class PlayerCharacter(character.Character):
                  defense: int = 5, magic: int = 5, battle_ui_color: Color = arcade.color.RED,
                  battle_ui_icon_color: Color = arcade.color.RED, fight_box_color: Color = arcade.color.GRAY,
                  fight_crit_box_color: Color = arcade.color.WHITE, element_id: int = 0, knows_magic: bool = True,
-                 spells: list[Spell] = []):
+                 spells: list[Spell] = [], magic_user_acts: list[MagicUserAct] = []):
 
         self._sprite_pack_path = PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -59,6 +60,9 @@ class PlayerCharacter(character.Character):
         self.armor_slot_1 = None
         self.armor_slot_2 = None
 
+        # Add S-Actions, R-Actions, etc. if the player character is a magic user
+        if knows_magic and len(magic_user_acts) > 0:
+            self.magic_user_acts = magic_user_acts
 
         self.animations_by_state.update({
             "battle_idle": graphics_objects.SimpleLoopAnimation(
