@@ -1,4 +1,5 @@
 import math
+import random
 
 import arcade
 import pyglet.clock
@@ -14,7 +15,7 @@ from arcade.types.color import Color
 import non_player_character
 import player_character
 import settings
-from act import Act
+from act import Act, MagicUserAct
 from acts import CheckAct
 from graphics_methods import ease_out, make_texture_solid_color
 from items.consumable_items import ConsumableItem
@@ -714,17 +715,19 @@ class SpellList(UIGridLayout):
             int(character.battle_ui_color.a)
         ])
 
-        if character.spells:
-            self.add(
-                SpellListOption(
-                    Spell(
-                        name=character.name[0].upper() + "-Action"
-                    ),
-                    color=action_color
-                ),
-                column=0,
-                row=0
-            )
+        if character.spells or (character.knows_magic and len(character.magic_user_acts) > 0):
+            for magic_user_act in character.magic_user_acts:
+                for enemy in controller.enemies:
+                    if isinstance(enemy, magic_user_act.enemy_type):
+                        self.add(
+                            ActListOption(
+                                character.magic_user_acts[random.randint(0, len(character.magic_user_acts) - 1)],
+                                color=action_color
+                            ),
+                            column=0,
+                            row=0
+                        )
+                        break
 
             spell_index = 1
             for spell in character.spells:
@@ -785,6 +788,11 @@ class SpellDescriptionAndTPCost(UIBoxLayout):
         self.children[0].text = "" if not spell or not spell.description else spell.description
         self.children[1].text = "" if not spell or not spell.tp_cost else str(spell.tp_cost) + "% TP"
 
+    def update_act_data(self, act: Act = None):
+        """ Updates the act data shown in the layout. """
+        self.children[0].text = "" if not act or not act.description else act.description
+        self.children[1].text = "" if not act or not act.tp_cost else str(act.tp_cost) + "% TP"
+
 
 class SpellSelect(UIBoxLayout):
     def __init__(self, character: player_character.PlayerCharacter, controller):
@@ -799,20 +807,32 @@ class SpellSelect(UIBoxLayout):
             x=36,
             y=0,
             width=view_width,
-            height=int(settings.WINDOW_HEIGHT / 4),
+            height=int(settings.WINDOW_HEIGHT / 4 - 20),
             vertical=False,
             space_between=self.space_between,
             children=[
                 spell_list,
                 spell_description
             ],
-            align="center"
+            align="top"
         )
         self.center_x = int(settings.WINDOW_WIDTH / 2)
+
+        # Populate the spell/act description card on startup
+        if hasattr(self.children[0].children[0], "spell"):
+            self.update_spell_data(self.children[0].children[0].spell)
+        else:
+            self.update_act_data(self.children[0].children[0].act)
+
+        self.do_layout()
 
     def update_spell_data(self, spell: Spell = None):
         """ Updates the spell data shown in the layout. """
         self.children[1].update_spell_data(spell)
+
+    def update_act_data(self, act: Act = None):
+        """ Updates the act data shown in the layout. """
+        self.children[1].update_act_data(act)
 
     def calculate_space_between(self):
         """ Calculate the space between the spell list and the spell description card. """
@@ -1626,14 +1646,14 @@ class PlayerSelect(UIBoxLayout):
 
 
 class ActListOption(UILabel):
-    def __init__(self, act: Act):
+    def __init__(self, act: Act, color: Color = arcade.color.WHITE):
         super().__init__(
             text="     " + act.name,
             width=400,
             height=64,
             font_name="8bitoperator JVE",
             font_size=48,
-            text_color=arcade.color.WHITE,
+            text_color=color,
             size_hint=None
         )
 

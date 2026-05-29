@@ -6,6 +6,7 @@ from arcade.types import Color
 import math_methods
 import non_player_character
 import player_character
+import player_characters
 import settings
 import sound_methods
 import graphics_methods
@@ -128,28 +129,17 @@ class GameView(arcade.View):
         self.soul = None
 
         # Initializes the starting positions of the player characters and enemy characters.
-        self._holy_arc = math_methods.initialize_holy_arc(4)
+        self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(3)
 
     def setup(self):
         # Create and append the players to the SpriteList.
 
-        self.player_one = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
-                                                           scale=4.0,
-                                                           center_x=self._holy_arc[0][0],
-                                                           center_y=self._holy_arc[0][1],
-                                                           angle=0,
-                                                           sprite_folder_name="kris",
-                                                           name="Kris",
-                                                           max_hp=90,
-                                                           attack=10,
-                                                           defense=2,
-                                                           magic=0,
-                                                           battle_ui_color=Color(0, 255, 255, 255),
-                                                           battle_ui_icon_color=Color(0, 162, 232, 255),
-                                                           fight_box_color=Color(0, 0, 255, 255),
-                                                           fight_crit_box_color=Color(0, 162, 232, 255),
-                                                           knows_magic=False)
+        self.player_one = player_characters.Kris()
+        self.player_one.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
+        self.player_one.center_x = self._holy_arc[0][0]
+        self.player_one.center_y = self._holy_arc[0][1]
+
         self.player_one.equip_weapon(JingleBlade())
         self.player_one.equip_armor_to_slot_1(PrincessRbn())
         self.player_one.equip_armor_to_slot_2(TennaTie())
@@ -157,102 +147,23 @@ class GameView(arcade.View):
 
         self._animation_states = self.player_one.get_valid_animation_states()
 
-
-        self.player_two = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
-                                                           scale=4.0,
-                                                           center_x=self._holy_arc[1][0],
-                                                           center_y=self._holy_arc[1][1],
-                                                           angle=0,
-                                                           sprite_folder_name="susie",
-                                                           name="Susie",
-                                                           max_hp=110,
-                                                           attack=14,
-                                                           defense=2,
-                                                           magic=1,
-                                                           battle_ui_color=Color(255, 0, 255, 255),
-                                                           battle_ui_icon_color=Color(234, 121, 200, 255),  # Sprite initialization
-                                                           fight_box_color = Color(128, 0, 128, 255),
-                                                           fight_crit_box_color=Color(234, 121, 200, 255),
-                                                           spells=[IceShock()])
+        """
+        self.player_two = player_characters.Susie()
+        self.player_two.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
+        self.player_two.center_x = self._holy_arc[1][0]
+        self.player_two.center_y = self._holy_arc[1][1]
+        
         self.player_two.equip_weapon(JusticeAxe())
         self.player_two.equip_armor_to_slot_1(ShadowMantle())
         self.player_two.equip_armor_to_slot_2(Jevilstail())
         self.player_characters.append(self.player_two)
+        """
 
+        self.player_four = player_characters.Noelle()
+        self.player_four.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
+        self.player_four.center_x = self._holy_arc[1][0]
+        self.player_four.center_y = self._holy_arc[1][1]
 
-        self.player_three = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
-                                                             scale=4.0,
-                                                             center_x=self._holy_arc[2][0],
-                                                             center_y=self._holy_arc[2][1],
-                                                             angle=0,
-                                                             sprite_folder_name="ralsei",
-                                                             name="Ralsei",
-                                                             max_hp=70,
-                                                             attack=8,
-                                                             defense=2,
-                                                             magic=7,
-                                                             battle_ui_color=Color(0, 255, 0, 255),
-                                                             battle_ui_icon_color=Color(181, 230, 29, 255), # Sprite initialization
-                                                             fight_box_color=Color(0, 255, 0, 255),
-                                                             fight_crit_box_color=Color(181, 230, 29, 255),
-                                                             spells=[IceShock()])
-        self.player_three.equip_weapon(ScarfMark())
-        self.player_three.equip_armor_to_slot_1(WhiteRibbon())
-        self.player_three.equip_armor_to_slot_2(WaferGuard())
-        self.player_characters.append(self.player_three)
-
-
-        self.player_four = player_character.PlayerCharacter(sprites_and_effects_collection=self.sprites_and_effects_collection,
-                                                            scale=4.0,
-                                                            center_x=self._holy_arc[3][0],
-                                                            center_y=self._holy_arc[3][1],
-                                                            angle=0,
-                                                            sprite_folder_name="noelle",
-                                                            name="Noelle",
-                                                            max_hp=90,
-                                                            attack=3,
-                                                            defense=1,
-                                                            magic=11,
-                                                            battle_ui_color=Color(255, 255, 0, 255),
-                                                            battle_ui_icon_color=Color(255, 255, 0, 255),
-                                                            fight_box_color=Color(255, 255, 0, 255),
-                                                            fight_crit_box_color=Color(254, 254, 255, 255),
-                                                            spells=[
-                                                                Spell(
-                                                                    name="Heal Prayer",
-                                                                    description="Heal Ally",
-                                                                    tp_cost=32,
-                                                                    element_id=2,
-                                                                    base_health_change=30,
-                                                                    is_friendly_spell=True,
-                                                                    is_healing_spell=True,
-                                                                    is_pacifying_spell=False,
-                                                                    is_aoe_spell=False
-                                                                ),
-                                                                Spell(
-                                                                    name="Sleep Mist",
-                                                                    description="Spare TIRED foes",
-                                                                    tp_cost=32,
-                                                                    element_id=8,
-                                                                    base_health_change=0,
-                                                                    is_friendly_spell=False,
-                                                                    is_healing_spell=False,
-                                                                    is_pacifying_spell=True,
-                                                                    is_aoe_spell=True
-                                                                ),
-                                                                IceShock(),
-                                                                Spell(
-                                                                    name="SnowGrave",
-                                                                    description="Fatal",
-                                                                    tp_cost=200,
-                                                                    element_id=8,
-                                                                    base_health_change=1000,
-                                                                    is_friendly_spell=False,
-                                                                    is_healing_spell=False,
-                                                                    is_pacifying_spell=False,
-                                                                    is_aoe_spell=True
-                                                                )
-                                                            ])
         self.player_four.equip_weapon(SnowRing())
         self.player_four.equip_armor_to_slot_1(RoyalPin())
         self.player_four.equip_armor_to_slot_2(MysticBand())
@@ -260,6 +171,15 @@ class GameView(arcade.View):
 
         self.player_four.get_valid_animation_states()
 
+        self.player_three = player_characters.Ralsei()
+        self.player_three.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
+        self.player_three.center_x = self._holy_arc[2][0]
+        self.player_three.center_y = self._holy_arc[2][1]
+
+        self.player_three.equip_weapon(ScarfMark())
+        self.player_three.equip_armor_to_slot_1(WhiteRibbon())
+        self.player_three.equip_armor_to_slot_2(WaferGuard())
+        self.player_characters.append(self.player_three)
 
         # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", True)

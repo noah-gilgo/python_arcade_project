@@ -68,3 +68,26 @@ class SimpleAct(Act):
         if self.tired_percentage > 0.0:
             target.receive_tired(self.mercy_percentage)
 
+
+class MagicUserAct(SimpleAct):
+    """
+    An act performable by magic users. (ex. S-Action, R-Action, N-Action, etc.)
+
+    Think of them as a junction record between players and enemies. If a character does not have any MagicUserActs
+    associated with any of the non-player characters in battle, they will not have the option to perform a
+    magic user option.
+    """
+
+    def __init__(self, player, enemy_type: type, name: str = "", description: str = "",
+                 perform_act_text: str = "", tp_cost: float = 0.0, mercy_percentage: float = 0.0,
+                 tired_percentage: float = 0.0):
+
+        if not name:
+            name = player.name[0].upper() + "-Action"
+        super().__init__(name=name, description=description, perform_act_text=perform_act_text, tp_cost=tp_cost)
+
+        self.player = player
+        self.enemy_type = enemy_type
+        self.mercy_percentage = mercy_percentage
+        self.tired_percentage = tired_percentage
+

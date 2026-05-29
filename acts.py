@@ -1,5 +1,7 @@
-from act import SimpleAct
+from act import SimpleAct, MagicUserAct
 
+
+# SimpleActs
 
 class CheckAct(SimpleAct):
     """
@@ -38,3 +40,30 @@ class RudinnLecture(SimpleAct):
         super().perform_act(actor, target, dialogue_box)
         for enemy in self.enemies_list:
             enemy.receive_tired(100.0)
+
+
+# Magic user acts
+
+class NoelleRudinnAction1(MagicUserAct):
+    def __init__(self, player):
+        from non_player_character import Rudinn  # TODO: fix this
+
+        super().__init__(
+            player=player,
+            enemy_type=Rudinn,
+            description="Traumatize playing card\nSPARE 50%",
+            perform_act_text="* Noelle cuts Rudinn card paper snowflakes! \n* They are mortified but impressed!",
+            mercy_percentage=50
+        )
+
+class RalseiRudinnAction1(MagicUserAct):
+    def __init__(self, player):
+        from non_player_character import Rudinn
+
+        super().__init__(
+            player=player,
+            enemy_type=Rudinn,
+            description="Offer relief from duty\nSPARE 50%",
+            perform_act_text="* Ralsei promises that his castle town has suites suited for all suits.",
+            mercy_percentage=50
+        )

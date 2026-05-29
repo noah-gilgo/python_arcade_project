@@ -7,6 +7,7 @@ from arcade.types import Color
 import character
 import default_data
 import graphics_objects
+from act import MagicUserAct
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
 from graphics_methods import make_texture_solid_color
@@ -19,12 +20,13 @@ PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/player_characters/"
 
 
 class PlayerCharacter(character.Character):
-    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection,
-                 scale: float, center_x: float, center_y: float, angle: float, sprite_folder_name: str, name: str,
-                 max_hp: int, attack: int, defense: int, magic: int, battle_ui_color: Color,
-                 battle_ui_icon_color: Color, fight_box_color: Color = arcade.color.GRAY,
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection = None,
+                 scale: float = 4.0, center_x: float = 0.0, center_y: float = 0.0, angle: float = 0.0,
+                 sprite_folder_name: str = "kris", name: str = "Kris", max_hp: int = 100, attack: int = 5,
+                 defense: int = 5, magic: int = 5, battle_ui_color: Color = arcade.color.RED,
+                 battle_ui_icon_color: Color = arcade.color.RED, fight_box_color: Color = arcade.color.GRAY,
                  fight_crit_box_color: Color = arcade.color.WHITE, element_id: int = 0, knows_magic: bool = True,
-                 spells: list[Spell] = []):
+                 spells: list[Spell] = [], magic_user_acts: list[MagicUserAct] = []):
 
         self._sprite_pack_path = PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -58,6 +60,9 @@ class PlayerCharacter(character.Character):
         self.armor_slot_1 = None
         self.armor_slot_2 = None
 
+        # Add S-Actions, R-Actions, etc. if the player character is a magic user
+        if knows_magic and len(magic_user_acts) > 0:
+            self.magic_user_acts = magic_user_acts
 
         self.animations_by_state.update({
             "battle_idle": graphics_objects.SimpleLoopAnimation(
@@ -68,7 +73,7 @@ class PlayerCharacter(character.Character):
 
             "battle_act_ready": graphics_objects.SimpleLoopAnimation(
                 sprite_pack_path=self._sprite_pack_path + "/battle_act_ready",
-                frame_duration=0.10,
+                frame_duration=0.20,
                 loop_animation=True
             ),
 

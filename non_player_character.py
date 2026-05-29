@@ -16,9 +16,9 @@ NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/non_player_characters
 
 
 class NonPlayerCharacter(character.Character):
-    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, scale: float, center_x: float,
-                 center_y: float, angle: float, sprite_folder_name: str, name: str, hp: int, max_hp: int, attack: int,
-                 defense: int, element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [],
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection = None, scale: float = 4.0, center_x: float = 0.0,
+                 center_y: float = 0.0, angle: float = 0.0, sprite_folder_name: str = "", name: str = "", hp: int = 100, max_hp: int = 100, attack: int = 5,
+                 defense: int = 5, element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [],
                  attacks: list = [], acts: list = [], battle_description: str = ""):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
@@ -242,8 +242,8 @@ def get_number_of_unique_enemies_from_enemies_list(enemies_list: list[NonPlayerC
 
 
 class Rudinn(NonPlayerCharacter):
-    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection, enemies_list: list,
-                 center_x: float, center_y: float, bullet_board, scale: float = 4.0, angle: float = 0):
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection = None, enemies_list: list = [],
+                 center_x: float = 0.0, center_y: float = 0.0, bullet_board = None, scale: float = 4.0, angle: float = 0):
         super().__init__(
             sprites_and_effects_collection=sprites_and_effects_collection,
             center_x=center_x,
@@ -251,7 +251,7 @@ class Rudinn(NonPlayerCharacter):
             scale=scale,
             angle=angle,
             sprite_folder_name="rudinn",
-            name="Rudinn 1",
+            name="Rudinn",
             hp=90,
             max_hp=90,
             attack=10,

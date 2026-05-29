@@ -80,7 +80,7 @@ class TextBoxDialog:
     def __init__(self,
                  portrait_texture_path: str = "",
                  text: str = "This is test text",
-                 rate_of_text: float = 0.05,
+                 rate_of_text: float = 0.04,
                  text_sound_path: str = "assets/audio/dialog/snd_text.wav"
                  ):
         self._text = text
