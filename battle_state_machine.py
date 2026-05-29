@@ -316,11 +316,22 @@ class BattleController:
         :return:
         """
         self.actions_queue.push(action)
-        if self.current_player_index + 1 < self.focus_stack.get_highest_member().get_full_layout_length():
+
+        # Check if the next player character is downed. If so, skip over them.
+        next_character_index_change = 1
+        not_knocked_out_next_character_found = False
+
+        while (not not_knocked_out_next_character_found) and self.current_player_index + next_character_index_change < self.focus_stack.get_highest_member().get_full_layout_length():
+            if self.players[self.current_player_index + next_character_index_change].hp < 0:
+                next_character_index_change += 1
+            else:
+                not_knocked_out_next_character_found = True
+
+        if self.current_player_index + next_character_index_change < self.focus_stack.get_highest_member().get_full_layout_length():
             self.state = BattleState.PLAYER_COMMAND
             self.focus_stack.pop()
             self.battle_player_character_cards.children[self.current_player_index].unfocus()
-            self.current_player_index += 1
+            self.current_player_index += next_character_index_change
             self.battle_player_character_cards.children[self.current_player_index].focus()
             self.menu_select_sound.play()
             self.focus_stack.push(
