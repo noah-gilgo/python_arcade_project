@@ -39,6 +39,7 @@ class PlayerCharacter(character.Character):
 
         self.player_hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
         self.player_attack_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_laz_c.wav", False)
+        self.player_heal_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_power.wav", False)
 
         image = Image.open(icon_texture_path)
         hurt_image = Image.open(icon_hurt_texture_path)
@@ -333,39 +334,61 @@ class PlayerCharacter(character.Character):
         :return: None
         """
         damage_dealt = self.calculate_received_damage(damage_dealt, element_id)
-        damage_dealt_text = str(damage_dealt)
+        self.modify_hp(-damage_dealt)
+
+
+    def modify_hp(self, hp_change: float = 0.0):
+        """
+        Modifies the hp of the player character by a specified amount. Animates the HP change.
+        :param hp_change: The amount to modify the player's HP by.
+        :return: None
+        """
+
+        damage_dealt_text = str(hp_change)
         damage_dealt_color = arcade.color.WHITE
         previous_hp = int(self.hp)
 
-        if damage_dealt <= 0:
+        if hp_change == 0:
             damage_dealt_text = "MISS"
 
         else:
-            self.hp -= damage_dealt
-            if play_hurt_sound:
+            self.hp += hp_change
+            if hp_change < 0:
                 self.player_hurt_sound.play()
 
-            # If the attack reduces the enemy HP to 0
-            if self.hp <= 0:
-                if previous_hp > 0:
-                    damage_dealt_text = "DOWN"
-                    damage_dealt_color = arcade.color.RED
-                    self.set_animation_state("battle_downed")
-                    self.hp = min(-self.max_hp / 2, -80)
+                # If the attack reduces the enemy HP to 0
+                if self.hp <= 0:
+                    if previous_hp > 0:
+                        damage_dealt_text = "DOWN"
+                        damage_dealt_color = arcade.color.RED
+                        self.set_animation_state("battle_downed")
+                        self.hp = min(int(-self.max_hp / 2), -80)
+                else:
+                    damage_dealt_text = str(int(-hp_change))
+                    if not self.is_defending:
+                        self.set_animation_to_not_idle(1.2, "battle_hurt")
+
+                    shake_animation = ShakeAnimation(
+                        sprite=self
+                    )
+                    self.sprites_and_effects_collection.effects.append(shake_animation)
             else:
-                if not self.is_defending:
-                    self.set_animation_to_not_idle(1.2, "battle_hurt")
+                self.player_heal_sound.play()
 
-                shake_animation = ShakeAnimation(
-                    sprite=self
-                )
-                self.sprites_and_effects_collection.effects.append(shake_animation)
+                damage_dealt_color = arcade.color.NEON_GREEN
+                if self.hp > 0:
+                    if previous_hp < 0:
+                        damage_dealt_text = "UP"
+                        self.set_animation_state("battle_idle")
+                        self.hp = int(self.max_hp / 5)
+                else:
+                    damage_dealt_text = str(int(hp_change))
+                    damage_dealt_color = arcade.color.NEON_GREEN
 
-            damage_dealt_animation = NumberBounceAnimation(
-                text=damage_dealt_text,
-                color=damage_dealt_color,
-                target=self
-            )
-
-            self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
-            self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
+        damage_dealt_animation = NumberBounceAnimation(
+            text=damage_dealt_text,
+            color=damage_dealt_color,
+            target=self
+        )
+        self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
+        self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
