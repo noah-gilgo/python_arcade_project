@@ -570,8 +570,6 @@ class BattleController:
 
         actor.attack_enemy(target, attack_damage_multiplier)
 
-        print("attack_enemy called")
-
         # TODO: This currently makes the damage numbers above the enemies disappear.
 
         """

@@ -78,7 +78,7 @@ class MagicUserAct(SimpleAct):
     magic user option.
     """
 
-    def __init__(self, player, enemy_type: type = None, name: str = "", description: str = "",
+    def __init__(self, player, enemy_type: type, name: str = "", description: str = "",
                  perform_act_text: str = "", tp_cost: float = 0.0, mercy_percentage: float = 0.0,
                  tired_percentage: float = 0.0):
 

@@ -47,6 +47,7 @@ class RudinnLecture(SimpleAct):
 class NoelleRudinnAction1(MagicUserAct):
     def __init__(self, player):
         from non_player_character import Rudinn  # TODO: fix this
+
         super().__init__(
             player=player,
             enemy_type=Rudinn,
@@ -58,9 +59,10 @@ class NoelleRudinnAction1(MagicUserAct):
 class RalseiRudinnAction1(MagicUserAct):
     def __init__(self, player):
         from non_player_character import Rudinn
+
         super().__init__(
             player=player,
-            enemy_type=Rudinn,
+            enemy_type=Rudinn(),
             description="Offer relief from duty\n SPARE 50%",
             perform_act_text="* Ralsei promises that his castle town has suites suited for all sorts of suits.",
             mercy_percentage=50

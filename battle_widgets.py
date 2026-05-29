@@ -1,4 +1,5 @@
 import math
+import random
 
 import arcade
 import pyglet.clock
@@ -14,7 +15,7 @@ from arcade.types.color import Color
 import non_player_character
 import player_character
 import settings
-from act import Act
+from act import Act, MagicUserAct
 from acts import CheckAct
 from graphics_methods import ease_out, make_texture_solid_color
 from items.consumable_items import ConsumableItem
@@ -714,17 +715,19 @@ class SpellList(UIGridLayout):
             int(character.battle_ui_color.a)
         ])
 
-        if character.spells:
-            self.add(
-                SpellListOption(
-                    Spell(
-                        name=character.name[0].upper() + "-Action"
-                    ),
-                    color=action_color
-                ),
-                column=0,
-                row=0
-            )
+        if character.spells or (character.knows_magic and len(character.magic_user_acts) > 0):
+            for magic_user_act in character.magic_user_acts:
+                for enemy in controller.enemies:
+                    if isinstance(enemy, magic_user_act.enemy_type):
+                        self.add(
+                            ActListOption(
+                                character.magic_user_acts[random.randint(0, len(character.magic_user_acts) - 1)],
+                                color=action_color
+                            ),
+                            column=0,
+                            row=0
+                        )
+                        break
 
             spell_index = 1
             for spell in character.spells:
@@ -1626,14 +1629,14 @@ class PlayerSelect(UIBoxLayout):
 
 
 class ActListOption(UILabel):
-    def __init__(self, act: Act):
+    def __init__(self, act: Act, color: Color = arcade.color.WHITE):
         super().__init__(
             text="     " + act.name,
             width=400,
             height=64,
             font_name="8bitoperator JVE",
             font_size=48,
-            text_color=arcade.color.WHITE,
+            text_color=color,
             size_hint=None
         )
 
