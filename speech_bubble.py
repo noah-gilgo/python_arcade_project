@@ -1,27 +1,39 @@
-from arcade import Sprite, Texture, SpriteSheet, LBWH
+from arcade import Sprite, Texture, SpriteSheet, LBWH, Sound
 
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
-class ClassicSpeechBubbleTextContainer:
+class ClassicSpeechBubbleTextContainer(Sprite):
     """
     The part of speech bubbles that contain text. This version only supports English.
     """
-    def __init__(self, text: str = "test text", center_x: int = 0, center_y: int = 0, row_count: int = 1, column_count: int = 1,
-                 text_spacing: int = 1, sprites_and_effects_collection: SpritesAndEffectsCollection = None):
+    def __init__(self, text: str = "test text", center_x: int = 0, center_y: int = 0, row_count: int = 1,
+                 column_count: int = 1, text_spacing: int = 1, rate_of_text: float = 0.04, text_sound: Sound = None,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection = None):
 
         self.text = text
         self.text_length = len(self.text)
         self.current_character_index = 0
 
+        self.rate_of_text = rate_of_text
+        self.time_elapsed_since_last_character = 0.0
+
+        if text_sound is None:
+            self.text_sound = Sound("assets/audio/dialog/snd_text.wav")
+        else:
+            self.text_sound = text_sound
+
+        self.row_count = row_count
+        self.column_count = column_count
+
         self.sprites_and_effects_collection = sprites_and_effects_collection
 
         self.text_spacing = text_spacing  # The amount of pixels between each character
 
-        width = (column_count * 8) + (column_count - self.text_spacing)
-        height = (row_count * 16) + (row_count - self.text_spacing)
+        width = (self.column_count * 8) + (self.column_count - self.text_spacing)
+        height = (self.row_count * 16) + (self.row_count - self.text_spacing)
 
-        self.speech_bubble_background_sprite = Sprite(
+        super().__init__(
             path_or_texture=Texture.create_empty(
                 name="speech_bubble_text_container",
                 size=(width, height),
@@ -31,11 +43,12 @@ class ClassicSpeechBubbleTextContainer:
             center_y=center_y
         )
 
-        self.sprites_and_effects_collection.speech_bubble_sprites.append(self.speech_bubble_background_sprite)
+        self.sprites_and_effects_collection.speech_bubble_sprites.append(self)
+        self.sprites_and_effects_collection.effects.append(self)
 
         self.text_character_sprite_sheet = SpriteSheet("assets/sprites/speech_bubbles/speech_bubble_text_sprite_sheet.png")
 
-    def get_character_from_sprite_sheet(self, character: str):
+    def get_character_from_sprite_sheet(self, character: str) -> Sprite:
         """ Returns a character sprite from the sprite sheet depending on the supplied character. """
         character_unicode_code = ord(character)
 
@@ -46,9 +59,29 @@ class ClassicSpeechBubbleTextContainer:
 
         character_rect = LBWH(left=character_x_coordinate, bottom=character_y_coordinate, width=8, height=16)
 
-        return self.text_character_sprite_sheet.get_texture(character_rect)
+        return Sprite(self.text_character_sprite_sheet.get_texture(character_rect))
 
     def add_character_to_speech_bubble(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
-        pass
+        character_column_index = self.current_character_index % self.column_count
+        character_row_index = self.current_character_index // self.column_count
 
+        character_x_coordinate = self.left - 4 + (character_row_index * (8 + self.text_spacing))
+        character_y_coordinate = self.top - 8 + (character_column_index * 17)
+
+        character = self.text[self.current_character_index]
+        character_sprite = self.get_character_from_sprite_sheet(character)
+
+        character_sprite.center_x = character_x_coordinate
+        character_sprite.center_y = character_y_coordinate
+
+        self.sprites_and_effects_collection.speech_bubble_sprites.append(character_sprite)
+
+        self.current_character_index += 1
+
+    def update_animation(self, delta_time):
+        self.time_elapsed_since_last_character += delta_time
+        if self.time_elapsed_since_last_character > self.rate_of_text:
+            self.time_elapsed_since_last_character -= self.rate_of_text
+            self.add_character_to_speech_bubble()
+            self.text_sound.play()
