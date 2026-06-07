@@ -66,6 +66,7 @@ class GameView(arcade.View):
         arcade.load_font("assets/fonts/3x5-font.ttf")
         arcade.load_font("assets/fonts/roarin.ttf")
         arcade.load_font("assets/fonts/greater-determination-dr-damage.ttf")
+        arcade.load_font("assets/fonts/dotumche-pixel.ttf")
 
         # Initialize the UIManager.
         self.manager = UIManager()
