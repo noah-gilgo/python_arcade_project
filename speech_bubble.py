@@ -35,7 +35,7 @@ class SpeechBubbleTextContainer(Sprite):
         self.time_elapsed_since_last_character = 0.0
         self.speech_bubble_is_left_of_character = speech_bubble_is_left_of_character
 
-        self.speech_bubble_scale = 1.6  # The amount that the speech bubble is scaled up from its default size.
+        self.speech_bubble_scale = 5/3  # The amount that the speech bubble is scaled up from its default size.
 
         if text_sound is None:
             self.text_sound = Sound("assets/audio/dialog/snd_text.wav")
@@ -120,6 +120,8 @@ class SpeechBubbleTextContainer(Sprite):
 
         # Corner texture
         corner_texture = arcade.load_texture("assets/sprites/speech_bubbles/speech_bubble_corner_texture.png")
+        corner_texture.width = left_right_border_sprite_width
+        corner_texture.height = top_bottom_border_sprite_height
 
         # Corner sprites
 
@@ -128,41 +130,34 @@ class SpeechBubbleTextContainer(Sprite):
             Sprite(
                 path_or_texture=corner_texture,
                 center_x=self.center_x + (self.width / 2) + (left_right_border_sprite_width / 2),
-                center_y=self.center_y + (self.height / 2) + (top_bottom_border_sprite_height / 2),
-                scale=self.speech_bubble_scale
+                center_y=self.center_y + (self.height / 2) + (top_bottom_border_sprite_height / 2)
             )
         )
 
         # Bottom right corner
         self.sprites_associated_with_text_box.append(
             Sprite(
-                path_or_texture=corner_texture,
+                path_or_texture=corner_texture.flip_vertically(),
                 center_x=self.center_x + (self.width / 2) + (left_right_border_sprite_width / 2),
-                center_y=self.center_y - (self.height / 2) - (top_bottom_border_sprite_height / 2),
-                scale=self.speech_bubble_scale,
-                angle=90
+                center_y=self.center_y - (self.height / 2) - (top_bottom_border_sprite_height / 2)
             )
         )
 
         # Bottom left corner
         self.sprites_associated_with_text_box.append(
             Sprite(
-                path_or_texture=corner_texture,
+                path_or_texture=corner_texture.flip_diagonally(),
                 center_x=self.center_x - (self.width / 2) - (left_right_border_sprite_width / 2),
-                center_y=self.center_y - (self.height / 2) - (top_bottom_border_sprite_height / 2),
-                scale=self.speech_bubble_scale,
-                angle=180
+                center_y=self.center_y - (self.height / 2) - (top_bottom_border_sprite_height / 2)
             )
         )
 
         # Top left corner
         self.sprites_associated_with_text_box.append(
             Sprite(
-                path_or_texture=corner_texture,
+                path_or_texture=corner_texture.flip_horizontally(),
                 center_x=self.center_x - (self.width / 2) - (left_right_border_sprite_width / 2),
-                center_y=self.center_y + (self.height / 2) + (top_bottom_border_sprite_height / 2),
-                scale=self.speech_bubble_scale,
-                angle=270
+                center_y=self.center_y + (self.height / 2) + (top_bottom_border_sprite_height / 2)
             )
         )
 
@@ -190,9 +185,6 @@ class SpeechBubbleTextContainer(Sprite):
         else:
             speech_bubble_arrow_sprite_center_x = self.center_x - (self.width / 2) + left_right_border_sprite_width - (
                     speech_bubble_arrow_sprite_width / 2)
-
-        print(self.center_x)
-        print(speech_bubble_arrow_sprite_center_x)
 
         self.sprites_associated_with_text_box.append(
             Sprite(
