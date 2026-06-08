@@ -1,3 +1,4 @@
+import arcade
 from arcade import Sprite, Texture, SpriteSheet, LBWH, Sound
 
 from sprites_and_effects_collection import SpritesAndEffectsCollection
@@ -59,52 +60,66 @@ class SpeechBubbleTextContainer(Sprite):
 
         self.text_character_sprite_sheet = SpriteSheet("assets/sprites/speech_bubbles/speech_bubble_text_sprite_sheet.png")
 
-    def get_character_from_sprite_sheet(self, character_unicode_code: int) -> Sprite:
+    def get_character_sprite(self, character: str) -> Sprite:
         """ Returns a character sprite from the sprite sheet depending on the supplied character. """
+        """
+        print(chr(character_unicode_code))
+
         offset_from_start_in_pixels = 9 * (character_unicode_code - 32)
 
         character_y_coordinate = offset_from_start_in_pixels // 117
         character_x_coordinate = offset_from_start_in_pixels % 117
 
         character_rect = LBWH(left=character_x_coordinate, bottom=character_y_coordinate, width=8, height=16)
+        """
+        print(character)
 
-        return Sprite(self.text_character_sprite_sheet.get_texture(character_rect))
+        character_sprite = arcade.create_text_sprite(
+            text=character,
+            color=(0, 0, 0),
+            font_size=12.0,
+            width=8,
+            font_name="DotumChe Pixel"
+        )
+
+        return character_sprite
 
     def add_character_to_speech_bubble(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
         character = self.text[self.current_character_index]
         character_unicode_code = ord(character)
 
-        if 127 > character_unicode_code > 32: # Letters, numbers, symbols
-            character_sprite = self.get_character_from_sprite_sheet(character_unicode_code)
+        if 127 > character_unicode_code > 31: # Letters, numbers, symbols
+            character_sprite = self.get_character_sprite(character)
 
-            character_x_coordinate = self.left - 4 + (self.character_row_index * (8 + self.text_spacing))
-            character_y_coordinate = self.top - 8 + (self.character_column_index * 17)
+            character_x_coordinate = self.left + 4 + (self.character_column_index * (8 + self.text_spacing))
+            character_y_coordinate = self.top - 8 - (self.character_row_index * 17)
 
             character_sprite.center_x = character_x_coordinate
             character_sprite.center_y = character_y_coordinate
 
             self.sprites_and_effects_collection.speech_bubble_sprites.append(character_sprite)
 
-            if self.character_row_index + 1 < self.row_count:
-                self.character_row_index += 1
-            else:
+            if self.character_column_index < self.column_count:
                 self.character_column_index += 1
-                self.character_row_index = 0
+            else:
+                self.character_column_index = 0
+                self.character_row_index += 1
 
         else: # Basic characters such as newline, tab, etc, as well as characters beyond basic latin characters
             # Treat them all like they're the enter key.
-            self.character_column_index += 1
-            self.character_row_index = 0
+            self.character_column_index = 0
+            self.character_row_index += 1
 
         self.current_character_index += 1
 
     def update_animation(self, delta_time):
-        self.time_elapsed_since_last_character += delta_time
-        if self.time_elapsed_since_last_character > self.rate_of_text:
-            self.time_elapsed_since_last_character -= self.rate_of_text
-            self.add_character_to_speech_bubble()
-            self.text_sound.play()
+        if self.current_character_index < self.text_length:
+            self.time_elapsed_since_last_character += delta_time
+            if self.time_elapsed_since_last_character > self.rate_of_text:
+                self.time_elapsed_since_last_character -= self.rate_of_text
+                self.add_character_to_speech_bubble()
+                self.text_sound.play()
 
 
 class SpeechBubbleDialog:

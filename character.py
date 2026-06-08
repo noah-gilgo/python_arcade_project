@@ -207,5 +207,8 @@ class Character(arcade.Sprite):
             column_count=speech_bubble_dialogue.column_count,
             text_spacing=speech_bubble_dialogue.text_spacing,
             text_sound=text_sound,
-            rate_of_text=speech_bubble_dialogue.rate_of_text
+            rate_of_text=speech_bubble_dialogue.rate_of_text,
+            sprites_and_effects_collection=self.sprites_and_effects_collection
         )
+
+        return speech_bubble

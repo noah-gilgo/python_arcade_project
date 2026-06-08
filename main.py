@@ -242,6 +242,9 @@ class GameView(arcade.View):
         )
         self.enemies.append(self.enemy_three)
 
+        #for enemy in self.enemies:
+        self.enemies[0].spawn_speech_bubble(self.enemies[0].random_speech_bubble_dialogue[0])
+
     def on_draw(self):
         # 3. Clear the screen
         self.clear()
