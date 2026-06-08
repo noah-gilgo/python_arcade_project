@@ -20,6 +20,7 @@ class SpeechBubbleTextContainer(Sprite):
 
     def __init__(self, text: str = "test text", center_x: float = 0, center_y: float = 0, row_count: int = 1,
                  column_count: int = 1, text_spacing: int = 1, rate_of_text: float = 0.05, text_sound: Sound = None,
+                 speech_bubble_is_left_of_character: bool = True,
                  sprites_and_effects_collection: SpritesAndEffectsCollection = None):
 
         self.text = text
@@ -32,6 +33,9 @@ class SpeechBubbleTextContainer(Sprite):
 
         self.rate_of_text = rate_of_text
         self.time_elapsed_since_last_character = 0.0
+        self.speech_bubble_is_left_of_character = speech_bubble_is_left_of_character
+
+        self.speech_bubble_scale = 1.6  # The amount that the speech bubble is scaled up from its default size.
 
         if text_sound is None:
             self.text_sound = Sound("assets/audio/dialog/snd_text.wav")
@@ -42,8 +46,8 @@ class SpeechBubbleTextContainer(Sprite):
 
         self.text_spacing = text_spacing  # The amount of pixels between each character
 
-        width = (self.column_count * 11) + (self.column_count - self.text_spacing)
-        height = (self.row_count * 17) + (self.row_count - self.text_spacing)
+        width = int(((self.column_count * 9) + (self.column_count - self.text_spacing)) * self.speech_bubble_scale)
+        height = int(((self.row_count * 17) + (self.row_count - self.text_spacing)) * self.speech_bubble_scale)
 
         super().__init__(
             path_or_texture=Texture.create_empty(
@@ -55,7 +59,153 @@ class SpeechBubbleTextContainer(Sprite):
             center_y=center_y
         )
 
-        self.sprites_and_effects_collection.speech_bubble_sprites.append(self)
+        # Append the sprites that decorate the basic text box.
+        self.sprites_associated_with_text_box = []
+
+        self.sprites_associated_with_text_box.append(self)
+
+        # Side sprites (top, bottom, left, right borders of the dialogue box)
+        left_right_border_sprite_width = int(10*self.speech_bubble_scale)
+        top_bottom_border_sprite_height = left_right_border_sprite_width
+
+        # Left/right border texture
+        left_right_border_texture = Texture.create_empty(
+            name="left_right_border_texture",
+            size=(left_right_border_sprite_width, int(self.height)),
+            color=(255, 255, 255, 255)
+        )
+
+        # Left border sprite
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=left_right_border_texture,
+                center_x=self.center_x - (self.width / 2) - (left_right_border_sprite_width / 2),
+                center_y=self.center_y,
+            )
+        )
+
+        # Right border sprite
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=left_right_border_texture,
+                center_x=self.center_x + (self.width / 2) + (left_right_border_sprite_width / 2),
+                center_y=self.center_y
+            )
+        )
+
+        # Top/bottom border texture
+        top_bottom_border_texture = Texture.create_empty(
+            name="top_bottom_border_texture",
+            size=(int(self.width), top_bottom_border_sprite_height),
+            color=(255, 255, 255, 255)
+        )
+
+        # Bottom border sprite
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=top_bottom_border_texture,
+                center_x=self.center_x,
+                center_y=self.center_y - (self.height / 2) - (top_bottom_border_sprite_height / 2)
+            )
+        )
+
+        # Top border sprite
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=top_bottom_border_texture,
+                center_x=self.center_x,
+                center_y=self.center_y + (self.height / 2) + (top_bottom_border_sprite_height / 2)
+            )
+        )
+
+        # Corner texture
+        corner_texture = arcade.load_texture("assets/sprites/speech_bubbles/speech_bubble_corner_texture.png")
+
+        # Corner sprites
+
+        # Top right corner
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=corner_texture,
+                center_x=self.center_x + (self.width / 2) + (left_right_border_sprite_width / 2),
+                center_y=self.center_y + (self.height / 2) + (top_bottom_border_sprite_height / 2),
+                scale=self.speech_bubble_scale
+            )
+        )
+
+        # Bottom right corner
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=corner_texture,
+                center_x=self.center_x + (self.width / 2) + (left_right_border_sprite_width / 2),
+                center_y=self.center_y - (self.height / 2) - (top_bottom_border_sprite_height / 2),
+                scale=self.speech_bubble_scale,
+                angle=90
+            )
+        )
+
+        # Bottom left corner
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=corner_texture,
+                center_x=self.center_x - (self.width / 2) - (left_right_border_sprite_width / 2),
+                center_y=self.center_y - (self.height / 2) - (top_bottom_border_sprite_height / 2),
+                scale=self.speech_bubble_scale,
+                angle=180
+            )
+        )
+
+        # Top left corner
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=corner_texture,
+                center_x=self.center_x - (self.width / 2) - (left_right_border_sprite_width / 2),
+                center_y=self.center_y + (self.height / 2) + (top_bottom_border_sprite_height / 2),
+                scale=self.speech_bubble_scale,
+                angle=270
+            )
+        )
+
+        # The pointy bit that points at the character talking.
+        if self.speech_bubble_is_left_of_character:
+            if row_count < 3:
+                speech_bubble_arrow_texture_path = "assets/sprites/speech_bubbles/small_right_facing_speech_bubble_arrow.png"
+            else:
+                speech_bubble_arrow_texture_path = "assets/sprites/speech_bubbles/big_right_facing_speech_bubble_arrow.png"
+        else:
+            if row_count < 3:
+                speech_bubble_arrow_texture_path = "assets/sprites/speech_bubbles/small_left_facing_speech_bubble_arrow.png"
+            else:
+                speech_bubble_arrow_texture_path = "assets/sprites/speech_bubbles/big_left_facing_speech_bubble_arrow.png"
+
+        speech_bubble_arrow_texture = arcade.load_texture(
+            file_path=speech_bubble_arrow_texture_path,
+        )
+
+        speech_bubble_arrow_sprite_width = int(speech_bubble_arrow_texture.width * self.speech_bubble_scale)
+
+        if self.speech_bubble_is_left_of_character:
+            speech_bubble_arrow_sprite_center_x = self.center_x + (self.width / 2) + left_right_border_sprite_width + (
+                    speech_bubble_arrow_sprite_width / 2)
+        else:
+            speech_bubble_arrow_sprite_center_x = self.center_x - (self.width / 2) + left_right_border_sprite_width - (
+                    speech_bubble_arrow_sprite_width / 2)
+
+        print(self.center_x)
+        print(speech_bubble_arrow_sprite_center_x)
+
+        self.sprites_associated_with_text_box.append(
+            Sprite(
+                path_or_texture=speech_bubble_arrow_texture_path,
+                center_x=speech_bubble_arrow_sprite_center_x,
+                center_y=self.center_y,
+                scale=self.speech_bubble_scale,
+            )
+        )
+
+        for sprite in self.sprites_associated_with_text_box:
+            self.sprites_and_effects_collection.speech_bubble_sprites.append(sprite)
+
         self.sprites_and_effects_collection.effects.append(self)
 
         self.text_character_sprite_sheet = SpriteSheet("assets/sprites/speech_bubbles/speech_bubble_text_sprite_sheet.png")
@@ -85,7 +235,10 @@ class SpeechBubbleTextContainer(Sprite):
         )
         """
 
-        return Sprite(self.text_character_sprite_sheet.get_texture(character_rect))
+        return Sprite(
+            path_or_texture=self.text_character_sprite_sheet.get_texture(character_rect),
+            scale=self.speech_bubble_scale
+        )
 
     def add_character_to_speech_bubble(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
@@ -95,8 +248,8 @@ class SpeechBubbleTextContainer(Sprite):
         if 127 > character_unicode_code > 31: # Letters, numbers, symbols
             character_sprite = self.get_character_sprite(character_unicode_code)
 
-            character_x_coordinate = self.left + 7 + (self.character_column_index * (8 + self.text_spacing))
-            character_y_coordinate = self.top - 9 - (self.character_row_index * 17)
+            character_x_coordinate = self.left + 10 + int((self.character_column_index * (8 + self.text_spacing)) * self.speech_bubble_scale)
+            character_y_coordinate = self.top - 16 - int(self.character_row_index * 17 * self.speech_bubble_scale)
 
             character_sprite.center_x = character_x_coordinate
             character_sprite.center_y = character_y_coordinate

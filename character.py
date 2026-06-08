@@ -192,7 +192,7 @@ class Character(arcade.Sprite):
         :return: None
         """
 
-        x_offset = -200 if is_left_of_character else 200
+        x_offset = -240 if is_left_of_character else 240
 
         if speech_bubble_dialogue.text_sound:
             text_sound = speech_bubble_dialogue.text_sound
@@ -202,7 +202,7 @@ class Character(arcade.Sprite):
         speech_bubble = SpeechBubbleTextContainer(
             text=speech_bubble_dialogue.text,
             center_x=self.center_x + x_offset,
-            center_y=self.center_y + (self.height / 4),
+            center_y=self.center_y + (self.height / 10),
             row_count=speech_bubble_dialogue.row_count,
             column_count=speech_bubble_dialogue.column_count,
             text_spacing=speech_bubble_dialogue.text_spacing,
