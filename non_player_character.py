@@ -10,6 +10,7 @@ from acts import RudinnConvince, RudinnLecture
 from animations.battle_animations import EnemyFleeingAnimation, StrikeEnemyAnimation, NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
 from enemy_attacks import RainingDiamondAttack
+from speech_bubble import SpeechBubbleDialog
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/non_player_characters/"
@@ -272,10 +273,26 @@ class Rudinn(NonPlayerCharacter):
             ],
             enemies_list=enemies_list,
             random_speech_bubble_dialogue=[
-                "Long live the guy who pays us!",
-                "I'm just a normal person.",
-                "Face my Diamond Cutter!",
-                "Shine, shine"
+                SpeechBubbleDialog(
+                    text="Long live the\nguy who pays\nus!",
+                    row_count=3,
+                    column_count=13
+                ),
+                SpeechBubbleDialog(
+                    text="I'm just a\nnormal person.",
+                    row_count=2,
+                    column_count=14
+                ),
+                SpeechBubbleDialog(
+                    text="Face my\nDiamond\nCutter!",
+                    row_count=3,
+                    column_count=7
+                ),
+                SpeechBubbleDialog(
+                    text="Shine,\nshine",
+                    row_count=2,
+                    column_count=6
+                )
             ]
         )
 

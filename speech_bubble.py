@@ -5,9 +5,19 @@ from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 class SpeechBubbleTextContainer(Sprite):
     """
-    The part of speech bubbles that contain text. This version only supports English.
+    The part of speech bubbles that contain text. This version only supports Latin characters. I was originally going to
+    implement the speech bubbles (and all other dialogue in the game) with multi-language support, but as it turns out
+    many of the fonts used in Deltarune only have the very limited basic Latin character set available. Only one font
+    in Deltarune (Greater Determination Dr Damage) has a variant with broader language support, so a true broad-tongue
+    Deltarune would require either non-Deltarune fonts or a lot of commissioned font work.
+
+    This version of the speech bubble is meant to most closely mimic the speech bubbles in Deltarune. (Dotum Che font,
+    animatable characters, even spacing between the characters, etc.)
     """
-    def __init__(self, text: str = "test text", center_x: int = 0, center_y: int = 0, row_count: int = 1,
+
+    # TODO: make a speech bubble that supports multiple languages.
+
+    def __init__(self, text: str = "test text", center_x: float = 0, center_y: float = 0, row_count: int = 1,
                  column_count: int = 1, text_spacing: int = 1, rate_of_text: float = 0.04, text_sound: Sound = None,
                  sprites_and_effects_collection: SpritesAndEffectsCollection = None):
 
@@ -95,3 +105,22 @@ class SpeechBubbleTextContainer(Sprite):
             self.time_elapsed_since_last_character -= self.rate_of_text
             self.add_character_to_speech_bubble()
             self.text_sound.play()
+
+
+class SpeechBubbleDialog:
+    def __init__(self, text: str = "", row_count: int = 10, column_count: int = 10, text_spacing: int = 1,
+                 text_sound: Sound = None, rate_of_text: float = 0.04):
+        """
+        Stores basic data needed by the speech bubble to render a specific dialogue.
+        :param text: The text of the dialogue.
+        :param row_count: The rows of dialogue accommodated by the speech bubble.
+        :param column_count: The columns of dialogue accommodated by the speech bubble.
+        :param text_spacing: The space between letters in the rendered dialogue.
+        """
+
+        self.text = text
+        self.row_count = row_count
+        self.column_count = column_count
+        self.text_spacing = text_spacing
+        self.text_sound = text_sound
+        self.rate_of_text = rate_of_text
