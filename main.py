@@ -1,4 +1,5 @@
 import arcade
+import pyglet
 from arcade import SpriteList
 from arcade.gui import UIManager
 from arcade.types import Color
@@ -67,6 +68,7 @@ class GameView(arcade.View):
         arcade.load_font("assets/fonts/roarin.ttf")
         arcade.load_font("assets/fonts/greater-determination-dr-damage.ttf")
         arcade.load_font("assets/fonts/dotumche-pixel.ttf")
+        arcade.load_font("assets/fonts/undertale-deltarune-extended-fixed.ttf")
 
         # Initialize the UIManager.
         self.manager = UIManager()

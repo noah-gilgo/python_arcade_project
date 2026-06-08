@@ -3,7 +3,7 @@ from arcade import Sprite, Texture, SpriteSheet, LBWH, Sound
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
-class ClassicSpeechBubbleTextContainer(Sprite):
+class SpeechBubbleTextContainer(Sprite):
     """
     The part of speech bubbles that contain text. This version only supports English.
     """
@@ -14,6 +14,10 @@ class ClassicSpeechBubbleTextContainer(Sprite):
         self.text = text
         self.text_length = len(self.text)
         self.current_character_index = 0
+        self.row_count = row_count
+        self.column_count = column_count
+        self.character_row_index = 0
+        self.character_column_index = 0
 
         self.rate_of_text = rate_of_text
         self.time_elapsed_since_last_character = 0.0
@@ -22,9 +26,6 @@ class ClassicSpeechBubbleTextContainer(Sprite):
             self.text_sound = Sound("assets/audio/dialog/snd_text.wav")
         else:
             self.text_sound = text_sound
-
-        self.row_count = row_count
-        self.column_count = column_count
 
         self.sprites_and_effects_collection = sprites_and_effects_collection
 
@@ -48,10 +49,8 @@ class ClassicSpeechBubbleTextContainer(Sprite):
 
         self.text_character_sprite_sheet = SpriteSheet("assets/sprites/speech_bubbles/speech_bubble_text_sprite_sheet.png")
 
-    def get_character_from_sprite_sheet(self, character: str) -> Sprite:
+    def get_character_from_sprite_sheet(self, character_unicode_code: int) -> Sprite:
         """ Returns a character sprite from the sprite sheet depending on the supplied character. """
-        character_unicode_code = ord(character)
-
         offset_from_start_in_pixels = 9 * (character_unicode_code - 32)
 
         character_y_coordinate = offset_from_start_in_pixels // 117
@@ -63,19 +62,30 @@ class ClassicSpeechBubbleTextContainer(Sprite):
 
     def add_character_to_speech_bubble(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
-        character_column_index = self.current_character_index % self.column_count
-        character_row_index = self.current_character_index // self.column_count
-
-        character_x_coordinate = self.left - 4 + (character_row_index * (8 + self.text_spacing))
-        character_y_coordinate = self.top - 8 + (character_column_index * 17)
-
         character = self.text[self.current_character_index]
-        character_sprite = self.get_character_from_sprite_sheet(character)
+        character_unicode_code = ord(character)
 
-        character_sprite.center_x = character_x_coordinate
-        character_sprite.center_y = character_y_coordinate
+        if 127 > character_unicode_code > 32: # Letters, numbers, symbols
+            character_sprite = self.get_character_from_sprite_sheet(character_unicode_code)
 
-        self.sprites_and_effects_collection.speech_bubble_sprites.append(character_sprite)
+            character_x_coordinate = self.left - 4 + (self.character_row_index * (8 + self.text_spacing))
+            character_y_coordinate = self.top - 8 + (self.character_column_index * 17)
+
+            character_sprite.center_x = character_x_coordinate
+            character_sprite.center_y = character_y_coordinate
+
+            self.sprites_and_effects_collection.speech_bubble_sprites.append(character_sprite)
+
+            if self.character_row_index + 1 < self.row_count:
+                self.character_row_index += 1
+            else:
+                self.character_column_index += 1
+                self.character_row_index = 0
+
+        else: # Basic characters such as newline, tab, etc, as well as characters beyond basic latin characters
+            # Treat them all like they're the enter key.
+            self.character_column_index += 1
+            self.character_row_index = 0
 
         self.current_character_index += 1
 
