@@ -19,7 +19,7 @@ class SpeechBubbleTextContainer(Sprite):
     # TODO: make a speech bubble that supports multiple languages.
 
     def __init__(self, text: str = "test text", center_x: float = 0, center_y: float = 0, row_count: int = 1,
-                 column_count: int = 1, text_spacing: int = 1, rate_of_text: float = 0.04, text_sound: Sound = None,
+                 column_count: int = 1, text_spacing: int = 1, rate_of_text: float = 0.05, text_sound: Sound = None,
                  sprites_and_effects_collection: SpritesAndEffectsCollection = None):
 
         self.text = text
@@ -42,8 +42,8 @@ class SpeechBubbleTextContainer(Sprite):
 
         self.text_spacing = text_spacing  # The amount of pixels between each character
 
-        width = (self.column_count * 8) + (self.column_count - self.text_spacing)
-        height = (self.row_count * 16) + (self.row_count - self.text_spacing)
+        width = (self.column_count * 11) + (self.column_count - self.text_spacing)
+        height = (self.row_count * 17) + (self.row_count - self.text_spacing)
 
         super().__init__(
             path_or_texture=Texture.create_empty(
@@ -60,29 +60,32 @@ class SpeechBubbleTextContainer(Sprite):
 
         self.text_character_sprite_sheet = SpriteSheet("assets/sprites/speech_bubbles/speech_bubble_text_sprite_sheet.png")
 
-    def get_character_sprite(self, character: str) -> Sprite:
+    def get_character_sprite(self, character_unicode_code: int) -> Sprite:
         """ Returns a character sprite from the sprite sheet depending on the supplied character. """
-        """
-        print(chr(character_unicode_code))
 
-        offset_from_start_in_pixels = 9 * (character_unicode_code - 32)
+        offset_code = character_unicode_code - 32
 
-        character_y_coordinate = offset_from_start_in_pixels // 117
-        character_x_coordinate = offset_from_start_in_pixels % 117
+        char_column = offset_code % 13
+        char_row = offset_code // 13
+
+        #offset_from_start_in_pixels = 9 * (character_unicode_code - 32)
+
+        character_x_coordinate = char_column * 9
+        character_y_coordinate = char_row * 17
 
         character_rect = LBWH(left=character_x_coordinate, bottom=character_y_coordinate, width=8, height=16)
-        """
-        print(character)
 
+        """
         character_sprite = arcade.create_text_sprite(
             text=character,
             color=(0, 0, 0),
             font_size=12.0,
-            width=8,
+            #width=10,
             font_name="DotumChe Pixel"
         )
+        """
 
-        return character_sprite
+        return Sprite(self.text_character_sprite_sheet.get_texture(character_rect))
 
     def add_character_to_speech_bubble(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
@@ -90,10 +93,10 @@ class SpeechBubbleTextContainer(Sprite):
         character_unicode_code = ord(character)
 
         if 127 > character_unicode_code > 31: # Letters, numbers, symbols
-            character_sprite = self.get_character_sprite(character)
+            character_sprite = self.get_character_sprite(character_unicode_code)
 
-            character_x_coordinate = self.left + 4 + (self.character_column_index * (8 + self.text_spacing))
-            character_y_coordinate = self.top - 8 - (self.character_row_index * 17)
+            character_x_coordinate = self.left + 7 + (self.character_column_index * (8 + self.text_spacing))
+            character_y_coordinate = self.top - 9 - (self.character_row_index * 17)
 
             character_sprite.center_x = character_x_coordinate
             character_sprite.center_y = character_y_coordinate
@@ -124,7 +127,7 @@ class SpeechBubbleTextContainer(Sprite):
 
 class SpeechBubbleDialog:
     def __init__(self, text: str = "", row_count: int = 10, column_count: int = 10, text_spacing: int = 1,
-                 text_sound: Sound = None, rate_of_text: float = 0.04):
+                 text_sound: Sound = None, rate_of_text: float = 0.05):
         """
         Stores basic data needed by the speech bubble to render a specific dialogue.
         :param text: The text of the dialogue.
