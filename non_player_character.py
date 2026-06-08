@@ -19,7 +19,8 @@ class NonPlayerCharacter(character.Character):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection = None, scale: float = 4.0, center_x: float = 0.0,
                  center_y: float = 0.0, angle: float = 0.0, sprite_folder_name: str = "", name: str = "", hp: int = 100, max_hp: int = 100, attack: int = 5,
                  defense: int = 5, element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [],
-                 attacks: list = [], acts: list = [], battle_description: str = ""):
+                 attacks: list = [], acts: list = [], battle_description: str = "",
+                 random_speech_bubble_dialogue: list = []):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -69,8 +70,8 @@ class NonPlayerCharacter(character.Character):
             ),
         })
 
-        # Meant to contain all of the random dialogue that non player characters say right before they do battle
-        self.witty_banter = []
+        # Meant to contain all the random dialogue that non player characters say right before they do battle
+        self.random_speech_bubble_dialogue = random_speech_bubble_dialogue
 
         # Set the animation state to battle_idle, if it exists
         if "battle_idle" in self.animations_by_state:
@@ -269,7 +270,13 @@ class Rudinn(NonPlayerCharacter):
                 RudinnConvince(),
                 RudinnLecture(enemies_list)
             ],
-            enemies_list=enemies_list
+            enemies_list=enemies_list,
+            random_speech_bubble_dialogue=[
+                "Long live the guy who pays us!",
+                "I'm just a normal person.",
+                "Face my Diamond Cutter!",
+                "Shine, shine"
+            ]
         )
 
         self.bullet_board = bullet_board
