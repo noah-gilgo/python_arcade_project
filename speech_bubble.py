@@ -4,6 +4,28 @@ from arcade import Sprite, Texture, SpriteSheet, LBWH, Sound
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
+class SpeechBubbleDialog:
+    def __init__(self, text: str = "", row_count: int = 10, column_count: int = 10, text_spacing: int = 1,
+                 text_sound: Sound = None, rate_of_text: float = 0.05, is_left_of_character: bool = True,
+                 actor = None):
+        """
+        Stores basic data needed by the speech bubble to render a specific dialogue.
+        :param text: The text of the dialogue.
+        :param row_count: The rows of dialogue accommodated by the speech bubble.
+        :param column_count: The columns of dialogue accommodated by the speech bubble.
+        :param text_spacing: The space between letters in the rendered dialogue.
+        """
+
+        self.text = text
+        self.row_count = row_count
+        self.column_count = column_count
+        self.text_spacing = text_spacing
+        self.text_sound = text_sound
+        self.rate_of_text = rate_of_text
+        self.is_left_of_character = is_left_of_character
+        self.actor = actor
+
+
 class SpeechBubble(Sprite):
     """
     The part of speech bubbles that contain text. This version only supports Latin characters. I was originally going to
@@ -18,36 +40,55 @@ class SpeechBubble(Sprite):
 
     # TODO: make a speech bubble that supports multiple languages.
 
-    def __init__(self, text: str = "test text", center_x: float = 0, center_y: float = 0, row_count: int = 1,
-                 column_count: int = 1, text_spacing: int = 1, rate_of_text: float = 0.05, text_sound: Sound = None,
-                 speech_bubble_is_left_of_character: bool = True,
-                 sprites_and_effects_collection: SpritesAndEffectsCollection = None):
+    def __init__(self, speech_bubble_dialog: SpeechBubbleDialog,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection = None,
+                 center_x: float = 0, center_y: float = 0):
+        """
+        Initializes the speech bubble. Adds it to the screen and starts animating the text.
+        :param speech_bubble_dialog: The SpeechBubbleDialog object containing the dialog data for the speech bubble.
+        :param sprites_and_effects_collection: The collection of sprite lists the speech bubble sprites will be added to
+        :param center_x: The center_x of the main text component of the speech bubble, if the uses wishes to specify one
+        :param center_y: The center_y of the main text component of the speech bubble, if the uses wishes to specify one
+        :param actor: Optional actor parameter. If specified, the coordinates of the speech bubble will be set near it.
+        :param is_left_of_character: If specified with actor, controls which side of the actor the bubble will spawn on
+        """
 
-        self.text = text
+        self.text = speech_bubble_dialog.text
         self.text_length = len(self.text)
         self.current_character_index = 0
-        self.row_count = row_count
-        self.column_count = column_count
+        self.row_count = speech_bubble_dialog.row_count
+        self.column_count = speech_bubble_dialog.column_count
         self.character_row_index = 0
         self.character_column_index = 0
 
-        self.rate_of_text = rate_of_text
+        self.rate_of_text = speech_bubble_dialog.rate_of_text
         self.time_elapsed_since_last_character = 0.0
-        self.speech_bubble_is_left_of_character = speech_bubble_is_left_of_character
+        self.speech_bubble_is_left_of_character = speech_bubble_dialog.is_left_of_character
 
         self.speech_bubble_scale = 5/3  # The amount that the speech bubble is scaled up from its default size.
 
-        if text_sound is None:
+        if speech_bubble_dialog.text_sound is None:
             self.text_sound = Sound("assets/audio/dialog/snd_text.wav")
         else:
-            self.text_sound = text_sound
+            self.text_sound = speech_bubble_dialog.text_sound
 
         self.sprites_and_effects_collection = sprites_and_effects_collection
 
-        self.text_spacing = text_spacing  # The amount of pixels between each character
+        self.text_spacing = speech_bubble_dialog.text_spacing  # The amount of pixels between each character
 
         width = int(((self.column_count * 9) + (self.column_count - self.text_spacing)) * self.speech_bubble_scale)
         height = int(((self.row_count * 17) + (self.row_count - self.text_spacing)) * self.speech_bubble_scale)
+
+        speech_bubble_center_x = center_x
+        speech_bubble_center_y = center_y
+
+        if speech_bubble_dialog.actor:
+            speech_bubble_center_y = speech_bubble_dialog.actor.center_y + (speech_bubble_dialog.actor.height / 10)
+            if speech_bubble_dialog.is_left_of_character:
+                speech_bubble_center_x = speech_bubble_dialog.actor.center_x - (speech_bubble_dialog.actor.width / 2) - (width / 2) - 60
+            else:
+                speech_bubble_center_x = speech_bubble_dialog.actor.center_x + (speech_bubble_dialog.actor.width / 2) + (width / 2) + 60
+
 
         super().__init__(
             path_or_texture=Texture.create_empty(
@@ -55,8 +96,8 @@ class SpeechBubble(Sprite):
                 size=(width, height),
                 color=(255, 255, 255, 255)
             ),
-            center_x=center_x,
-            center_y=center_y
+            center_x=speech_bubble_center_x,
+            center_y=speech_bubble_center_y
         )
 
         # Append the sprites that decorate the basic text box.
@@ -163,12 +204,12 @@ class SpeechBubble(Sprite):
 
         # The pointy bit that points at the character talking.
         if self.speech_bubble_is_left_of_character:
-            if row_count < 3:
+            if speech_bubble_dialog.row_count < 3:
                 speech_bubble_arrow_texture_path = "assets/sprites/speech_bubbles/small_right_facing_speech_bubble_arrow.png"
             else:
                 speech_bubble_arrow_texture_path = "assets/sprites/speech_bubbles/big_right_facing_speech_bubble_arrow.png"
         else:
-            if row_count < 3:
+            if speech_bubble_dialog.row_count < 3:
                 speech_bubble_arrow_texture_path = "assets/sprites/speech_bubbles/small_left_facing_speech_bubble_arrow.png"
             else:
                 speech_bubble_arrow_texture_path = "assets/sprites/speech_bubbles/big_left_facing_speech_bubble_arrow.png"
@@ -282,22 +323,3 @@ class SpeechBubble(Sprite):
             self.sprites_and_effects_collection.effects.remove(self)
         for sprite in self.sprites_associated_with_text_box:
             sprite.kill()
-
-
-class SpeechBubbleDialog:
-    def __init__(self, text: str = "", row_count: int = 10, column_count: int = 10, text_spacing: int = 1,
-                 text_sound: Sound = None, rate_of_text: float = 0.05):
-        """
-        Stores basic data needed by the speech bubble to render a specific dialogue.
-        :param text: The text of the dialogue.
-        :param row_count: The rows of dialogue accommodated by the speech bubble.
-        :param column_count: The columns of dialogue accommodated by the speech bubble.
-        :param text_spacing: The space between letters in the rendered dialogue.
-        """
-
-        self.text = text
-        self.row_count = row_count
-        self.column_count = column_count
-        self.text_spacing = text_spacing
-        self.text_sound = text_sound
-        self.rate_of_text = rate_of_text
