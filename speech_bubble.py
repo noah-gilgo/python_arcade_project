@@ -4,7 +4,7 @@ from arcade import Sprite, Texture, SpriteSheet, LBWH, Sound
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
-class SpeechBubbleTextContainer(Sprite):
+class SpeechBubble(Sprite):
     """
     The part of speech bubbles that contain text. This version only supports Latin characters. I was originally going to
     implement the speech bubbles (and all other dialogue in the game) with multi-language support, but as it turns out
@@ -203,7 +203,7 @@ class SpeechBubbleTextContainer(Sprite):
         self.text_character_sprite_sheet = SpriteSheet("assets/sprites/speech_bubbles/speech_bubble_text_sprite_sheet.png")
 
     def get_character_sprite(self, character_unicode_code: int) -> Sprite:
-        """ Returns a character sprite from the sprite sheet depending on the supplied character. """
+        """ Returns a (letter) character sprite from the sprite sheet depending on the supplied character. """
 
         offset_code = character_unicode_code - 32
 
@@ -227,10 +227,14 @@ class SpeechBubbleTextContainer(Sprite):
         )
         """
 
-        return Sprite(
+        letter_sprite = Sprite(
             path_or_texture=self.text_character_sprite_sheet.get_texture(character_rect),
             scale=self.speech_bubble_scale
         )
+
+        self.sprites_associated_with_text_box.append(letter_sprite)
+
+        return letter_sprite
 
     def add_character_to_speech_bubble(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
@@ -268,6 +272,16 @@ class SpeechBubbleTextContainer(Sprite):
                 self.time_elapsed_since_last_character -= self.rate_of_text
                 self.add_character_to_speech_bubble()
                 self.text_sound.play()
+
+    def despawn_speech_bubble(self):
+        """
+        Despawns the speech bubble.
+        :return: None
+        """
+        if self in self.sprites_and_effects_collection.effects:
+            self.sprites_and_effects_collection.effects.remove(self)
+        for sprite in self.sprites_associated_with_text_box:
+            sprite.kill()
 
 
 class SpeechBubbleDialog:

@@ -367,7 +367,7 @@ class FightHitBar(SingleSpriteAnimation):
 
         if len(self.controller.fight_hit_markers) == 0 and not self.controller.load_bullet_board_called_for_this_turn:
             self.controller.load_bullet_board_called_for_this_turn = True
-            pyglet.clock.schedule_once(lambda dt: self.controller.start_enemy_attack(), 1.5)
+            pyglet.clock.schedule_once(lambda dt: self.controller.spawn_enemy_speech_bubbles(), 1.5)
 
     def get_bar_sprite(self) -> Sprite:
         """

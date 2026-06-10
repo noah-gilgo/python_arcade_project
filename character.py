@@ -5,7 +5,7 @@ import graphics_objects
 import settings
 import texture_methods
 from animations.common_animations import FadeInFadeOutColorAnimation
-from speech_bubble import SpeechBubbleDialog, SpeechBubbleTextContainer
+from speech_bubble import SpeechBubbleDialog, SpeechBubble
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 SPRITE_SCALING = 1.0
@@ -184,7 +184,7 @@ class Character(arcade.Sprite):
             self.focus_animation.filter_sprite.kill()
             self.is_focused = False
 
-    def spawn_speech_bubble(self, speech_bubble_dialogue: SpeechBubbleDialog, is_left_of_character: bool = True):
+    def spawn_speech_bubble(self, speech_bubble_dialogue: SpeechBubbleDialog, is_left_of_character: bool = True) -> SpeechBubble:
         """
         Spawns a speech bubble within the proximity of the NPC.
         :param speech_bubble_dialogue: A SpeechBubbleDialogue instance containing the text/dimensional data of the dialogue.
@@ -199,7 +199,7 @@ class Character(arcade.Sprite):
         else:
             text_sound = self.talk_sound
 
-        speech_bubble = SpeechBubbleTextContainer(
+        speech_bubble = SpeechBubble(
             text=speech_bubble_dialogue.text,
             center_x=self.center_x + x_offset,
             center_y=self.center_y + (self.height / 10),
