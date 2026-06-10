@@ -10,7 +10,7 @@ class SpeechBubble(Sprite):
     implement the speech bubbles (and all other dialogue in the game) with multi-language support, but as it turns out
     many of the fonts used in Deltarune only have the very limited basic Latin character set available. Only one font
     in Deltarune (Greater Determination Dr Damage) has a variant with broader language support, so a true broad-tongue
-    Deltarune would require either non-Deltarune fonts or a lot of commissioned font work.
+    Deltarune simulator would require either non-Deltarune fonts or a lot of commissioned font work.
 
     This version of the speech bubble is meant to most closely mimic the speech bubbles in Deltarune. (Dotum Che font,
     animatable characters, even spacing between the characters, etc.)
