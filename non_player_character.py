@@ -75,7 +75,7 @@ class NonPlayerCharacter(character.Character):
         self.random_speech_bubble_dialogue = random_speech_bubble_dialogue
 
         # Meant to contain specific dialogue assigned to the enemy after a player performs a specific act.
-        self.speech_bubble_dialog_assigned_this_turn = None
+        self.speech_bubble_dialog_assigned_this_turn = ""
 
         # Set the animation state to battle_idle, if it exists
         if "battle_idle" in self.animations_by_state:
@@ -251,10 +251,14 @@ class NonPlayerCharacter(character.Character):
         else:
             speech_bubble_dialog = self.random_speech_bubble_dialogue[random.randint(0, len(self.random_speech_bubble_dialogue) - 1)]
 
-        return super().spawn_speech_bubble(
+        speech_bubble = super().spawn_speech_bubble(
             speech_bubble_dialogue=speech_bubble_dialog,
             is_left_of_character=True
         )
+
+        self.speech_bubble_dialog_assigned_this_turn = ""
+
+        return speech_bubble
 
 
 def get_number_of_unique_enemies_from_enemies_list(enemies_list: list[NonPlayerCharacter]):
