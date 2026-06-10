@@ -20,6 +20,7 @@ class SpritesAndEffectsCollection:
         self.character_sprites = SpriteList()  # Character sprites, like for player characters/non player characters
         self.effects_sprites = SpriteList()  # Effects sprites, like the animations for attacking/spells
         self.bullet_sprites = SpriteList()  # Bullet sprites, like the ones spawned by enemies in their attacks
+        self.speech_bubble_sprites = SpriteList()  # Speech bubbles, such as the ones characters talk with in battle
         self.soul_sprites = SpriteList()  # The SOUL sprite and related sprites, like the yellow soul bullets
 
     def draw(self):
@@ -29,6 +30,7 @@ class SpritesAndEffectsCollection:
             self.character_sprites.draw(pixelated=True)
             self.manager.draw()
             self.effects_sprites.draw(pixelated=True)
+            self.speech_bubble_sprites.draw(pixelated=True)
             self.bullet_sprites.draw(pixelated=True)
             for effect in self.effects:
                 if hasattr(effect, "draw") and callable(effect.draw):

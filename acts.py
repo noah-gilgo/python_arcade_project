@@ -1,4 +1,5 @@
 from act import SimpleAct, MagicUserAct
+from speech_bubble import SpeechBubbleDialog
 
 
 # SimpleActs
@@ -25,6 +26,16 @@ class RudinnConvince(SimpleAct):
             mercy_percentage=100
         )
 
+    def perform_act(self, actor, target, dialogue_box):
+        super().perform_act(actor, target, dialogue_box)
+        target.assign_speech_bubble_dialog_this_turn(
+            SpeechBubbleDialog(
+                text="Yeah that\nmakes sense.",
+                row_count=2,
+                column_count=12,
+            )
+        )
+
 
 class RudinnLecture(SimpleAct):
     def __init__(self, enemies_list: list):
@@ -40,6 +51,13 @@ class RudinnLecture(SimpleAct):
         super().perform_act(actor, target, dialogue_box)
         for enemy in self.enemies_list:
             enemy.receive_tired(100.0)
+            enemy.assign_speech_bubble_dialog_this_turn(
+                SpeechBubbleDialog(
+                    text="(Yawn)...\nWhat? OK..",
+                    row_count=2,
+                    column_count=10,
+                )
+            )
 
 
 # Magic user acts
@@ -56,6 +74,16 @@ class NoelleRudinnAction1(MagicUserAct):
             mercy_percentage=50
         )
 
+    def perform_act(self, actor, target, dialogue_box):
+        super().perform_act(actor, target, dialogue_box)
+        target.assign_speech_bubble_dialog_this_turn(
+            SpeechBubbleDialog(
+                text="That's what the\nKnight did to my\ncousin Phil",
+                row_count=3,
+                column_count=16,
+            )
+        )
+
 class RalseiRudinnAction1(MagicUserAct):
     def __init__(self, player):
         from non_player_character import Rudinn
@@ -66,4 +94,14 @@ class RalseiRudinnAction1(MagicUserAct):
             description="Offer relief from duty\nSPARE 50%",
             perform_act_text="* Ralsei promises that his castle town has suites suited for all suits.",
             mercy_percentage=50
+        )
+
+    def perform_act(self, actor, target, dialogue_box):
+        super().perform_act(actor, target, dialogue_box)
+        target.assign_speech_bubble_dialog_this_turn(
+            SpeechBubbleDialog(
+                text="My last house\nwas a\nmatchbox...",
+                row_count=3,
+                column_count=13,
+            )
         )

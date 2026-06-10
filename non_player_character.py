@@ -10,16 +10,18 @@ from acts import RudinnConvince, RudinnLecture
 from animations.battle_animations import EnemyFleeingAnimation, StrikeEnemyAnimation, NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
 from enemy_attacks import RainingDiamondAttack
+from speech_bubble import SpeechBubbleDialog, SpeechBubble
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH = "assets/sprites/non_player_characters/"
 
 
 class NonPlayerCharacter(character.Character):
-    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection = None, scale: float = 4.0, center_x: float = 0.0,
-                 center_y: float = 0.0, angle: float = 0.0, sprite_folder_name: str = "", name: str = "", hp: int = 100, max_hp: int = 100, attack: int = 5,
-                 defense: int = 5, element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [],
-                 attacks: list = [], acts: list = [], battle_description: str = ""):
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection = None, scale: float = 4.0,
+                 center_x: float = 0.0, center_y: float = 0.0, angle: float = 0.0, sprite_folder_name: str = "",
+                 name: str = "", hp: int = 100, max_hp: int = 100, attack: int = 5, defense: int = 5,
+                 element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [], attacks: list = [],
+                 acts: list = [], battle_description: str = "", random_speech_bubble_dialogue: list = []):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -69,8 +71,11 @@ class NonPlayerCharacter(character.Character):
             ),
         })
 
-        # Meant to contain all of the random dialogue that non player characters say right before they do battle
-        self.witty_banter = []
+        # Meant to contain all the random dialogue that non player characters say right before they do battle
+        self.random_speech_bubble_dialogue = random_speech_bubble_dialogue
+
+        # Meant to contain specific dialogue assigned to the enemy after a player performs a specific act.
+        self.speech_bubble_dialog_assigned_this_turn = ""
 
         # Set the animation state to battle_idle, if it exists
         if "battle_idle" in self.animations_by_state:
@@ -226,6 +231,35 @@ class NonPlayerCharacter(character.Character):
         self.sprites_and_effects_collection.effects_sprites.append(tired_percent_number_animation.sprite)
         self.mercy_add_sound.play()
 
+    def assign_speech_bubble_dialog_this_turn(self, speech_bubble_dialog: SpeechBubbleDialog):
+        """
+        Assigns a speech bubble dialog to the non player character. This will be shown instead of a random dialog during
+        the dialog section of the turn.
+        :param speech_bubble_dialog: The assigned speech dialog to be played by the NPC this turn.
+        :return: None
+        """
+        self.speech_bubble_dialog_assigned_this_turn = speech_bubble_dialog
+
+    def spawn_speech_bubble_this_turn(self) -> SpeechBubble:
+        """
+        Spawns a speech bubble from the NPC before the NPC begins attacking.
+        This function should probably only be called on non-boss NPCs, at least in this form
+        :return:
+        """
+        if self.speech_bubble_dialog_assigned_this_turn:
+            speech_bubble_dialog = self.speech_bubble_dialog_assigned_this_turn
+        else:
+            speech_bubble_dialog = self.random_speech_bubble_dialogue[random.randint(0, len(self.random_speech_bubble_dialogue) - 1)]
+
+        speech_bubble = super().spawn_speech_bubble(
+            speech_bubble_dialogue=speech_bubble_dialog,
+            is_left_of_character=True
+        )
+
+        self.speech_bubble_dialog_assigned_this_turn = ""
+
+        return speech_bubble
+
 
 def get_number_of_unique_enemies_from_enemies_list(enemies_list: list[NonPlayerCharacter]):
     """
@@ -269,7 +303,29 @@ class Rudinn(NonPlayerCharacter):
                 RudinnConvince(),
                 RudinnLecture(enemies_list)
             ],
-            enemies_list=enemies_list
+            enemies_list=enemies_list,
+            random_speech_bubble_dialogue=[
+                SpeechBubbleDialog(
+                    text="Long live the\nguy who pays\nus!",
+                    row_count=3,
+                    column_count=13
+                ),
+                SpeechBubbleDialog(
+                    text="I'm just a\nnormal person.",
+                    row_count=2,
+                    column_count=14
+                ),
+                SpeechBubbleDialog(
+                    text="Face my\nDiamond\nCutter!",
+                    row_count=3,
+                    column_count=7
+                ),
+                SpeechBubbleDialog(
+                    text="Shine,\nshine",
+                    row_count=2,
+                    column_count=6
+                )
+            ]
         )
 
         self.bullet_board = bullet_board

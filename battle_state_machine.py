@@ -63,6 +63,15 @@ class BattleController:
                  tp_meter: battle_widgets.TPMeter):
         # TODO: move most of these parameters into the BattleController.
 
+        # This variable controls whether the battle is scripted (typically a boss/miniboss battle).
+        # Scripted battles typically have dialog that progresses each turn, while non-scripted battles have dialog that
+        # is mostly random depending on player interaction.
+        self.is_scripted_battle = False
+
+        # Speech bubbles spawned during the fight can be placed in here to be automatically deleted at the start of the
+        # enemy attack.
+        self.active_speech_bubbles = []
+
         # Sprite lists that need to be accessed for animations.
         self.sprites_and_effects_collection = sprites_and_effects_collection
 
@@ -795,9 +804,30 @@ class BattleController:
             self.spawn_fight_bars(fighting_players, enemy_targets)
             return
         else:
-            # Start the enemy attack.
-            self.start_enemy_attack()
+            # Display the enemy speech bubbles.
+            self.spawn_enemy_speech_bubbles()
             return
+
+    def spawn_enemy_speech_bubbles(self):
+        """
+        Spawns enemy speech bubbles prior to the enemy attack.
+        :return: None
+        """
+        self.state = BattleState.DIALOGUE
+
+        for enemy in self.enemies:
+            speech_bubble = enemy.spawn_speech_bubble_this_turn()
+            self.active_speech_bubbles.append(speech_bubble)
+
+    def despawn_speech_bubbles(self):
+        """
+        Despawns all enemy speech bubbles in lieu of the enemy attack.
+        :return: None
+        """
+        for speech_bubble in self.active_speech_bubbles:
+            speech_bubble.despawn_speech_bubble()
+
+        self.active_speech_bubbles.clear()
 
     def start_enemy_attack(self):
         """
@@ -1115,6 +1145,10 @@ class SelectCommand(Command):
 
             case BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS:
                 self.controller.execute_queued_player_action()
+
+            case BattleState.DIALOGUE:
+                self.controller.despawn_speech_bubbles()
+                self.controller.start_enemy_attack()
 
 
 class CancelCommand(Command):

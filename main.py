@@ -1,4 +1,5 @@
 import arcade
+import pyglet
 from arcade import SpriteList
 from arcade.gui import UIManager
 from arcade.types import Color
@@ -66,6 +67,8 @@ class GameView(arcade.View):
         arcade.load_font("assets/fonts/3x5-font.ttf")
         arcade.load_font("assets/fonts/roarin.ttf")
         arcade.load_font("assets/fonts/greater-determination-dr-damage.ttf")
+        arcade.load_font("assets/fonts/dotumche-pixel.ttf")
+        arcade.load_font("assets/fonts/undertale-deltarune-extended-fixed.ttf")
 
         # Initialize the UIManager.
         self.manager = UIManager()
@@ -238,6 +241,9 @@ class GameView(arcade.View):
             bullet_board=self.battle_controller.bullet_board
         )
         self.enemies.append(self.enemy_three)
+
+        #for enemy in self.enemies:
+        #    enemy.spawn_speech_bubble(enemy.random_speech_bubble_dialogue[0])
 
     def on_draw(self):
         # 3. Clear the screen

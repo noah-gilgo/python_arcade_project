@@ -5,6 +5,7 @@ import graphics_objects
 import settings
 import texture_methods
 from animations.common_animations import FadeInFadeOutColorAnimation
+from speech_bubble import SpeechBubbleDialog, SpeechBubble
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 SPRITE_SCALING = 1.0
@@ -17,7 +18,7 @@ class Character(arcade.Sprite):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection,
                  scale: float, center_x: float, center_y: float, angle: float,
                  sprite_folder_name: str, name: str, max_hp: int, attack: int, defense: int,
-                 element_id: int = 0):
+                 element_id: int = 0, talk_sound_path: str = "assets/audio/dialog/snd_text.wav"):
         super().__init__(scale=scale, center_x=center_x, center_y=center_y, angle=angle)
         self.sprites_and_effects_collection = sprites_and_effects_collection
         self.sprite_folder_name = sprite_folder_name
@@ -55,6 +56,7 @@ class Character(arcade.Sprite):
         self.non_idle_timer = 0.0
 
         self.hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
+        self.talk_sound = arcade.load_sound(talk_sound_path, False)
 
     def set_sprites_and_effects_collection(self, sprites_and_effects_collection: SpritesAndEffectsCollection):
         """
@@ -181,3 +183,32 @@ class Character(arcade.Sprite):
             self.focus_animation.is_terminated = True
             self.focus_animation.filter_sprite.kill()
             self.is_focused = False
+
+    def spawn_speech_bubble(self, speech_bubble_dialogue: SpeechBubbleDialog, is_left_of_character: bool = True) -> SpeechBubble:
+        """
+        Spawns a speech bubble within the proximity of the NPC.
+        :param speech_bubble_dialogue: A SpeechBubbleDialogue instance containing the text/dimensional data of the dialogue.
+        :param is_left_of_character: Whether the speech bubble is to the right of the character.
+        :return: None
+        """
+
+        x_offset = -240 if is_left_of_character else 240
+
+        if speech_bubble_dialogue.text_sound:
+            text_sound = speech_bubble_dialogue.text_sound
+        else:
+            text_sound = self.talk_sound
+
+        speech_bubble = SpeechBubble(
+            text=speech_bubble_dialogue.text,
+            center_x=self.center_x + x_offset,
+            center_y=self.center_y + (self.height / 10),
+            row_count=speech_bubble_dialogue.row_count,
+            column_count=speech_bubble_dialogue.column_count,
+            text_spacing=speech_bubble_dialogue.text_spacing,
+            text_sound=text_sound,
+            rate_of_text=speech_bubble_dialogue.rate_of_text,
+            sprites_and_effects_collection=self.sprites_and_effects_collection
+        )
+
+        return speech_bubble
