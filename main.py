@@ -15,6 +15,7 @@ import dialogue_box
 import battle_widgets
 from battle_state_machine import BattleController
 import items.armor_items
+from bullet_board import BulletBoard
 from items import armor_items
 from items.armor_items import PrincessRbn, TennaTie, ShadowMantle, Jevilstail, WhiteRibbon, WaferGuard, RoyalPin, \
     MysticBand
@@ -129,6 +130,8 @@ class GameView(arcade.View):
 
         self.battle_controller = None
 
+        self.bullet_board = None
+
         self.soul = None
 
         # Initializes the starting positions of the player characters and enemy characters.
@@ -136,6 +139,9 @@ class GameView(arcade.View):
         self._unholy_arc = math_methods.initialize_unholy_arc(3)
 
     def setup(self):
+        # The bullet board used during the enemy attack.
+        self.bullet_board = BulletBoard()
+
         # Create and append the players to the SpriteList.
 
         self.player_one = player_characters.Kris()
@@ -184,6 +190,37 @@ class GameView(arcade.View):
         self.player_three.equip_armor_to_slot_2(WaferGuard())
         self.player_characters.append(self.player_three)
 
+        # Create and append the enemies to the SpriteList.
+        self.enemy_one = non_player_character.Rudinn(
+            sprites_and_effects_collection=self.sprites_and_effects_collection,
+            center_x=self._unholy_arc[0][0],
+            center_y=self._unholy_arc[0][1],
+            enemies_list=self.enemies,
+            bullet_board=self.bullet_board
+        )
+        self.enemies.append(self.enemy_one)
+
+        self.enemy_two = non_player_character.Rudinn(
+            sprites_and_effects_collection=self.sprites_and_effects_collection,
+            center_x=self._unholy_arc[1][0],
+            center_y=self._unholy_arc[1][1],
+            enemies_list=self.enemies,
+            bullet_board=self.bullet_board
+        )
+        self.enemies.append(self.enemy_two)
+
+        self.enemy_three = non_player_character.Rudinn(
+            sprites_and_effects_collection=self.sprites_and_effects_collection,
+            center_x=self._unholy_arc[2][0],
+            center_y=self._unholy_arc[2][1],
+            enemies_list=self.enemies,
+            bullet_board=self.bullet_board
+        )
+        self.enemies.append(self.enemy_three)
+
+        # for enemy in self.enemies:
+        #    enemy.spawn_speech_bubble(enemy.random_speech_bubble_dialogue[0])
+
         # Start the background music.
         self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", True)
         self.background_music_player = self.background_music.play()
@@ -211,39 +248,9 @@ class GameView(arcade.View):
             players=self.player_characters,
             enemies=self.enemies,
             sprites_and_effects_collection=self.sprites_and_effects_collection,
-            tp_meter=self.tp_meter
+            tp_meter=self.tp_meter,
+            bullet_board=self.bullet_board
         )
-
-        # Create and append the enemies to the SpriteList.
-        self.enemy_one = non_player_character.Rudinn(
-            sprites_and_effects_collection=self.sprites_and_effects_collection,
-            center_x=self._unholy_arc[0][0],
-            center_y=self._unholy_arc[0][1],
-            enemies_list=self.enemies,
-            bullet_board=self.battle_controller.bullet_board
-        )
-        self.enemies.append(self.enemy_one)
-
-        self.enemy_two = non_player_character.Rudinn(
-            sprites_and_effects_collection=self.sprites_and_effects_collection,
-            center_x=self._unholy_arc[1][0],
-            center_y=self._unholy_arc[1][1],
-            enemies_list=self.enemies,
-            bullet_board=self.battle_controller.bullet_board
-        )
-        self.enemies.append(self.enemy_two)
-
-        self.enemy_three = non_player_character.Rudinn(
-            sprites_and_effects_collection=self.sprites_and_effects_collection,
-            center_x=self._unholy_arc[2][0],
-            center_y=self._unholy_arc[2][1],
-            enemies_list=self.enemies,
-            bullet_board=self.battle_controller.bullet_board
-        )
-        self.enemies.append(self.enemy_three)
-
-        #for enemy in self.enemies:
-        #    enemy.spawn_speech_bubble(enemy.random_speech_bubble_dialogue[0])
 
     def on_draw(self):
         # 3. Clear the screen

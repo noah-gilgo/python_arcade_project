@@ -213,6 +213,17 @@ class TextBox(UILayout):
         pyglet.clock.unschedule(self.add_character_to_text_box_text)
         self.animate_character_dialog()
 
+    def clear_dialog(self):
+        """
+        Clears the dialog from the text box.
+        :return: None
+        """
+        self.load_dialog(
+            text_box_dialog=TextBoxDialog(
+                text="",
+            )
+        )
+
     def add_character_to_text_box_text(self, dt):
         """
         Scheduled event that adds a character to the textbox text.
