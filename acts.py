@@ -33,6 +33,7 @@ class RudinnConvince(SimpleAct):
                 text="Yeah that\nmakes sense.",
                 row_count=2,
                 column_count=12,
+                actor=target
             )
         )
 
@@ -56,6 +57,7 @@ class RudinnLecture(SimpleAct):
                     text="(Yawn)...\nWhat? OK..",
                     row_count=2,
                     column_count=10,
+                    actor=target
                 )
             )
 
@@ -81,6 +83,7 @@ class NoelleRudinnAction1(MagicUserAct):
                 text="That's what the\nKnight did to my\ncousin Phil",
                 row_count=3,
                 column_count=16,
+                actor=target
             )
         )
 
@@ -103,5 +106,6 @@ class RalseiRudinnAction1(MagicUserAct):
                 text="My last house\nwas a\nmatchbox...",
                 row_count=3,
                 column_count=13,
+                actor=target
             )
         )

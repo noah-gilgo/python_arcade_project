@@ -20,12 +20,14 @@ from animations.battle_animations import NumberBounceAnimation, HealAnimation, F
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from bullet_patterns import RainingDiamondBulletPattern
+from dialog_exchange import DialogExchange
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
 from items.consumable_items import ConsumableItem
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
+from speech_bubble import SpeechBubbleDialog
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 """
@@ -60,17 +62,9 @@ class BattleController:
                  players: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
                  sprites_and_effects_collection: SpritesAndEffectsCollection,
-                 tp_meter: battle_widgets.TPMeter):
+                 tp_meter: battle_widgets.TPMeter,
+                 bullet_board: BulletBoard):
         # TODO: move most of these parameters into the BattleController.
-
-        # This variable controls whether the battle is scripted (typically a boss/miniboss battle).
-        # Scripted battles typically have dialog that progresses each turn, while non-scripted battles have dialog that
-        # is mostly random depending on player interaction.
-        self.is_scripted_battle = False
-
-        # Speech bubbles spawned during the fight can be placed in here to be automatically deleted at the start of the
-        # enemy attack.
-        self.active_speech_bubbles = []
 
         # Sprite lists that need to be accessed for animations.
         self.sprites_and_effects_collection = sprites_and_effects_collection
@@ -81,6 +75,89 @@ class BattleController:
         self.tp_meter = tp_meter
         self.players = players
         self.enemies = enemies
+        self.bullet_board = bullet_board
+
+        # This variable controls whether the battle is scripted (typically a boss/miniboss battle).
+        # Scripted battles typically have dialog that progresses each turn, while non-scripted battles have dialog that
+        # is mostly random depending on player interaction.
+        self.is_scripted_battle = False
+
+        # If the battle is scripted, this array is meant to contain a sequence of DialogueExchange objects representing
+        # the scripted dialog exchanges that occur before each turn.
+        # One example of a dialog exchange in Deltarune is the following interaction:
+        # Gerson: "But... there is one thing that can overwrite the dark."
+        # Gerson: "A white pen, known as hope."
+        # Gerson: "Miss! I believe... this is what you hold."
+        # Susie: "Me? Nah, Kris has the pen."
+        # Susie: "My weapon's like a hairbrush or something."
+        # Gerson: "Geh-hahahahaha! Is that so? Is that SO???"
+        # Susie: "Yep. Now shut up and give me that axe!"
+        self.scripted_dialogue = [
+            DialogExchange(
+                battle_textbox=self.battle_textbox,
+                sprites_and_effects_collection=self.sprites_and_effects_collection,
+                dialog_instances=[
+                    TextBoxDialog(
+                        text="So...this is scripted dialog.",
+                        portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                    ),
+                    SpeechBubbleDialog(
+                        text="That would\nappear to be\nthe case, yes.",
+                        row_count=3,
+                        column_count=14,
+                        actor=self.enemies[0]
+                    ),
+                    TextBoxDialog(
+                        text="How does scripted dialog work?",
+                        portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_looking_at_the_camera_curiously.png",
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                    ),
+                    SpeechBubbleDialog(
+                        text="You load instances of\nthe DialogExchange object\ninto self.scripted_dialog\nin the battle controller.",
+                        row_count=4,
+                        column_count=25,
+                        actor=self.enemies[1]
+                    ),
+                    SpeechBubbleDialog(
+                        text="In each DialogExchange instance, pass\ninstances of TextBoxDialog\nand SpeechBubble dialog objects\ninto the dialog_instances parameter.",
+                        row_count=4,
+                        column_count=37,
+                        actor=self.enemies[1]
+                    ),
+                    SpeechBubbleDialog(
+                        text="SpeechBubbleDialog instances\nspawn speech bubbles\nsuch as this one.",
+                        row_count=3,
+                        column_count=28,
+                        actor=self.enemies[1]
+                    ),
+                    TextBoxDialog(
+                        text="Ah, that makes sense, I think..?",
+                        portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                    ),
+                    TextBoxDialog(
+                        text="And TextBoxDialog instances create text boxes like this one?",
+                        portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_looking_at_the_camera_curiously.png",
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                    ),
+                    SpeechBubbleDialog(
+                        text="That's correct!\nYour attunement to the\nmetaphysical properties\nof your universe is\ntruly on point.",
+                        row_count=5,
+                        column_count=23,
+                        actor=self.players[2],
+                        is_left_of_character=False
+                    ),
+                ]
+            )
+        ]
+
+        # The current dialog exchange being loaded by the fight.
+        self.current_dialog_exchange = None
+
+        # Speech bubbles spawned during the fight can be placed in here to be automatically deleted at the start of the
+        # enemy attack.
+        self.active_speech_bubbles = []
 
         self.current_player_index = 0
 
@@ -140,9 +217,6 @@ class BattleController:
         self.battle_idle_callback = None
         self.battle_idle_target = None
         self.enemy_hit_sound_player = None
-
-        # The bullet board used during the enemy attack.
-        self.bullet_board = BulletBoard()
 
         # The SOUL the player moves around during enemy attacks.
         self.soul = Soul(self.players[0], self)
@@ -804,16 +878,42 @@ class BattleController:
             self.spawn_fight_bars(fighting_players, enemy_targets)
             return
         else:
-            # Display the enemy speech bubbles.
-            self.spawn_enemy_speech_bubbles()
+            # Start the pre enemy attack dialog.
+            self.start_pre_enemy_attack_dialog()
             return
+
+    def start_pre_enemy_attack_dialog(self):
+        """
+        Initializes the pre-enemy attack dialog.
+        :return: None
+        """
+        self.despawn_fight_bars()
+        self.state = BattleState.DIALOGUE
+
+        if len(self.scripted_dialogue) == 0:
+            self.spawn_enemy_speech_bubbles()
+        else:
+            dialog_exchange = self.scripted_dialogue.pop(0)
+            self.current_dialog_exchange = dialog_exchange
+            self.spawn_next_dialog_from_dialog_exchange()
+
+    def spawn_next_dialog_from_dialog_exchange(self):
+        """
+        Spawns the next dialog from the current dialog exchange.
+        :return: None
+        """
+        self.despawn_speech_bubbles()
+
+        if not self.current_dialog_exchange.execute_next_dialog():
+            self.start_enemy_attack()
 
     def spawn_enemy_speech_bubbles(self):
         """
         Spawns enemy speech bubbles prior to the enemy attack.
         :return: None
         """
-        self.state = BattleState.DIALOGUE
+        # Clear any text from the battle textbox.
+        self.battle_textbox.load_dialog(TextBoxDialog(text=""))
 
         for enemy in self.enemies:
             speech_bubble = enemy.spawn_speech_bubble_this_turn()
@@ -834,8 +934,6 @@ class BattleController:
         Starts the enemy attack.
         :return: None
         """
-        # Clear any text from the battle textbox.
-        self.battle_textbox.load_dialog(TextBoxDialog(text=""))
 
         # Begin the enemy attack
         self.state = BattleState.ENEMY_ATTACK
@@ -1147,8 +1245,7 @@ class SelectCommand(Command):
                 self.controller.execute_queued_player_action()
 
             case BattleState.DIALOGUE:
-                self.controller.despawn_speech_bubbles()
-                self.controller.start_enemy_attack()
+                self.controller.spawn_next_dialog_from_dialog_exchange()
 
 
 class CancelCommand(Command):

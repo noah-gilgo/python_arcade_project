@@ -184,7 +184,7 @@ class Character(arcade.Sprite):
             self.focus_animation.filter_sprite.kill()
             self.is_focused = False
 
-    def spawn_speech_bubble(self, speech_bubble_dialogue: SpeechBubbleDialog, is_left_of_character: bool = True) -> SpeechBubble:
+    def spawn_speech_bubble(self, speech_bubble_dialogue: SpeechBubbleDialog) -> SpeechBubble:
         """
         Spawns a speech bubble within the proximity of the NPC.
         :param speech_bubble_dialogue: A SpeechBubbleDialogue instance containing the text/dimensional data of the dialogue.
@@ -192,22 +192,8 @@ class Character(arcade.Sprite):
         :return: None
         """
 
-        x_offset = -240 if is_left_of_character else 240
-
-        if speech_bubble_dialogue.text_sound:
-            text_sound = speech_bubble_dialogue.text_sound
-        else:
-            text_sound = self.talk_sound
-
         speech_bubble = SpeechBubble(
-            text=speech_bubble_dialogue.text,
-            center_x=self.center_x + x_offset,
-            center_y=self.center_y + (self.height / 10),
-            row_count=speech_bubble_dialogue.row_count,
-            column_count=speech_bubble_dialogue.column_count,
-            text_spacing=speech_bubble_dialogue.text_spacing,
-            text_sound=text_sound,
-            rate_of_text=speech_bubble_dialogue.rate_of_text,
+            speech_bubble_dialog=speech_bubble_dialogue,
             sprites_and_effects_collection=self.sprites_and_effects_collection
         )
 

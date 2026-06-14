@@ -252,8 +252,7 @@ class NonPlayerCharacter(character.Character):
             speech_bubble_dialog = self.random_speech_bubble_dialogue[random.randint(0, len(self.random_speech_bubble_dialogue) - 1)]
 
         speech_bubble = super().spawn_speech_bubble(
-            speech_bubble_dialogue=speech_bubble_dialog,
-            is_left_of_character=True
+            speech_bubble_dialogue=speech_bubble_dialog
         )
 
         self.speech_bubble_dialog_assigned_this_turn = ""
@@ -308,22 +307,26 @@ class Rudinn(NonPlayerCharacter):
                 SpeechBubbleDialog(
                     text="Long live the\nguy who pays\nus!",
                     row_count=3,
-                    column_count=13
+                    column_count=13,
+                    actor=self
                 ),
                 SpeechBubbleDialog(
                     text="I'm just a\nnormal person.",
                     row_count=2,
-                    column_count=14
+                    column_count=14,
+                    actor=self
                 ),
                 SpeechBubbleDialog(
                     text="Face my\nDiamond\nCutter!",
                     row_count=3,
-                    column_count=7
+                    column_count=7,
+                    actor=self
                 ),
                 SpeechBubbleDialog(
                     text="Shine,\nshine",
                     row_count=2,
-                    column_count=6
+                    column_count=6,
+                    actor=self
                 )
             ]
         )
