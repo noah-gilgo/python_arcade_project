@@ -76,7 +76,7 @@ class SpeechBubble(Sprite):
 
         self.text_spacing = speech_bubble_dialog.text_spacing  # The amount of pixels between each character
 
-        width = int(((self.column_count * 9) + (self.column_count - self.text_spacing)) * self.speech_bubble_scale)
+        width = int(((self.column_count * 8) + (self.column_count - self.text_spacing)) * self.speech_bubble_scale)
         height = int(((self.row_count * 17) + (self.row_count - self.text_spacing)) * self.speech_bubble_scale)
 
         speech_bubble_center_x = center_x
@@ -285,7 +285,7 @@ class SpeechBubble(Sprite):
         if 127 > character_unicode_code > 31: # Letters, numbers, symbols
             character_sprite = self.get_character_sprite(character_unicode_code)
 
-            character_x_coordinate = self.left + 10 + int((self.character_column_index * (8 + self.text_spacing)) * self.speech_bubble_scale)
+            character_x_coordinate = self.left + 6 + int((self.character_column_index * (8 + self.text_spacing)) * self.speech_bubble_scale)
             character_y_coordinate = self.top - 16 - int(self.character_row_index * 17 * self.speech_bubble_scale)
 
             character_sprite.center_x = character_x_coordinate
