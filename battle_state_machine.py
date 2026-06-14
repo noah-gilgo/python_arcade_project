@@ -145,7 +145,8 @@ class BattleController:
                         text="That's correct!\nYour attunement to the\nmetaphysical properties\nof your universe is\ntruly on point.",
                         row_count=5,
                         column_count=23,
-                        actor=self.enemies[2]
+                        actor=self.players[2],
+                        is_left_of_character=False
                     ),
                 ]
             )

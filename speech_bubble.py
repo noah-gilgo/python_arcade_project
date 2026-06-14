@@ -87,7 +87,7 @@ class SpeechBubble(Sprite):
             if speech_bubble_dialog.is_left_of_character:
                 speech_bubble_center_x = speech_bubble_dialog.actor.center_x - (speech_bubble_dialog.actor.width / 2) - (width / 2) - 60
             else:
-                speech_bubble_center_x = speech_bubble_dialog.actor.center_x + (speech_bubble_dialog.actor.width / 2) + (width / 2) + 60
+                speech_bubble_center_x = speech_bubble_dialog.actor.center_x + (speech_bubble_dialog.actor.width / 2) + (width / 2) - 60
 
 
         super().__init__(
@@ -224,7 +224,7 @@ class SpeechBubble(Sprite):
             speech_bubble_arrow_sprite_center_x = self.center_x + (self.width / 2) + left_right_border_sprite_width + (
                     speech_bubble_arrow_sprite_width / 2)
         else:
-            speech_bubble_arrow_sprite_center_x = self.center_x - (self.width / 2) + left_right_border_sprite_width - (
+            speech_bubble_arrow_sprite_center_x = self.center_x - (self.width / 2) - left_right_border_sprite_width - (
                     speech_bubble_arrow_sprite_width / 2)
 
         self.sprites_associated_with_text_box.append(
