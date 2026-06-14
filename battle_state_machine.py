@@ -138,7 +138,7 @@ class BattleController:
                     ),
                     TextBoxDialog(
                         text="And TextBoxDialog instances create text boxes like this one?",
-                        portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
+                        portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_looking_at_the_camera_curiously.png",
                         text_sound_path="assets/audio/dialog/snd_txtsus.wav"
                     ),
                     SpeechBubbleDialog(
