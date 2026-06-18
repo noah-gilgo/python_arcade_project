@@ -270,25 +270,7 @@ class GameView(arcade.View):
     def on_update(self, delta_time):
         """ Movement and game logic """
 
-        # Update the player's animation.
-        for player in self.player_characters:
-            player.update_animation(delta_time)
-            player.update(delta_time)
-
-        for enemy in self.enemies:
-            enemy.update_animation(delta_time)
-            enemy.update(delta_time)
-
-        for effect in self.sprites_and_effects_collection.effects:
-            if hasattr(effect, "is_terminated") and effect.is_terminated:
-                self.sprites_and_effects_collection.effects.remove(effect)
-            else:
-                effect.update_animation(delta_time)
-
-        for soul_sprite in self.sprites_and_effects_collection.soul_sprites:
-            soul_sprite.update(delta_time)
-
-        self.battle_controller.update_clocks(delta_time)
+        self.battle_controller.update_sprites_and_effects(delta_time)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """

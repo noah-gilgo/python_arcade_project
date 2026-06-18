@@ -69,6 +69,9 @@ class BattleController:
         # Sprite lists that need to be accessed for animations.
         self.sprites_and_effects_collection = sprites_and_effects_collection
 
+        # This variable controls whether to update the sprites on screen or not.
+        self.update_sprites_on_screen = True
+
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
@@ -301,6 +304,47 @@ class BattleController:
                 self.right_pressed = False
                 return
 
+    def update_sprites_and_effects(self, delta_time: float):
+        """
+        Updates all of the data underlying the various sprites/effects/GUI elements on screen.
+        :param delta_time: the time between each frame
+        :return: None
+        """
+        if self.update_sprites_on_screen:
+            # Update the player's animation.
+            for player in self.players:
+                player.update_animation(delta_time)
+                player.update(delta_time)
+
+            for enemy in self.enemies:
+                enemy.update_animation(delta_time)
+                enemy.update(delta_time)
+
+            for effect in self.sprites_and_effects_collection.effects:
+                if hasattr(effect, "is_terminated") and effect.is_terminated:
+                    self.sprites_and_effects_collection.effects.remove(effect)
+                else:
+                    effect.update_animation(delta_time)
+
+            for soul_sprite in self.sprites_and_effects_collection.soul_sprites:
+                soul_sprite.update(delta_time)
+
+            self.update_clocks(delta_time)
+
+    def enable_sprite_and_effect_updates(self):
+        """
+        Enables sprite and effect updates.
+        :return: None
+        """
+        self.update_sprites_on_screen = True
+
+    def disable_sprite_and_effect_updates(self):
+        """
+        Disables sprite and effect updates.
+        :return: None
+        """
+        self.update_sprites_on_screen = False
+
     def update_clocks(self, delta_time: float):
         """
         This is where any local clocks used by the battle controller are updated.
@@ -442,7 +486,8 @@ class BattleController:
         Ends the battle in defeat. Animates the heart being shattered, with the game over screen being displayed.
         :return: None
         """
-        print("GAME OVER")
+        # Stops sprites from being drawn to the screen.
+        self.disable_sprite_and_effect_updates()
         pass
 
     def add_tp_to_meter(self, amount: float = 0.0):

@@ -327,16 +327,20 @@ class PlayerCharacter(character.Character):
             pyglet.clock.schedule_once(lambda dt: enemy.receive_damage(damage_dealt=damage_dealt, attacker=self, controller=controller), 0.4)
 
 
-    def receive_damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):
+    def receive_damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True, controller = None):
         """
         Damages the player character, removing some of their HP.
         :param damage_dealt: The base amount of damage dealt
         :param element_id: The element id of the attack
         :param play_hurt_sound: Controls whether to play the hurt sound
+        :param controller: The BattleController controlling the fight.
         :return: None
         """
         damage_dealt = self.calculate_received_damage(damage_dealt, element_id)
         self.modify_hp(-damage_dealt)
+
+        if controller.check_if_battle_is_lost():
+            controller.game_over()
 
 
     def modify_hp(self, hp_change: float = 0.0):
