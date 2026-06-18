@@ -348,7 +348,7 @@ class FightHitBar(SingleSpriteAnimation):
             self.sprite.visible = False
             self.bar_is_moving = False
             if self.bar_is_not_removed:
-                self.actor.attack_enemy(self.target, 0.0)
+                self.actor.attack_enemy(enemy=self.target, controller=self.controller, attack_damage_multiplier=0.0)
                 self.controller.fight_hit_markers.remove(self)
                 self.bar_is_not_removed = False
             pyglet.clock.schedule_once(lambda dt: self.terminate_animation(), 1.0)
@@ -366,11 +366,8 @@ class FightHitBar(SingleSpriteAnimation):
                 self.terminate_animation()
 
         if len(self.controller.fight_hit_markers) == 0 and not self.controller.load_bullet_board_called_for_this_turn:
-            if self.controller.check_if_battle_is_won():
-                self.controller.end_battle()
-            else:
-                self.controller.load_bullet_board_called_for_this_turn = True
-                pyglet.clock.schedule_once(lambda dt: self.controller.start_pre_enemy_attack_dialog(), 1.5)
+            self.controller.load_bullet_board_called_for_this_turn = True
+            pyglet.clock.schedule_once(lambda dt: self.controller.start_pre_enemy_attack_dialog(), 1.5)
 
     def get_bar_sprite(self) -> Sprite:
         """

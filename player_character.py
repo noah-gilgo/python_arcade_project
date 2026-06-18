@@ -300,6 +300,7 @@ class PlayerCharacter(character.Character):
         """
         Makes the player character attack the supplied non-player character.
         :param enemy: The enemy to be attacked.
+        :param controller: The BattleController controlling the fight.
         :param attack_damage_multiplier: The attack multiplier returned by the fight bar in the FIGHT act.
         :return: The base damage dealt to the enemy before their defense/elemental resistances come into play
         """
@@ -314,8 +315,8 @@ class PlayerCharacter(character.Character):
         if enemy:
             attack = self.attack + self.weapon_slot.attack_points + self.armor_slot_1.attack_points + self.armor_slot_2.attack_points
 
-            damage_dealt = int(attack * 10 * attack_damage_multiplier) # This is not exactly how it's calculated in the
-            if self.weapon_slot.element_id:                            # original game, but it's close
+            damage_dealt = int(attack * 10 * attack_damage_multiplier) # This is not exactly how damage is calculated in
+            if self.weapon_slot.element_id:                            # the original game, but it's close
                 for element in default_data.ELEMENTAL_PAIRS:
                     if element.element_id == self.weapon_slot.element_id:
                         if enemy.element_id in element.resistant_to:
@@ -323,7 +324,7 @@ class PlayerCharacter(character.Character):
                         if enemy.element_id in element.weak_to:
                             damage_dealt *= 1.5
 
-            pyglet.clock.schedule_once(lambda dt: enemy.receive_damage(damage_dealt, self, controller), 0.4)
+            pyglet.clock.schedule_once(lambda dt: enemy.receive_damage(damage_dealt=damage_dealt, attacker=self, controller=controller), 0.4)
 
 
     def receive_damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):

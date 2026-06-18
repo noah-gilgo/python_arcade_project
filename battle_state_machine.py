@@ -197,7 +197,7 @@ class BattleController:
         self.player_critical_hit_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_criticalswing.wav", False)
         self.enemy_hit_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_damage.wav", False)
         self.enemy_flee_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_defeatrun.wav", False)
-        self.power_sound = arcade.load_sound("assets/audio/battle/snd_dtrans_lw.ogg")
+        self.power_sound = arcade.load_sound("assets/audio/battle/snd_dtrans_lw.ogg", False)
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = ActionsQueue()
@@ -714,7 +714,7 @@ class BattleController:
         else:
             target = None
 
-        actor.attack_enemy(target, self, attack_damage_multiplier)
+        actor.attack_enemy(enemy=target, controller=self, attack_damage_multiplier=attack_damage_multiplier)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
 
