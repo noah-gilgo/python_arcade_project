@@ -418,7 +418,7 @@ class BattleController:
 
             # Check if any enemies were defeated violently. Modify the win message accordingly.
             if self.enemies_defeated_violently == 0:
-                second_line_of_win_message = "* Gained 0 XP and " + str(self.dark_dollars_given_on_defeat) + " D$."
+                second_line_of_win_message = "* Got 0 EXP and " + str(self.dark_dollars_given_on_defeat) + " D$."
             else:
                 second_line_of_win_message = "* You became stronger."
                 self.power_sound.play(speed=2.0)
