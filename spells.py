@@ -79,6 +79,7 @@ class Spell:
 
             # If the attack reduces the enemy HP to 0
             if target.hp <= 0:
+                controller.enemies_defeated_violently += 1
                 schedule_battle_idle = False
                 if self.element_id == 8: # Fire/Ice
                     if self.name.lower() == "iceshock":

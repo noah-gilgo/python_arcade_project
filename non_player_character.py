@@ -20,8 +20,9 @@ class NonPlayerCharacter(character.Character):
     def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection = None, scale: float = 4.0,
                  center_x: float = 0.0, center_y: float = 0.0, angle: float = 0.0, sprite_folder_name: str = "",
                  name: str = "", hp: int = 100, max_hp: int = 100, attack: int = 5, defense: int = 5,
-                 element_id: int = 0, tired: float = 0, mercy: float = 0, enemies_list: list = [], attacks: list = [],
-                 acts: list = [], battle_description: str = "", random_speech_bubble_dialogue: list = []):
+                 element_id: int = 0, dark_dollars_given_on_defeat: int = 0, tired: float = 0, mercy: float = 0,
+                 enemies_list: list = [], attacks: list = [], acts: list = [], battle_description: str = "",
+                 random_speech_bubble_dialogue: list = []):
 
         self._sprite_pack_path = NON_PLAYER_CHARACTER_SPRITES_FOLDER_PATH + sprite_folder_name
 
@@ -37,6 +38,7 @@ class NonPlayerCharacter(character.Character):
         self.hp = hp
         self.tired = tired
         self.mercy = mercy
+        self.dark_dollars_given_on_defeat = dark_dollars_given_on_defeat
 
         self.enemy_hit_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_damage.wav",
                                                  False)
@@ -115,7 +117,7 @@ class NonPlayerCharacter(character.Character):
         self.current_attack.terminate_attack()
         self.current_attack = None
 
-    def receive_damage(self, damage_dealt: float, attacker):
+    def receive_damage(self, damage_dealt: float, attacker, controller):
         if len(self.enemies_list) == 0:
             return
 
@@ -149,6 +151,7 @@ class NonPlayerCharacter(character.Character):
 
             # If the attack reduces the enemy HP to 0
             if target.hp <= 0:
+                controller.enemies_defeated_violently += 1
                 if target in target.enemies_list:
                     target.enemies_list.remove(target)
                 damage_dealt_text = "LOST"
@@ -289,6 +292,7 @@ class Rudinn(NonPlayerCharacter):
             max_hp=90,
             attack=10,
             defense=2,
+            dark_dollars_given_on_defeat=30,
             element_id=0,
             attacks=[
                 RainingDiamondAttack(
