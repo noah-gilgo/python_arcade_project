@@ -209,12 +209,8 @@ class TextBox(UIBoxLayout):
 
         if text_box_dialog.has_portrait():
             self.text_box_portrait_path = text_box_dialog.get_portrait_texture_path()
-            print(self.text_box_portrait_path)
             self.text_box_portrait.set_texture(self.text_box_portrait_path)
             self.text_box_portrait.visible = True
-            print(str(self.children))
-            print("self.text_box_portrait.visible:", self.text_box_portrait.visible)
-            print("self.text_box_portrait.width:", self.text_box_portrait.width)
             self.text_box_portrait.width = 192
             self.text_box_text.width=settings.WINDOW_WIDTH - 300
             if previous_text_box_dialog and not previous_text_box_dialog.has_portrait():

@@ -7,6 +7,7 @@ from arcade.types import Color
 import character
 import default_data
 import graphics_objects
+import non_player_character
 from act import MagicUserAct
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
@@ -295,7 +296,7 @@ class PlayerCharacter(character.Character):
         return int(damage_dealt)
 
 
-    def attack_enemy(self, enemy, attack_damage_multiplier: float = 1.0):
+    def attack_enemy(self, enemy, controller, attack_damage_multiplier: float = 1.0):
         """
         Makes the player character attack the supplied non-player character.
         :param enemy: The enemy to be attacked.
@@ -322,7 +323,7 @@ class PlayerCharacter(character.Character):
                         if enemy.element_id in element.weak_to:
                             damage_dealt *= 1.5
 
-            pyglet.clock.schedule_once(lambda dt: enemy.receive_damage(damage_dealt, self), 0.4)
+            pyglet.clock.schedule_once(lambda dt: enemy.receive_damage(damage_dealt, self, controller), 0.4)
 
 
     def receive_damage(self, damage_dealt: float = 0, element_id: int = 0, play_hurt_sound: bool = True):

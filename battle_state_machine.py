@@ -405,22 +405,26 @@ class BattleController:
         Ends the battle in the case of a player victory.
         :return: None
         """
-        # Set the animation states of the players to play their victory animations.
-        for player in self.players:
-            player.set_animation_state("battle_victory")
+        if self.state != BattleState.VICTORY:
+            # Set the player state to VICTORY.
+            self.state = BattleState.VICTORY
 
-        # Calculate the amount of TP gained from the fight.
-        self.dark_dollars_given_on_defeat += self.tp_meter.get_tp_in_meter()
+            # Set the animation states of the players to play their victory animations.
+            for player in self.players:
+                player.set_animation_state("battle_victory")
 
-        # Check if any enemies were defeated violently. Modify the win message accordingly.
-        if self.enemies_defeated_violently == 0:
-            second_line_of_win_message = "* Gained 0 XP and " + str(self.dark_dollars_given_on_defeat) + " D$."
-        else:
-            second_line_of_win_message = "* You became stronger."
-            self.power_sound.play()
+            # Calculate the amount of TP gained from the fight.
+            self.dark_dollars_given_on_defeat = int(self.dark_dollars_given_on_defeat + self.tp_meter.get_tp_in_meter())
 
-        win_message = "* You won!\n" + second_line_of_win_message
-        self.battle_textbox.load_dialog(win_message)
+            # Check if any enemies were defeated violently. Modify the win message accordingly.
+            if self.enemies_defeated_violently == 0:
+                second_line_of_win_message = "* Gained 0 XP and " + str(self.dark_dollars_given_on_defeat) + " D$."
+            else:
+                second_line_of_win_message = "* You became stronger."
+                self.power_sound.play(speed=2.0)
+
+            win_message = "* You won!\n" + second_line_of_win_message
+            self.battle_textbox.load_dialog(TextBoxDialog(text=win_message))
 
     def add_tp_to_meter(self, amount: float = 0.0):
         """
@@ -710,7 +714,7 @@ class BattleController:
         else:
             target = None
 
-        actor.attack_enemy(target, attack_damage_multiplier, self)
+        actor.attack_enemy(target, self, attack_damage_multiplier)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
 
@@ -887,6 +891,10 @@ class BattleController:
         Executes the highest priority player action.
         :return: None
         """
+        if self.check_if_battle_is_won():
+            self.end_battle()
+            return
+
         if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
             return
@@ -925,6 +933,12 @@ class BattleController:
         :return: None
         """
         self.despawn_fight_bars()
+
+        # Check if the battle is over. If so, end the battle.
+        if self.check_if_battle_is_won():
+            self.end_battle()
+            return
+
         self.state = BattleState.DIALOGUE
 
         if len(self.scripted_dialogue) == 0:
