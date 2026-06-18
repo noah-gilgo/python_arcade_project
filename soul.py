@@ -349,7 +349,7 @@ class Soul(arcade.Sprite):
                 self.visible = False
 
                 # Reverts the battle UI to its original state.
-                self.controller.move_to_first_player_card()
+                self.controller.move_to_first_not_downed_player_card()
                 self.controller.change_all_player_icons_to_default()
                 self.controller.reset_player_animation_states_before_next_turn()
                 for player in self.controller.players:

@@ -571,15 +571,20 @@ class BattleController:
             self.battle_player_character_cards.children[
                 self.current_player_index].change_icon()
 
-    def move_to_first_player_card(self):
+    def move_to_first_not_downed_player_card(self):
         """
-        Moves to the first player card in the HUD. Executed after the enemy turn completes.
+        Moves to the first not downed player card in the HUD. Executed after the enemy turn completes.
         :return:
         """
         if len(self.players) > 0:
             self.state = BattleState.PLAYER_COMMAND
 
             self.current_player_index = 0
+            for player in self.players:
+                if player.hp < 0:
+                    self.current_player_index += 1
+                else:
+                    break
             self.battle_player_character_cards.children[self.current_player_index].focus()
             self.focus_stack.push(
                 self.battle_player_character_cards,
