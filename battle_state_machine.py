@@ -426,6 +426,25 @@ class BattleController:
             win_message = "* You won!\n" + second_line_of_win_message
             self.battle_textbox.load_dialog(TextBoxDialog(text=win_message))
 
+    def check_if_battle_is_lost(self):
+        """
+        Checks if the battle is lost. The loss condition is if all players have an HP less than 0.
+        :return: A boolean representing if all players have an HP less than 0.
+        """
+        for player in self.players:
+            if player.hp > 0:
+                return False
+
+        return True
+
+    def game_over(self):
+        """
+        Ends the battle in defeat. Animates the heart being shattered, with the game over screen being displayed.
+        :return: None
+        """
+        print("GAME OVER")
+        pass
+
     def add_tp_to_meter(self, amount: float = 0.0):
         """
         Adds TP to the TP meter. Negative values should also work.
