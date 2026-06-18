@@ -145,8 +145,7 @@ class BattleController:
                         text="That's correct!\nYour attunement to the\nmetaphysical properties\nof your universe is\ntruly on point.",
                         row_count=5,
                         column_count=23,
-                        actor=self.players[2],
-                        is_left_of_character=False
+                        actor=self.enemies[2]
                     ),
                 ]
             )
@@ -165,6 +164,14 @@ class BattleController:
         self.turn = 0
         self.selected_command = None
         self.selected_target = None
+
+        # The amount of dark dollars that will be given to the player if they win the fight.
+        self.dark_dollars_given_on_defeat = 0
+        for enemy in self.enemies:
+            self.dark_dollars_given_on_defeat += enemy.dark_dollars_given_on_defeat
+
+        # The amount of enemies defeated through violent means.
+        self.enemies_defeated_violently = 0
 
         self.ui_manager.execute_layout()
 
@@ -190,6 +197,7 @@ class BattleController:
         self.player_critical_hit_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_criticalswing.wav", False)
         self.enemy_hit_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_damage.wav", False)
         self.enemy_flee_sound = arcade.load_sound("assets/audio/battle/non_player_character/common/snd_defeatrun.wav", False)
+        self.power_sound = arcade.load_sound("assets/audio/battle/snd_dtrans_lw.ogg", False)
 
         # The queue of actions selected by the player for each character.
         self.actions_queue = ActionsQueue()
@@ -384,6 +392,39 @@ class BattleController:
                 self.up_command()
             case arcade.key.DOWN:
                 self.down_command()
+
+    def check_if_battle_is_won(self):
+        """
+        Checks if the battle is won yet. The win condition is that all the enemies have been defeated, peacefully or not
+        :return: A boolean representing if there are any enemies left in battle.
+        """
+        return len(self.enemies) == 0
+
+    def end_battle(self):
+        """
+        Ends the battle in the case of a player victory.
+        :return: None
+        """
+        if self.state != BattleState.VICTORY:
+            # Set the player state to VICTORY.
+            self.state = BattleState.VICTORY
+
+            # Set the animation states of the players to play their victory animations.
+            for player in self.players:
+                player.set_animation_state("battle_victory")
+
+            # Calculate the amount of TP gained from the fight.
+            self.dark_dollars_given_on_defeat = int(self.dark_dollars_given_on_defeat + self.tp_meter.get_tp_in_meter())
+
+            # Check if any enemies were defeated violently. Modify the win message accordingly.
+            if self.enemies_defeated_violently == 0:
+                second_line_of_win_message = "* Got 0 EXP and " + str(self.dark_dollars_given_on_defeat) + " D$."
+            else:
+                second_line_of_win_message = "* You became stronger."
+                self.power_sound.play(speed=2.0)
+
+            win_message = "* You won!\n" + second_line_of_win_message
+            self.battle_textbox.load_dialog(TextBoxDialog(text=win_message))
 
     def add_tp_to_meter(self, amount: float = 0.0):
         """
@@ -673,7 +714,7 @@ class BattleController:
         else:
             target = None
 
-        actor.attack_enemy(target, attack_damage_multiplier)
+        actor.attack_enemy(enemy=target, controller=self, attack_damage_multiplier=attack_damage_multiplier)
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
 
@@ -850,6 +891,10 @@ class BattleController:
         Executes the highest priority player action.
         :return: None
         """
+        if self.check_if_battle_is_won():
+            self.end_battle()
+            return
+
         if len(self.sorted_actions_queue["complex_act_actions"]) > 0:
             self.sorted_actions_queue["act_actions"].pop().execute()
             return
@@ -888,6 +933,12 @@ class BattleController:
         :return: None
         """
         self.despawn_fight_bars()
+
+        # Check if the battle is over. If so, end the battle.
+        if self.check_if_battle_is_won():
+            self.end_battle()
+            return
+
         self.state = BattleState.DIALOGUE
 
         if len(self.scripted_dialogue) == 0:

@@ -348,7 +348,7 @@ class FightHitBar(SingleSpriteAnimation):
             self.sprite.visible = False
             self.bar_is_moving = False
             if self.bar_is_not_removed:
-                self.actor.attack_enemy(self.target, 0.0)
+                self.actor.attack_enemy(enemy=self.target, controller=self.controller, attack_damage_multiplier=0.0)
                 self.controller.fight_hit_markers.remove(self)
                 self.bar_is_not_removed = False
             pyglet.clock.schedule_once(lambda dt: self.terminate_animation(), 1.0)
