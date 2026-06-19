@@ -24,6 +24,7 @@ from dialog_exchange import DialogExchange
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
 from items.consumable_items import ConsumableItem
+from music_player import MusicPlayer
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
@@ -63,17 +64,18 @@ class BattleController:
                  enemies: list[non_player_character.NonPlayerCharacter],
                  sprites_and_effects_collection: SpritesAndEffectsCollection,
                  tp_meter: battle_widgets.TPMeter,
-                 bullet_board: BulletBoard):
+                 bullet_board: BulletBoard,
+                 music_player: MusicPlayer):
         # TODO: move most of these parameters into the BattleController.
 
         # Sprite lists that need to be accessed for animations.
         self.sprites_and_effects_collection = sprites_and_effects_collection
 
+        # Music player used to switch between currently playing songs.
+        self.music_player = music_player
+
         # This variable controls whether to update the sprites on screen or not.
         self.update_sprites_on_screen = True
-
-        # Tracks if the fight has been lost by the player.
-        self.battle_lost = False
 
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
@@ -496,7 +498,7 @@ class BattleController:
         Begins the game over animation.
         :return: None
         """
-        game_over_animation = GameOverAnimation(self.soul)
+        game_over_animation = GameOverAnimation(self.soul, self.music_player)
 
         self.sprites_and_effects_collection.effects.append(game_over_animation)
 
@@ -509,13 +511,17 @@ class BattleController:
         :return: None
         """
         # Tell the controller that the battle has been lost.
-        self.battle_lost = True
-        self.soul.disable_soul_movement()
+        self.state = BattleState.DEFEAT
+
+        # Stop the BGM from playing.
+        self.music_player.stop_sound()
+
+        # Kill the updates on the soul so that it stops grazing/taking damage.
+        self.soul.kill_updates()
 
         # Stops sprites from being drawn to the screen.
         self.clear_effects()
 
-        # pyglet.clock.schedule_once(lambda dt: self.enable_sprite_and_effect_updates(), 0.8)
         pyglet.clock.schedule_once(lambda dt: self.sprites_and_effects_collection.game_over(), 0.8)
         pyglet.clock.schedule_once(lambda dt: self.spawn_game_over_animation(), 0.8)
 
@@ -1112,7 +1118,7 @@ class BattleController:
         Ends the enemy attack.
         :return:
         """
-        if not self.battle_lost:
+        if self.state == BattleState.ENEMY_ATTACK:
             # Terminate all the currently active enemy attacks
             if len(self.enemies) > 0:
                 for enemy in self.enemies:

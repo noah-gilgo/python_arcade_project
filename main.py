@@ -5,6 +5,7 @@ from arcade.gui import UIManager
 from arcade.types import Color
 
 import math_methods
+import music_player
 import non_player_character
 import player_character
 import player_characters
@@ -134,6 +135,8 @@ class GameView(arcade.View):
 
         self.soul = None
 
+        self.music_player = None
+
         # Initializes the starting positions of the player characters and enemy characters.
         self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(3)
@@ -222,13 +225,14 @@ class GameView(arcade.View):
         #    enemy.spawn_speech_bubble(enemy.random_speech_bubble_dialogue[0])
 
         # Start the background music.
-        self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", True)
-        self.background_music_player = self.background_music.play()
-        self.background_music_player.pitch = 0.0
-        self.background_music_player.loop = True
-        self.background_music_player.volume = 0.3
+        self.music_player = music_player.MusicPlayer()
+        self.music_player.play_sound(
+            sound_name="another_him",
+            pitch=0.0,
+            volume=0.3
+        )
 
-        sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
+        sound_methods.gradually_update_pitch(self.music_player.currently_playing_song_player, 1.0, 0.02, 0.05)
 
         # Animate the background of the GONERMAKER.
         graphics_methods.animate_depths(self.sprites_and_effects_collection.background_sprites)
@@ -249,7 +253,8 @@ class GameView(arcade.View):
             enemies=self.enemies,
             sprites_and_effects_collection=self.sprites_and_effects_collection,
             tp_meter=self.tp_meter,
-            bullet_board=self.bullet_board
+            bullet_board=self.bullet_board,
+            music_player=self.music_player
         )
 
     def on_draw(self):

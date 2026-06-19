@@ -13,6 +13,7 @@ from graphics_objects import SingleSpriteAnimation, MultiSpriteAnimation
 
 import math
 
+from music_player import MusicPlayer
 from soul import Soul
 
 
@@ -114,8 +115,8 @@ class SoulFragment(Sprite):
         self.visible = False
 
         # Velocity data
-        self.dx = random.random() * random.randrange(-1, 1, 2) * 10
-        self.dy = random.random() * random.randrange(-1, 1, 2) * 10
+        self.dx = random.random() * random.choice([1, -1]) * 10
+        self.dy = random.random() * random.choice([1, -1]) * 10
 
         # Area in which the sprite can exist onscreen before despawning.
         self.lower_limit = -self.height
@@ -137,15 +138,10 @@ class SoulFragment(Sprite):
 
         # Dim the soul fragment if it's been on screen for too long.
         if self.time > 2.0:
-            self.alpha = max(0, self.alpha - 8)
+            self.alpha = max(0, self.alpha - 12)
 
         # Kill the sprite if it goes offscreen or if it is not visible.
-        if (self.alpha == 0 or
-            self.top < self.lower_limit or
-            self.bottom > self.upper_limit or
-            self.right < self.left_limit or
-            self.left > self.right_limit):
-
+        if self.alpha == 0:
             self.kill()
 
 
@@ -153,8 +149,10 @@ class GameOverAnimation(MultiSpriteAnimation):
     """
     The animation that plays when the game ends in player defeat.
     """
-    def __init__(self, soul: Soul):
+    def __init__(self, soul: Soul, music_player: MusicPlayer):
         self.soul = soul
+        self.music_player = music_player
+
         self.soul.graze_sprite.visible = False
         self.soul.visible = False
         self.soul_sprite = Sprite(
@@ -191,15 +189,15 @@ class GameOverAnimation(MultiSpriteAnimation):
             ] + self.soul_fragments
         )
 
+        # Sounds used by the animation
+        self.soul_break_sound = arcade.load_sound("assets/audio/soul/snd_break1.wav")
+        self.soul_shatter_sound = arcade.load_sound("assets/audio/soul/snd_break2.wav")
+
         # Animation state flags
         self.soul_not_made_visible = True
         self.soul_not_broken = True
         self.soul_not_shattered = True
         self.faint_courage_not_playing = True
-
-        self.faint_courage = arcade.load_sound(
-            "assets/audio/songs/faint-courage.wav"
-        )
 
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
@@ -211,12 +209,14 @@ class GameOverAnimation(MultiSpriteAnimation):
         elif 0.8 <= self.time < 2.0:  # Soul is broken
             if self.soul_not_broken:
                 self.soul_sprite.set_texture(1)
+                self.soul_break_sound.play()
                 self.soul_not_broken = False
         elif 2.0 <= self.time < 4.5:
             if self.soul_not_shattered:
                 self.soul_sprite.visible = False
                 for soul_fragment in self.soul_fragments:
                     soul_fragment.visible = True
+                self.soul_shatter_sound.play()
                 self.soul_not_shattered = False
             else:
                 if len(self.soul_fragments) > 0:
@@ -225,7 +225,7 @@ class GameOverAnimation(MultiSpriteAnimation):
 
         elif 4.5 <= self.time < 7.0:
             if self.faint_courage_not_playing:
-                self.faint_courage.play()
+                self.music_player.play_sound("faint_courage")
                 self.faint_courage_not_playing = False
 
             if self.game_over_title_sprite.alpha < 255:
