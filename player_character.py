@@ -1,17 +1,17 @@
 import arcade
 import pyglet.clock
 from PIL import Image
-from arcade import Sprite, Texture
+#from arcade import Sprite, Texture
 from arcade.types import Color
 
 import character
 import default_data
 import graphics_objects
-import non_player_character
+#import non_player_character
 from act import MagicUserAct
 from animations.battle_animations import NumberBounceAnimation
 from animations.common_animations import ShakeAnimation
-from graphics_methods import make_texture_solid_color
+#from graphics_methods import make_texture_solid_color
 from items.armor_items import ArmorItem
 from items.weapon_items import WeaponItem
 from spells import Spell

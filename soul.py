@@ -6,12 +6,12 @@ from arcade import Sprite
 from arcade.geometry import is_point_in_polygon
 from arcade.hitbox import HitBox
 
-import player_character
+#import player_character
 
 
 class Soul(arcade.Sprite):
     """ SOUL Class """
-    def __init__(self, player_with_soul: player_character.PlayerCharacter, battle_controller):
+    def __init__(self, player_with_soul, battle_controller):
         super().__init__(
             center_x=player_with_soul.center_x,
             center_y=player_with_soul.center_y,

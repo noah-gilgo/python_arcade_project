@@ -17,7 +17,7 @@ import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction, ActAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
     StrikeEnemyAnimation, EnemyFleeingAnimation
-from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
+from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, GameOverAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from bullet_patterns import RainingDiamondBulletPattern
 from dialog_exchange import DialogExchange
@@ -71,6 +71,9 @@ class BattleController:
 
         # This variable controls whether to update the sprites on screen or not.
         self.update_sprites_on_screen = True
+
+        # Tracks if the fight has been lost by the player.
+        self.battle_lost = False
 
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
@@ -345,6 +348,13 @@ class BattleController:
         """
         self.update_sprites_on_screen = False
 
+    def clear_effects(self):
+        """
+        Clears all the effects being updated by the sprites and effects collection.
+        :return: None
+        """
+        self.sprites_and_effects_collection.effects.clear()
+
     def update_clocks(self, delta_time: float):
         """
         This is where any local clocks used by the battle controller are updated.
@@ -481,13 +491,34 @@ class BattleController:
 
         return True
 
+    def spawn_game_over_animation(self):
+        """
+        Begins the game over animation.
+        :return: None
+        """
+        game_over_animation = GameOverAnimation(self.soul)
+
+        self.sprites_and_effects_collection.effects.append(game_over_animation)
+
+        for sprite in game_over_animation.get_sprites():
+            self.sprites_and_effects_collection.soul_sprites.append(sprite)
+
     def game_over(self):
         """
         Ends the battle in defeat. Animates the heart being shattered, with the game over screen being displayed.
         :return: None
         """
+        # Tell the controller that the battle has been lost.
+        self.battle_lost = True
+        self.soul.disable_soul_movement()
+
         # Stops sprites from being drawn to the screen.
-        self.disable_sprite_and_effect_updates()
+        self.clear_effects()
+
+        # pyglet.clock.schedule_once(lambda dt: self.enable_sprite_and_effect_updates(), 0.8)
+        pyglet.clock.schedule_once(lambda dt: self.sprites_and_effects_collection.game_over(), 0.8)
+        pyglet.clock.schedule_once(lambda dt: self.spawn_game_over_animation(), 0.8)
+
         pass
 
     def add_tp_to_meter(self, amount: float = 0.0):
@@ -1081,20 +1112,21 @@ class BattleController:
         Ends the enemy attack.
         :return:
         """
-        # Terminate all the currently active enemy attacks
-        if len(self.enemies) > 0:
-            for enemy in self.enemies:
-                enemy.terminate_attack()
+        if not self.battle_lost:
+            # Terminate all the currently active enemy attacks
+            if len(self.enemies) > 0:
+                for enemy in self.enemies:
+                    enemy.terminate_attack()
 
-        # Set all the defending players to not be defending.
-        for player in self.players:
-            if player.is_defending:
-                player.undefend()
+            # Set all the defending players to not be defending.
+            for player in self.players:
+                if player.is_defending:
+                    player.undefend()
 
-        # Return the state of the battle back to the starting state.
-        self.unload_bullet_board()
-        self.stop_enemy_attack_clock()
-        self.load_bullet_board_called_for_this_turn = False
+            # Return the state of the battle back to the starting state.
+            self.unload_bullet_board()
+            self.stop_enemy_attack_clock()
+            self.load_bullet_board_called_for_this_turn = False
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """

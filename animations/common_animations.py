@@ -1,17 +1,19 @@
-import math
+#import math
 import random
 
 import arcade.color
-from arcade import Sprite, Rect, LRBT
-from arcade.easing import ease_in_out, ease_in
+from arcade import Sprite, Rect, LRBT, Texture
+#from arcade.easing import ease_in_out, ease_in
 from arcade.types import Color
 
 import settings
 import texture_methods
 from graphics_methods import make_texture_solid_color, ease_out
-from graphics_objects import SingleSpriteAnimation
+from graphics_objects import SingleSpriteAnimation, MultiSpriteAnimation
 
 import math
+
+from soul import Soul
 
 
 class ShakeAnimation(SingleSpriteAnimation):
@@ -96,95 +98,135 @@ class FadeInFadeOutColorAnimation(SingleSpriteAnimation):
                 self.terminate_animation()
 
 
-class SparkleAnimation(SingleSpriteAnimation):
-    def __init__(self, target: Sprite, total_duration: float = 1.0, color: Color = None,
-                 particle_starting_rect: Rect = None, number_of_particles: int = 10, rotations_per_second: float = 0.7,
-                 particle_scale: float = 1.0):
+class SoulFragment(Sprite):
+    """
+    The fragments of the soul when shattered upon the player's defeat.
+    """
+    def __init__(self, soul: Soul, soul_fragment_textures: list[Texture]):
         super().__init__(
-            sprite=target,
-            total_duration=total_duration
+            center_x=soul.center_x,
+            center_y=soul.center_y,
+            scale=soul.scale
         )
 
-        if particle_starting_rect:
-            self.spare_particle_min_x = particle_starting_rect.left
-            self.spare_particle_max_x = particle_starting_rect.right
+        self.textures = soul_fragment_textures
+        self.set_texture(0)
+        self.visible = False
 
-            self.spare_particle_min_y = particle_starting_rect.bottom
-            self.spare_particle_max_y = particle_starting_rect.top
-        else:
-            self.spare_particle_min_x = int(self.sprite.center_x - (self.sprite.width / 4))
-            self.spare_particle_max_x = int(self.sprite.center_x + (self.sprite.width / 4))
+        # Velocity data
+        self.dx = random.random() * random.randrange(-1, 1, 2) * 10
+        self.dy = random.random() * random.randrange(-1, 1, 2) * 10
 
-            self.spare_particle_min_y = int(self.sprite.center_y - (self.sprite.height / 2))
-            self.spare_particle_max_y = int(self.sprite.center_y + (self.sprite.height / 2))
+        # Area in which the sprite can exist onscreen before despawning.
+        self.lower_limit = -self.height
+        self.upper_limit = settings.WINDOW_HEIGHT + self.height
+        self.left_limit = -self.width
+        self.right_limit = settings.WINDOW_WIDTH + self.width
 
-        self.sprite_pack_path = "assets/sprites/effects/heal_spare_particles"
+        # Time data
+        self.time = 0
 
-        spare_particle_textures = texture_methods.load_textures_at_filepath_into_texture_array(
-            self.sprite_pack_path
+    def update_animation(self, delta_time: float):
+        # Change the velocity of the sprite over time.
+        self.time += delta_time
+        self.set_texture(int(self.time // 0.25) % len(self.textures))
+
+        self.center_x += self.dx
+        self.dy -= 0.1
+        self.center_y += self.dy
+
+        # Dim the soul fragment if it's been on screen for too long.
+        if self.time > 2.0:
+            self.alpha = max(0, self.alpha - 8)
+
+        # Kill the sprite if it goes offscreen or if it is not visible.
+        if (self.alpha == 0 or
+            self.top < self.lower_limit or
+            self.bottom > self.upper_limit or
+            self.right < self.left_limit or
+            self.left > self.right_limit):
+
+            self.kill()
+
+
+class GameOverAnimation(MultiSpriteAnimation):
+    """
+    The animation that plays when the game ends in player defeat.
+    """
+    def __init__(self, soul: Soul):
+        self.soul = soul
+        self.soul.graze_sprite.visible = False
+        self.soul.visible = False
+        self.soul_sprite = Sprite(
+            center_x=self.soul.center_x,
+            center_y=self.soul.center_y,
+            scale=self.soul.scale
         )
-        if color is not None:
-            colored_spare_particle_textures = []
-            for texture in spare_particle_textures:
-                colored_spare_particle_textures.append(make_texture_solid_color(texture, color))
-            self.spare_particle_textures = colored_spare_particle_textures
-        else:
-            self.spare_particle_textures = spare_particle_textures
+        self.soul_sprite.textures = [
+            arcade.load_texture("assets/sprites/soul/soul.png"),
+            arcade.load_texture("assets/sprites/soul/soul_broken.png")
+        ]
+        self.soul_sprite.set_texture(0)
 
-        self.particle_sprite_list = []
+        self.game_over_title_sprite = Sprite(
+            path_or_texture="assets/sprites/game_over_title.png",
+            center_x=settings.WINDOW_CENTER_X,
+            center_y=int(settings.WINDOW_HEIGHT * .75),
+            scale=4.0
+        )
+        self.game_over_title_sprite.alpha = 0
 
-        self.number_of_particles = number_of_particles
+        self.soul_fragment_textures = texture_methods.load_textures_at_filepath_into_texture_array(
+            "assets/sprites/soul/soul_fragments"
+        )
 
-        self.initial_particle_positions = []
-        self.current_initial_particle_position_index = 0
-        self.current_initial_particle_x = 0
-        self.current_initial_particle_y = 0
+        self.soul_fragments = []
+        for i in range(6):
+            self.soul_fragments.append(SoulFragment(self.soul, self.soul_fragment_textures))
 
-        for i in range(self.number_of_particles):
-            sprite = arcade.Sprite()
-            sprite.textures = self.spare_particle_textures
-            sprite.set_texture(0)
-            sprite.center_x = random.randint(self.spare_particle_min_x, self.spare_particle_max_x)
-            sprite.center_y = random.randint(self.spare_particle_min_y, self.spare_particle_max_y)
-            self.initial_particle_positions.append((sprite.center_x, sprite.center_y))
-            sprite.scale = random.randint(3, 5) * particle_scale
-            sprite.visible = True
-            self.particle_sprite_list.append(sprite)
+        super().__init__(
+            sprites=[
+                self.soul_sprite,
+                self.game_over_title_sprite
+            ] + self.soul_fragments
+        )
 
-        # Miscellaneous variables so that on_update isn't repeating redundant calculations
-        self.particle_sprite_translation_factor = settings.WINDOW_WIDTH / 84
-        self.rotations_factor = rotations_per_second * 360
+        # Animation state flags
+        self.soul_not_made_visible = True
+        self.soul_not_broken = True
+        self.soul_not_shattered = True
+        self.faint_courage_not_playing = True
 
-    def particle_movement_function(self, particle_sprite: Sprite, delta_time: float):
-        particle_sprite.turn_right(delta_time * self.rotations_factor)
-        self.current_initial_particle_x = self.initial_particle_positions[self.current_initial_particle_position_index][
-            0]
-        self.current_initial_particle_y = self.initial_particle_positions[self.current_initial_particle_position_index][
-            1]
-        particle_sprite.center_x = self.current_initial_particle_x + (
-                    ease_out(self.time) * self.particle_sprite_translation_factor * 2)
-        particle_sprite.center_y = self.current_initial_particle_y + (
-                    ease_out(self.time) * self.particle_sprite_translation_factor * 8)
-        particle_sprite.alpha = ease_out((self.total_duration - self.time) / self.total_duration) * 255
+        self.faint_courage = arcade.load_sound(
+            "assets/audio/songs/faint-courage.wav"
+        )
 
     def update_animation(self, delta_time):
-        self.time += delta_time
-        self.current_initial_particle_position_index = 0
+        super().update_animation(delta_time)
 
-        # Animate the particle sprites to rotate, drift to the right, and change textures
-        texture_index = int(self.time * 6) % len(self.spare_particle_textures)
-        for particle_sprite in self.particle_sprite_list:
-            particle_sprite.set_texture(texture_index)
-            self.particle_movement_function(particle_sprite, delta_time)
-            self.current_initial_particle_position_index += 1
-        if self.time > self.total_duration:
-            for particle_sprite in self.particle_sprite_list:
-                particle_sprite.kill()
-            self.terminate_animation()
+        if 0 < self.time < 0.8:  # Non-battle soul sprite is made visible
+            if self.soul_not_made_visible:
+                self.soul_sprite.visible = True
+                self.soul_not_made_visible = False
+        elif 0.8 <= self.time < 2.0:  # Soul is broken
+            if self.soul_not_broken:
+                self.soul_sprite.set_texture(1)
+                self.soul_not_broken = False
+        elif 2.0 <= self.time < 4.5:
+            if self.soul_not_shattered:
+                self.soul_sprite.visible = False
+                for soul_fragment in self.soul_fragments:
+                    soul_fragment.visible = True
+                self.soul_not_shattered = False
+            else:
+                if len(self.soul_fragments) > 0:
+                    for soul_fragment in self.soul_fragments:
+                        soul_fragment.update_animation(delta_time)
 
-    def get_sprites(self):
-        """
-        Get the sprites used by this animation.
-        :return: Both of the fading out sprites used by this animation.
-        """
-        return self.particle_sprite_list
+        elif 4.5 <= self.time < 7.0:
+            if self.faint_courage_not_playing:
+                self.faint_courage.play()
+                self.faint_courage_not_playing = False
+
+            if self.game_over_title_sprite.alpha < 255:
+                self.game_over_title_sprite.alpha = min(255, self.game_over_title_sprite.alpha + 4)
