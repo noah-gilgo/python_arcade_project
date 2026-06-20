@@ -181,6 +181,9 @@ class BattleController:
         # The amount of enemies defeated through violent means.
         self.enemies_defeated_violently = 0
 
+        # The animation controlling the Game Over screen.
+        self.game_over_animation = None
+
         self.ui_manager.execute_layout()
 
         # The focus stack for the battle GUI.
@@ -498,11 +501,11 @@ class BattleController:
         Begins the game over animation.
         :return: None
         """
-        game_over_animation = GameOverAnimation(self.soul, self.music_player, self.sprites_and_effects_collection)
+        self.game_over_animation = GameOverAnimation(self.soul, self.music_player, self.sprites_and_effects_collection)
 
-        self.sprites_and_effects_collection.effects.append(game_over_animation)
+        self.sprites_and_effects_collection.effects.append(self.game_over_animation)
 
-        for sprite in game_over_animation.get_sprites():
+        for sprite in self.game_over_animation.get_sprites():
             self.sprites_and_effects_collection.soul_sprites.append(sprite)
 
     def game_over(self):
@@ -524,8 +527,6 @@ class BattleController:
 
         pyglet.clock.schedule_once(lambda dt: self.sprites_and_effects_collection.game_over(), 0.8)
         pyglet.clock.schedule_once(lambda dt: self.spawn_game_over_animation(), 0.8)
-
-        pass
 
     def add_tp_to_meter(self, amount: float = 0.0):
         """
@@ -1404,6 +1405,9 @@ class SelectCommand(Command):
 
             case BattleState.DIALOGUE:
                 self.controller.spawn_next_dialog_from_dialog_exchange()
+
+            case BattleState.DEFEAT:
+                self.controller.game_over_animation.load_next_dialog_in_text_box()
 
 
 class CancelCommand(Command):

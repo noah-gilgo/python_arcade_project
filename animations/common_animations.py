@@ -131,7 +131,7 @@ class SoulFragment(Sprite):
     def update_animation(self, delta_time: float):
         # Change the velocity of the sprite over time.
         self.time += delta_time
-        self.set_texture(int(self.time // 0.25) % len(self.textures))
+        self.set_texture(int(self.time // 0.2) % len(self.textures))
 
         self.center_x += self.dx
         self.dy -= 0.1
@@ -205,6 +205,45 @@ class GameOverAnimation(MultiSpriteAnimation):
         # Death message textbox
         self.death_message_textbox = None
 
+        # Dialog options for the death message text box
+        self.death_messages = [
+            [
+                SpriteTextBoxDialog(
+                    text="This is not your fate...!",
+                    text_sound_path="assets/audio/dialog/snd_txtral.wav",
+                    font_size=48,
+                    text_spacing=16,
+                    rate_of_text=0.06
+                ),
+                SpriteTextBoxDialog(
+                    text="Please,\ndon't give up!",
+                    text_sound_path="assets/audio/dialog/snd_txtral.wav",
+                    font_size=48,
+                    text_spacing=16,
+                    rate_of_text=0.06
+                ),
+            ],
+            [
+                SpriteTextBoxDialog(
+                    text="Come on, that all you got!?",
+                    text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                    font_size=48,
+                    text_spacing=16,
+                    rate_of_text=0.06
+                ),
+                SpriteTextBoxDialog(
+                    text="Kris, get up...!",
+                    text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                    font_size=48,
+                    text_spacing=16,
+                    rate_of_text=0.06
+                ),
+            ]
+        ]
+
+        self.chosen_death_message = random.choice(self.death_messages)
+        self.chosen_death_message_index = 0
+
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
 
@@ -246,15 +285,20 @@ class GameOverAnimation(MultiSpriteAnimation):
                     height=400,
                     sprites_and_effects_collection=self.sprites_and_effects_collection
                 )
-                self.death_message_textbox.load_dialog(
-                    SpriteTextBoxDialog(
-                        text="This is not your fate...!",
-                        text_sound_path="assets/audio/dialog/snd_txtral.wav",
-                        font_size=48,
-                        text_spacing=16,
-                        rate_of_text=0.06
-                    )
-                )
+                self.death_message_textbox.load_dialog(self.chosen_death_message[self.chosen_death_message_index])
+                self.chosen_death_message_index += 1
                 self.text_box_not_loaded = False
             else:
                 self.death_message_textbox.update_animation(delta_time)
+
+    def load_next_dialog_in_text_box(self):
+        """
+        Loads the next dialog into the text box.
+        :return:
+        """
+        if self.death_message_textbox:
+            if self.chosen_death_message_index < len(self.chosen_death_message):
+                self.death_message_textbox.load_dialog(self.chosen_death_message[self.chosen_death_message_index])
+                self.chosen_death_message_index += 1
+            else:
+                self.death_message_textbox.clear_dialog()

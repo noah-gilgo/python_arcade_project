@@ -1,6 +1,7 @@
 import arcade
 from arcade import Sound, Sprite, Texture
 
+from dialogue_box import TextBoxDialog
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
@@ -101,6 +102,7 @@ class SpriteTextBox(Sprite):
         self.sprites_and_effects_collection = sprites_and_effects_collection
         self.sprites_associated_with_text_box = []
         self.sprites_associated_with_text_box.append(self)
+        self.letter_sprites = []
 
         self.sprite_sheet = None
 
@@ -153,6 +155,7 @@ class SpriteTextBox(Sprite):
 
         self.sprites_and_effects_collection.soul_sprites.append(character_sprite)
         self.sprites_associated_with_text_box.append(character_sprite)
+        self.letter_sprites.append(character_sprite)
 
         # Iterate the indexes.
         self.current_character_index += 1
@@ -163,8 +166,8 @@ class SpriteTextBox(Sprite):
             self.current_character_index_in_current_word += 1
 
         # If the current character is the first letter of a new word, check to see if the word fits in the current line
-        if self.current_character_index_in_current_word == 0 and self.character_column_index + len(
-                self.words[self.current_word_index]) >= self.max_number_of_characters_in_a_row:
+        if (self.current_character_index_in_current_word == 0 and self.character_column_index + len(
+                self.words[self.current_word_index]) >= self.max_number_of_characters_in_a_row) or self.words[self.current_word_index] == "\n":
             self.character_row_index += 1
             self.character_column_index = 0
         else:
@@ -184,6 +187,16 @@ class SpriteTextBox(Sprite):
         :param text_box_dialog: The TextBoxDialog object representing the text to be loaded.
         :return:
         """
+        # Kill the sprites from the previous dialog loading instance, if there was one.
+        for sprite in self.letter_sprites:
+            sprite.kill()
+
+        # Reset the indexes
+        self.character_row_index = 0
+        self.character_column_index = 0
+        self.current_character_index = 0
+        self.current_word_index = 0
+        self.current_character_index_in_current_word = 0
 
         self.text = text_box_dialog.text
         self.text_font_size = text_box_dialog.font_size
@@ -210,7 +223,12 @@ class SpriteTextBox(Sprite):
 
         self.words = self.text.split()
 
-        print("dialog loaded")
+    def clear_dialog(self):
+        """
+        Clears the text box from the text box.
+        :return: None
+        """
+        self.load_dialog(SpriteTextBoxDialog(text=""))
 
     def update_animation(self, delta_time):
         if self.current_character_index < self.text_length:
