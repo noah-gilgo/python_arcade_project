@@ -100,6 +100,8 @@ class BattleController:
         # Susie: "My weapon's like a hairbrush or something."
         # Gerson: "Geh-hahahahaha! Is that so? Is that SO???"
         # Susie: "Yep. Now shut up and give me that axe!"
+        self.scripted_dialogue = []
+        """
         self.scripted_dialogue = [
             DialogExchange(
                 battle_textbox=self.battle_textbox,
@@ -158,6 +160,7 @@ class BattleController:
                 ]
             )
         ]
+        """
 
         # The current dialog exchange being loaded by the fight.
         self.current_dialog_exchange = None
@@ -1404,7 +1407,11 @@ class SelectCommand(Command):
                 self.controller.execute_queued_player_action()
 
             case BattleState.DIALOGUE:
-                self.controller.spawn_next_dialog_from_dialog_exchange()
+                if len(self.controller.scripted_dialogue) > 0:
+                    self.controller.spawn_next_dialog_from_dialog_exchange()
+                else:
+                    self.controller.despawn_speech_bubbles()
+                    self.controller.start_enemy_attack()
 
             case BattleState.DEFEAT:
                 self.controller.game_over_animation.load_next_dialog_in_text_box()

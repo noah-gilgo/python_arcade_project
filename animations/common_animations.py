@@ -216,7 +216,7 @@ class GameOverAnimation(MultiSpriteAnimation):
                     rate_of_text=0.06
                 ),
                 SpriteTextBoxDialog(
-                    text="Please,\ndon't give up!",
+                    text="Please, don't give up!",
                     text_sound_path="assets/audio/dialog/snd_txtral.wav",
                     font_size=48,
                     text_spacing=16,

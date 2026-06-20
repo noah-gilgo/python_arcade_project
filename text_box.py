@@ -117,6 +117,12 @@ class SpriteTextBox(Sprite):
         self.words = []
         self.max_number_of_characters_in_a_row = 0
 
+        # Space texture
+        self.space_texture = None
+
+        # Used for debugging
+        self.last_character_loaded = False
+
     def get_character_sprite(self, character: str) -> Sprite:
         """
         Gets the sprite for the character to be loaded.
@@ -136,15 +142,21 @@ class SpriteTextBox(Sprite):
     def add_character_to_text_box(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
         # If the current character index = the length of the word, make the current character a space.
+        """
         if self.current_character_index_in_current_word == len(self.words[self.current_word_index]):
+            
+            if not self.space_texture:
+                self.space_texture = Texture.create_empty(
+                    name="space",
+                    size=(self.letter_width, self.letter_height)
+                )
+            character_sprite = Sprite(path_or_texture=self.space_texture)
+            
             character = " "
-            character_sprite = Sprite(path_or_texture=Texture.create_empty(
-                name="space",
-                size=(self.letter_width, self.letter_height)
-            ))
         else:
-            character = self.text[self.current_character_index]
-            character_sprite = self.get_character_sprite(character)
+        """
+        character = self.text[self.current_character_index]
+        character_sprite = self.get_character_sprite(character)
 
         character_x_coordinate = self.left + 24 + int(self.character_column_index * (self.letter_width + self.text_spacing))
         character_y_coordinate = self.top - 24 - int(self.character_row_index * (self.letter_height + self.line_spacing))
@@ -187,9 +199,15 @@ class SpriteTextBox(Sprite):
         :param text_box_dialog: The TextBoxDialog object representing the text to be loaded.
         :return:
         """
+        # Used for debugging
+        self.last_character_loaded = False
+
         # Kill the sprites from the previous dialog loading instance, if there was one.
         for sprite in self.letter_sprites:
             sprite.kill()
+
+        self.letter_sprites.clear()
+        self.sprites_associated_with_text_box = [self.sprites_associated_with_text_box[0]]
 
         # Reset the indexes
         self.character_row_index = 0
@@ -238,6 +256,11 @@ class SpriteTextBox(Sprite):
                 # Attempt to add a character to the text box.
                 self.add_character_to_text_box()
                 self.text_sound.play()
+        else:
+            if not self.last_character_loaded:
+                self.last_character_loaded = True
+                for sprite in self.letter_sprites:
+                    print(sprite.center_x, sprite.center_y, sprite.alpha, sprite.visible)
 
     def despawn_text_box(self):
         """
