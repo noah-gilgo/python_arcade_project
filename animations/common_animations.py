@@ -15,6 +15,7 @@ import math
 
 from music_player import MusicPlayer
 from soul import Soul
+from text_box import SpriteTextBox, SpriteTextBoxDialog
 
 
 class ShakeAnimation(SingleSpriteAnimation):
@@ -149,9 +150,10 @@ class GameOverAnimation(MultiSpriteAnimation):
     """
     The animation that plays when the game ends in player defeat.
     """
-    def __init__(self, soul: Soul, music_player: MusicPlayer):
+    def __init__(self, soul: Soul, music_player: MusicPlayer, sprites_and_effects_collection):
         self.soul = soul
         self.music_player = music_player
+        self.sprites_and_effects_collection = sprites_and_effects_collection
 
         self.soul.graze_sprite.visible = False
         self.soul.visible = False
@@ -198,6 +200,10 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.soul_not_broken = True
         self.soul_not_shattered = True
         self.faint_courage_not_playing = True
+        self.text_box_not_loaded = True
+
+        # Death message textbox
+        self.death_message_textbox = None
 
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
@@ -230,3 +236,25 @@ class GameOverAnimation(MultiSpriteAnimation):
 
             if self.game_over_title_sprite.alpha < 255:
                 self.game_over_title_sprite.alpha = min(255, self.game_over_title_sprite.alpha + 4)
+
+        elif 7.0 <= self.time:
+            if self.text_box_not_loaded:
+                self.death_message_textbox = SpriteTextBox(
+                    center_x=settings.WINDOW_CENTER_X,
+                    center_y=int(settings.WINDOW_HEIGHT * .15),
+                    width=700,
+                    height=400,
+                    sprites_and_effects_collection=self.sprites_and_effects_collection
+                )
+                self.death_message_textbox.load_dialog(
+                    SpriteTextBoxDialog(
+                        text="This is not your fate...!",
+                        text_sound_path="assets/audio/dialog/snd_txtral.wav",
+                        font_size=48,
+                        text_spacing=16,
+                        rate_of_text=0.06
+                    )
+                )
+                self.text_box_not_loaded = False
+            else:
+                self.death_message_textbox.update_animation(delta_time)

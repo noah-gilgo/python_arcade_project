@@ -498,7 +498,7 @@ class BattleController:
         Begins the game over animation.
         :return: None
         """
-        game_over_animation = GameOverAnimation(self.soul, self.music_player)
+        game_over_animation = GameOverAnimation(self.soul, self.music_player, self.sprites_and_effects_collection)
 
         self.sprites_and_effects_collection.effects.append(game_over_animation)
 

@@ -72,6 +72,14 @@ class GameView(arcade.View):
         arcade.load_font("assets/fonts/dotumche-pixel.ttf")
         arcade.load_font("assets/fonts/undertale-deltarune-extended-fixed.ttf")
 
+        from fontTools.ttLib import TTFont
+
+        font = TTFont("assets/fonts/undertale-deltarune-extended-fixed.ttf")
+
+        for record in font["name"].names:
+            if record.nameID == 1:
+                print(record.toUnicode())
+
         # Initialize the UIManager.
         self.manager = UIManager()
         self.manager._pixelated = True
