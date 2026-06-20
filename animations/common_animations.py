@@ -146,6 +146,19 @@ class SoulFragment(Sprite):
             self.kill()
 
 
+class BlurrySoulSprite(Sprite):
+    """
+    The blurry sprite of the soul used in the DEVICE segments of the game, such as the game over screen.
+    """
+    def __init__(self):
+        super().__init__(
+            path_or_texture="assets/sprites/soul/soul_blurry.png",
+            scale=4.0,
+            center_x=settings.WINDOW_CENTER_X,
+            center_y=settings.WINDOW_HEIGHT * .15
+        )
+
+
 class GameOverAnimation(MultiSpriteAnimation):
     """
     The animation that plays when the game ends in player defeat.
@@ -168,6 +181,54 @@ class GameOverAnimation(MultiSpriteAnimation):
         ]
         self.soul_sprite.set_texture(0)
 
+        self.blurry_soul_sprite = Sprite(
+            path_or_texture="assets/sprites/soul/soul_blurry.png",
+            scale=5.0,
+            center_x=settings.WINDOW_CENTER_X,
+            center_y=settings.WINDOW_HEIGHT * .2
+        )
+        self.blurry_soul_sprite.alpha = 0
+
+        self.continue_option_sprite = arcade.create_text_sprite(
+            text="CONTINUE",
+            font_name="8bitoperator JVE",
+            font_size=48,
+            color=arcade.color.NEON_GREEN
+        )
+        self.continue_option_sprite.alpha = 0
+        self.continue_option_sprite.center_x = settings.WINDOW_WIDTH * .35
+        self.continue_option_sprite.center_y = settings.WINDOW_HEIGHT * .2
+
+        self.continue_option_sprite_highlight = arcade.create_text_sprite(
+            text="CONTINUE",
+            font_name="8bitoperator JVE",
+            font_size=48,
+            color=arcade.color.WHITE
+        )
+        self.continue_option_sprite_highlight.visible = False
+        self.continue_option_sprite_highlight.center_x = settings.WINDOW_WIDTH * .35
+        self.continue_option_sprite_highlight.center_y = settings.WINDOW_HEIGHT * .2
+
+        self.give_up_option_sprite = arcade.create_text_sprite(
+            text="GIVE UP",
+            font_name="8bitoperator JVE",
+            font_size=48,
+            color=arcade.color.NEON_GREEN
+        )
+        self.give_up_option_sprite.alpha = 0
+        self.give_up_option_sprite.center_x = settings.WINDOW_WIDTH * .65
+        self.give_up_option_sprite.center_y = settings.WINDOW_HEIGHT * .2
+
+        self.give_up_option_sprite_highlight = arcade.create_text_sprite(
+            text="GIVE UP",
+            font_name="8bitoperator JVE",
+            font_size=48,
+            color=arcade.color.WHITE
+        )
+        self.give_up_option_sprite_highlight.visible = False
+        self.give_up_option_sprite_highlight.center_x = settings.WINDOW_WIDTH * .65
+        self.give_up_option_sprite_highlight.center_y = settings.WINDOW_HEIGHT * .2
+
         self.game_over_title_sprite = Sprite(
             path_or_texture="assets/sprites/game_over_title.png",
             center_x=settings.WINDOW_CENTER_X,
@@ -187,7 +248,12 @@ class GameOverAnimation(MultiSpriteAnimation):
         super().__init__(
             sprites=[
                 self.soul_sprite,
-                self.game_over_title_sprite
+                self.game_over_title_sprite,
+                self.blurry_soul_sprite,
+                self.continue_option_sprite,
+                self.give_up_option_sprite,
+                self.continue_option_sprite_highlight,
+                self.give_up_option_sprite_highlight
             ] + self.soul_fragments
         )
 
@@ -201,6 +267,9 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.soul_not_shattered = True
         self.faint_courage_not_playing = True
         self.text_box_not_loaded = True
+        self.death_message_textbox_unloaded = False
+        self.load_continue_options = False
+        self.continue_options_loaded = False
 
         # Death message textbox
         self.death_message_textbox = None
@@ -289,7 +358,19 @@ class GameOverAnimation(MultiSpriteAnimation):
                 self.chosen_death_message_index += 1
                 self.text_box_not_loaded = False
             else:
-                self.death_message_textbox.update_animation(delta_time)
+                if not self.death_message_textbox_unloaded:
+                    self.death_message_textbox.update_animation(delta_time)
+                else:
+                    self.load_continue_options = True
+
+            if self.load_continue_options and not self.continue_options_loaded:
+                self.blurry_soul_sprite.alpha = (min(255, self.blurry_soul_sprite.alpha + (255 * delta_time)))
+                self.continue_option_sprite.alpha = (min(255, self.continue_option_sprite.alpha + (255 * delta_time)))
+                self.give_up_option_sprite.alpha = (min(255, self.give_up_option_sprite.alpha + (255 * delta_time)))
+                if self.blurry_soul_sprite.alpha >= 255:
+                    self.continue_options_loaded = True
+                else:
+                    print(self.give_up_option_sprite.alpha, self.give_up_option_sprite.visible, self.give_up_option_sprite.center_x, self.give_up_option_sprite.center_y)
 
     def load_next_dialog_in_text_box(self):
         """
@@ -302,3 +383,11 @@ class GameOverAnimation(MultiSpriteAnimation):
                 self.chosen_death_message_index += 1
             else:
                 self.death_message_textbox.clear_dialog()
+                self.death_message_textbox_unloaded = True
+
+    def load_continue_options(self):
+        """
+        Loads the CONTINUE and GIVE UP options, as well as the soul for choosing between them.
+        :return:
+        """
+        self.load_continue_options = True
