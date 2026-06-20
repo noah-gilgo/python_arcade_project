@@ -1496,6 +1496,9 @@ class RightCommand(Command):
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().act
                         )
+        else:
+            if self.controller.state == BattleState.DEFEAT:
+                self.controller.game_over_animation.move_blurry_soul_to_give_up_option()
 
 
 class LeftCommand(Command):
@@ -1529,6 +1532,9 @@ class LeftCommand(Command):
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().act
                         )
+        else:
+            if self.controller.state == BattleState.DEFEAT:
+                self.controller.game_over_animation.move_blurry_soul_to_continue_option()
 
 class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """

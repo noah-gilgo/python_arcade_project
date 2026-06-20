@@ -3,6 +3,7 @@ import random
 
 import arcade.color
 from arcade import Sprite, Rect, LRBT, Texture
+from arcade.easing import ease_in, ease_out
 #from arcade.easing import ease_in_out, ease_in
 from arcade.types import Color
 
@@ -313,6 +314,21 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.chosen_death_message = random.choice(self.death_messages)
         self.chosen_death_message_index = 0
 
+        # Variables used by soul moving function.
+        self.blurry_soul_starting_x = 0
+        self.blurry_soul_ending_x = 0
+        self.blurry_soul_starting_y = 0
+        self.blurry_soul_ending_y = 0
+        self.blurry_soul_dx = 0
+        self.blurry_soul_dy = 0
+
+        self.blurry_soul_movement_time = 0.0
+        self.blurry_soul_movement_total_duration = 0.4
+
+        self.blurry_soul_moving = False
+        self.continue_option_selected = False
+        self.give_up_option_selected = False
+
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
 
@@ -365,12 +381,16 @@ class GameOverAnimation(MultiSpriteAnimation):
 
             if self.load_continue_options and not self.continue_options_loaded:
                 self.blurry_soul_sprite.alpha = (min(255, self.blurry_soul_sprite.alpha + (255 * delta_time)))
-                self.continue_option_sprite.alpha = (min(255, self.continue_option_sprite.alpha + (255 * delta_time)))
+                self.continue_option_sprite.alpha = (min(128, self.continue_option_sprite.alpha + (128 * delta_time)))
                 self.give_up_option_sprite.alpha = (min(255, self.give_up_option_sprite.alpha + (255 * delta_time)))
-                if self.blurry_soul_sprite.alpha >= 255:
+                if self.blurry_soul_sprite.alpha >= 128:
                     self.continue_options_loaded = True
                 else:
                     print(self.give_up_option_sprite.alpha, self.give_up_option_sprite.visible, self.give_up_option_sprite.center_x, self.give_up_option_sprite.center_y)
+
+            if self.continue_options_loaded:
+                if self.blurry_soul_moving:
+                    self.move_blurry_soul_to_sprite_slightly(delta_time)
 
     def load_next_dialog_in_text_box(self):
         """
@@ -391,3 +411,56 @@ class GameOverAnimation(MultiSpriteAnimation):
         :return:
         """
         self.load_continue_options = True
+
+    def move_blurry_soul_to_sprite(self, sprite: Sprite):
+        """
+        Sets the initial conditions for the blurry soul movement and starts the updates.
+        :return:
+        """
+        self.blurry_soul_starting_x = self.blurry_soul_sprite.center_x
+        self.blurry_soul_starting_y = self.blurry_soul_sprite.center_y
+        self.blurry_soul_ending_x = sprite.center_x
+        self.blurry_soul_ending_y = sprite.center_y
+
+        self.blurry_soul_dx = self.blurry_soul_ending_x - self.blurry_soul_starting_x
+        self.blurry_soul_dy = self.blurry_soul_ending_y - self.blurry_soul_starting_y
+
+        self.blurry_soul_moving = True
+        self.blurry_soul_movement_time = 0.0
+
+    def move_blurry_soul_to_sprite_slightly(self, delta_time: float):
+        """
+        The function that moves the blurry soul to the supplied coordinates each frame.
+        :return: None
+        """
+        self.blurry_soul_movement_time += delta_time
+
+        fraction_of_distance_travelled = ease_out(self.blurry_soul_movement_time / self.blurry_soul_movement_total_duration)
+
+        self.blurry_soul_sprite.center_x = self.blurry_soul_starting_x + (self.blurry_soul_dx * fraction_of_distance_travelled)
+        self.blurry_soul_sprite.center_y = self.blurry_soul_starting_y + (self.blurry_soul_dy * fraction_of_distance_travelled)
+
+        if self.blurry_soul_movement_time >= self.blurry_soul_movement_total_duration:
+            self.blurry_soul_moving = False
+            self.blurry_soul_sprite.center_x = self.blurry_soul_ending_x
+            self.blurry_soul_sprite.center_y = self.blurry_soul_ending_y
+
+    def move_blurry_soul_to_continue_option(self):
+        """
+        Moves the blurry soul to the continue option.
+        :return: None
+        """
+        if self.continue_options_loaded and not self.continue_option_selected:
+            self.move_blurry_soul_to_sprite(self.continue_option_sprite)
+            self.continue_option_selected = True
+            self.give_up_option_selected = False
+
+    def move_blurry_soul_to_give_up_option(self):
+        """
+        Moves the blurry soul to the give up option.
+        :return: None
+        """
+        if self.continue_options_loaded and not self.give_up_option_selected:
+            self.move_blurry_soul_to_sprite(self.give_up_option_sprite)
+            self.continue_option_selected = False
+            self.give_up_option_selected = True
