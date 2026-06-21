@@ -290,6 +290,16 @@ class GameOverAnimation(MultiSpriteAnimation):
         for i in range(6):
             self.soul_fragments.append(SoulFragment(self.soul, self.soul_fragment_textures))
 
+        # The whiteness that covers the screen when the user selects the CONTINUE option.
+        self.continue_brightness_sprite = arcade.SpriteSolidColor(
+            width=settings.WINDOW_WIDTH,
+            height=settings.WINDOW_HEIGHT,
+            center_x=settings.WINDOW_CENTER_X,
+            center_y=settings.WINDOW_CENTER_Y,
+            color=(255, 255, 255, 255)
+        )
+        self.continue_brightness_sprite.alpha = 0
+
         super().__init__(
             sprites=[
                 self.soul_sprite,
@@ -297,12 +307,14 @@ class GameOverAnimation(MultiSpriteAnimation):
                 self.blurry_soul_sprite,
                 self.continue_option_sprite,
                 self.give_up_option_sprite,
+                self.continue_brightness_sprite
             ] + self.soul_fragments
         )
 
         # Sounds used by the animation
         self.soul_break_sound = arcade.load_sound("assets/audio/soul/snd_break1.wav")
         self.soul_shatter_sound = arcade.load_sound("assets/audio/soul/snd_break2.wav")
+        self.continue_sound = arcade.load_sound("assets/audio/battle/snd_dtrans_lw.ogg")
 
         # Animation state flags
         self.soul_not_made_visible = True
@@ -313,6 +325,9 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.death_message_textbox_unloaded = False
         self.load_continue_options = False
         self.continue_options_loaded = False
+        self.continue_option_selected = False
+        self.give_up_option_selected = False
+        self.continue_animation_completed = False
 
         # Death message textbox
         self.death_message_textbox = None
@@ -368,8 +383,8 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.blurry_soul_movement_total_duration = 0.4
 
         self.blurry_soul_moving = False
-        self.continue_option_selected = False
-        self.give_up_option_selected = False
+        self.continue_option_focused = False
+        self.give_up_option_focused = False
 
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
@@ -434,6 +449,9 @@ class GameOverAnimation(MultiSpriteAnimation):
                 if self.blurry_soul_moving:
                     self.move_blurry_soul_to_sprite_slightly(delta_time)
 
+            if self.continue_option_selected:
+                self.continue_brightness_sprite.alpha = min(255, self.continue_brightness_sprite.alpha + (128 * delta_time))
+
     def load_next_dialog_in_text_box(self):
         """
         Loads the next dialog into the text box.
@@ -492,10 +510,10 @@ class GameOverAnimation(MultiSpriteAnimation):
         Moves the blurry soul to the continue option.
         :return: None
         """
-        if self.continue_options_loaded and not self.continue_option_selected:
+        if self.continue_options_loaded and not self.continue_option_focused:
             self.move_blurry_soul_to_sprite(self.continue_option_sprite)
-            self.continue_option_selected = True
-            self.give_up_option_selected = False
+            self.continue_option_focused = True
+            self.give_up_option_focused = False
             self.continue_option_sprite.set_texture(1)
             self.give_up_option_sprite.set_texture(0)
             print(len(self.continue_option_sprite.textures))
@@ -505,9 +523,22 @@ class GameOverAnimation(MultiSpriteAnimation):
         Moves the blurry soul to the give up option.
         :return: None
         """
-        if self.continue_options_loaded and not self.give_up_option_selected:
+        if self.continue_options_loaded and not self.give_up_option_focused:
             self.move_blurry_soul_to_sprite(self.give_up_option_sprite)
-            self.continue_option_selected = False
-            self.give_up_option_selected = True
+            self.continue_option_focused = False
+            self.give_up_option_focused = True
             self.continue_option_sprite.set_texture(0)
             self.give_up_option_sprite.set_texture(1)
+
+    def select_option(self):
+        """
+        Selects the currently hovered over option.
+        :return: None
+        """
+        if self.continue_option_focused:
+            self.continue_option_selected = True
+            self.music_player.stop_sound()
+            self.continue_sound.play()
+
+        if self.give_up_option_focused:
+            self.give_up_option_selected = True

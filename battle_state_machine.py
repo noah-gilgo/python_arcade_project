@@ -1414,7 +1414,11 @@ class SelectCommand(Command):
                     self.controller.start_enemy_attack()
 
             case BattleState.DEFEAT:
-                self.controller.game_over_animation.load_next_dialog_in_text_box()
+                if not self.controller.game_over_animation.continue_options_loaded:
+                    self.controller.game_over_animation.load_next_dialog_in_text_box()
+                else:
+                    if not (self.controller.game_over_animation.continue_option_selected or self.controller.game_over_animation.give_up_option_selected):
+                        self.controller.game_over_animation.select_option()
 
 
 class CancelCommand(Command):
@@ -1498,7 +1502,8 @@ class RightCommand(Command):
                         )
         else:
             if self.controller.state == BattleState.DEFEAT:
-                self.controller.game_over_animation.move_blurry_soul_to_give_up_option()
+                if not (self.controller.game_over_animation.continue_option_selected or self.controller.game_over_animation.give_up_option_selected):
+                    self.controller.game_over_animation.move_blurry_soul_to_give_up_option()
 
 
 class LeftCommand(Command):
@@ -1534,7 +1539,8 @@ class LeftCommand(Command):
                         )
         else:
             if self.controller.state == BattleState.DEFEAT:
-                self.controller.game_over_animation.move_blurry_soul_to_continue_option()
+                if not (self.controller.game_over_animation.continue_option_selected or self.controller.game_over_animation.give_up_option_selected):
+                    self.controller.game_over_animation.move_blurry_soul_to_continue_option()
 
 class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """
