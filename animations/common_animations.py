@@ -164,10 +164,11 @@ class GameOverAnimation(MultiSpriteAnimation):
     """
     The animation that plays when the game ends in player defeat.
     """
-    def __init__(self, soul: Soul, music_player: MusicPlayer, sprites_and_effects_collection):
+    def __init__(self, soul: Soul, music_player: MusicPlayer, sprites_and_effects_collection, controller):
         self.soul = soul
         self.music_player = music_player
         self.sprites_and_effects_collection = sprites_and_effects_collection
+        self.controller = controller
 
         self.soul.graze_sprite.visible = False
         self.soul.visible = False
@@ -386,6 +387,10 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.continue_option_focused = False
         self.give_up_option_focused = False
 
+        # Variables used during the CONTINUE animation
+        self.continue_animation_timer = 0.0
+        self.continue_animation_total_duration = 4.0
+
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
 
@@ -450,7 +455,11 @@ class GameOverAnimation(MultiSpriteAnimation):
                     self.move_blurry_soul_to_sprite_slightly(delta_time)
 
             if self.continue_option_selected:
-                self.continue_brightness_sprite.alpha = min(255, self.continue_brightness_sprite.alpha + (128 * delta_time))
+                self.continue_animation_timer += delta_time
+                self.continue_brightness_sprite.alpha = min(255, self.continue_brightness_sprite.alpha + (96 * delta_time))
+                if self.continue_animation_timer >= self.continue_animation_total_duration:
+                    self.terminate_animation()
+                    self.controller.reset_battle()
 
     def load_next_dialog_in_text_box(self):
         """

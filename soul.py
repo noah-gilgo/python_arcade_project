@@ -120,6 +120,13 @@ class Soul(arcade.Sprite):
         """
         self.is_alive = False
 
+    def resume_updates(self):
+        """
+        Enable the update loop for the soul.
+        :return: None
+        """
+        self.is_alive = True
+
     def enable_soul_movement(self):
         self.soul_movement_enabled = True
 

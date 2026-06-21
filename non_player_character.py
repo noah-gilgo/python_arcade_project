@@ -114,7 +114,8 @@ class NonPlayerCharacter(character.Character):
         Terminates all bullet patterns spawned by the enemy and kills their sprites.
         :return: None
         """
-        self.current_attack.terminate_attack()
+        if self.current_attack:
+            self.current_attack.terminate_attack()
         self.current_attack = None
 
     def receive_damage(self, damage_dealt: float, attacker, controller):

@@ -91,3 +91,16 @@ class SpritesAndEffectsCollection:
         self.is_drawing_bullet_sprites = False
         self.is_drawing_soul_sprites = True
 
+    def resume_game(self):
+        """
+        Re-enables the draw loop for all sprites.
+        :return: None
+        """
+        self.is_drawing_background_sprites = True
+        self.is_drawing_character_sprites = True
+        self.is_drawing_gui_sprites = True
+        self.is_drawing_effects_sprites = True
+        self.is_drawing_speech_bubble_sprites = True
+        self.is_drawing_bullet_sprites = True
+        self.is_drawing_soul_sprites = True
+

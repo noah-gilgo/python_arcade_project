@@ -83,6 +83,12 @@ class BattleController:
         self.tp_meter = tp_meter
         self.players = players
         self.enemies = enemies
+        self.initial_players = []
+        for player in self.players:
+            self.initial_players.append(player)
+        self.initial_enemies = []
+        for enemy in self.enemies:
+            self.initial_enemies.append(enemy)
         self.bullet_board = bullet_board
 
         # This variable controls whether the battle is scripted (typically a boss/miniboss battle).
@@ -226,7 +232,7 @@ class BattleController:
         self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
         self.fight_hit_markers = []
 
-        # All of the clocks used by the BattleController.
+        # All the clocks used by the BattleController.
         # The clock used by the fight bars.
         self.fight_bar_clock = 0.0
         self.fight_bar_clock_is_updating = False
@@ -241,7 +247,7 @@ class BattleController:
         self.enemy_hit_sound_player = None
 
         # The SOUL the player moves around during enemy attacks.
-        self.soul = Soul(self.players[0], self)
+        self.soul = Soul(self.players[0], self)  # Give the soul to whichever player you prefer. Soul wielders can still use magic if you want them to
         self.sprites_and_effects_collection.soul_sprites.append(self.soul)
 
         # A variable tracking whether the bullet board has been loaded for the current turn.
@@ -256,6 +262,77 @@ class BattleController:
         self.down_pressed = False
         self.left_pressed = False
         self.right_pressed = False
+
+    def reset_battle(self):
+        """
+        Reverts the battle back to its original state.
+        :return:
+        """
+        self.state = BattleState.PLAYER_COMMAND
+        self.turn = 0
+        self.selected_command = None
+        self.selected_target = None
+
+        self.players = self.initial_players
+        for player in self.players:
+            player.hp = player.max_hp
+        self.enemies = self.initial_enemies
+        for enemy in self.enemies:
+            enemy.hp = enemy.max_hp
+
+        self.soul.resume_updates()
+        self.soul.center_x = self.soul.player_with_soul.center_x
+        self.soul.center_y = self.soul.player_with_soul.center_y
+        self.soul.visible = False
+        self.soul.soul_movement_enabled = False
+
+        self.tp_meter.update_tp_meter(-100.0)
+
+        self.soul = Soul(self.players[0], self)
+        self.current_player_index = 0
+
+        self.enemies_defeated_violently = 0
+
+        self.game_over_animation = None
+
+        self.current_dialog_exchange = None
+
+        self.active_speech_bubbles = []
+
+        self.update_sprites_on_screen = True
+
+        self.load_bullet_board_called_for_this_turn = False
+
+        # The queue of actions selected by the player for each character.
+        self.actions_queue = ActionsQueue()
+        self.sorted_actions_queue = {}
+
+        self.items = items.consumable_items.initialize_default_consumable_items()
+
+        self.fight_box_sprites_array = []
+        self.fight_crit_box_sprites_array = []
+        self.icon_and_press_sprites_array = []
+        self.blue_divider_lines_sprites_array = []
+        self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
+        self.fight_hit_markers = []
+
+        # All the clocks used by the BattleController.
+        # The clock used by the fight bars.
+        self.fight_bar_clock = 0.0
+        self.fight_bar_clock_is_updating = False
+
+        # The timer used by the enemy attack.
+        self.enemy_attack_time = 0.0
+        self.enemy_attack_duration = 10.0
+        self.enemy_is_attacking = False
+
+        self.battle_idle_callback = None
+        self.battle_idle_target = None
+        self.enemy_hit_sound_player = None
+
+        self.end_enemy_attack()
+        # self.move_to_first_not_downed_player_card()
+        self.sprites_and_effects_collection.resume_game()
 
     def add_key_pressed(self, key):
         """
@@ -362,6 +439,15 @@ class BattleController:
         :return: None
         """
         self.sprites_and_effects_collection.effects.clear()
+
+    """
+    def resume_effects(self):
+        
+        #Clears all the effects being updated by the sprites and effects collection.
+        #:return: None
+        
+        self.sprites_and_effects_collection.effects.clear()
+    """
 
     def update_clocks(self, delta_time: float):
         """
@@ -504,7 +590,7 @@ class BattleController:
         Begins the game over animation.
         :return: None
         """
-        self.game_over_animation = GameOverAnimation(self.soul, self.music_player, self.sprites_and_effects_collection)
+        self.game_over_animation = GameOverAnimation(self.soul, self.music_player, self.sprites_and_effects_collection, self)
 
         self.sprites_and_effects_collection.effects.append(self.game_over_animation)
 
@@ -1122,21 +1208,21 @@ class BattleController:
         Ends the enemy attack.
         :return:
         """
-        if self.state == BattleState.ENEMY_ATTACK:
-            # Terminate all the currently active enemy attacks
-            if len(self.enemies) > 0:
-                for enemy in self.enemies:
+        # Terminate all the currently active enemy attacks
+        if len(self.enemies) > 0:
+            for enemy in self.enemies:
+                if enemy:
                     enemy.terminate_attack()
 
-            # Set all the defending players to not be defending.
-            for player in self.players:
-                if player.is_defending:
-                    player.undefend()
+        # Set all the defending players to not be defending.
+        for player in self.players:
+            if player.is_defending:
+                player.undefend()
 
-            # Return the state of the battle back to the starting state.
-            self.unload_bullet_board()
-            self.stop_enemy_attack_clock()
-            self.load_bullet_board_called_for_this_turn = False
+        # Return the state of the battle back to the starting state.
+        self.unload_bullet_board()
+        self.stop_enemy_attack_clock()
+        self.load_bullet_board_called_for_this_turn = False
 
     def change_player_icon(self, icon_path: str = ""):
         """ Changes the icon of the current player to the icon at the given path. """
