@@ -2,7 +2,7 @@
 import random
 
 import arcade.color
-from arcade import Sprite, Rect, LRBT, Texture
+from arcade import Sprite, Rect, LRBT, Texture, Text
 from arcade.easing import ease_in, ease_out
 #from arcade.easing import ease_in_out, ease_in
 from arcade.types import Color
@@ -190,45 +190,65 @@ class GameOverAnimation(MultiSpriteAnimation):
         )
         self.blurry_soul_sprite.alpha = 0
 
+        """
+        continue_option_sprite_texture = arcade.create_text_sprite(
+            text="CONTINUE",
+            font_name="8bitoperator JVE",
+            font_size=48,
+            color=(255, 255, 255, 255)
+        ).texture
+        """
+
+        continue_option_sprite_highlight_texture = arcade.create_text_sprite(
+            text="CONTINUE",
+            font_name="8bitoperator JVE",
+            font_size=48,
+            color=(255, 255, 0, 255)
+        ).texture
+
         self.continue_option_sprite = arcade.create_text_sprite(
             text="CONTINUE",
             font_name="8bitoperator JVE",
             font_size=48,
-            color=arcade.color.NEON_GREEN
+            color=(255, 255, 255, 255)
         )
-        self.continue_option_sprite.alpha = 0
-        self.continue_option_sprite.center_x = settings.WINDOW_WIDTH * .35
-        self.continue_option_sprite.center_y = settings.WINDOW_HEIGHT * .2
+        self.continue_option_sprite.center_x = int(settings.WINDOW_WIDTH * .35)
+        self.continue_option_sprite.center_y = int(settings.WINDOW_HEIGHT * .2)
 
-        self.continue_option_sprite_highlight = arcade.create_text_sprite(
-            text="CONTINUE",
+        #self.continue_option_sprite.append_texture(continue_option_sprite_texture)
+        self.continue_option_sprite.append_texture(continue_option_sprite_highlight_texture)
+        self.continue_option_sprite.set_texture(0)
+        self.continue_option_sprite.alpha = 0
+
+        """
+        give_up_option_sprite_texture = arcade.create_text_sprite(
+            text="GIVE UP",
             font_name="8bitoperator JVE",
             font_size=48,
-            color=arcade.color.WHITE
-        )
-        self.continue_option_sprite_highlight.visible = False
-        self.continue_option_sprite_highlight.center_x = settings.WINDOW_WIDTH * .35
-        self.continue_option_sprite_highlight.center_y = settings.WINDOW_HEIGHT * .2
+            color=(255, 255, 255, 255)
+        ).texture
+        """
+
+        give_up_option_sprite_highlight_texture = arcade.create_text_sprite(
+            text="GIVE UP",
+            font_name="8bitoperator JVE",
+            font_size=48,
+            color=(255, 255, 0, 255)
+        ).texture
 
         self.give_up_option_sprite = arcade.create_text_sprite(
             text="GIVE UP",
             font_name="8bitoperator JVE",
             font_size=48,
-            color=arcade.color.NEON_GREEN
+            color=(255, 255, 255, 255)
         )
-        self.give_up_option_sprite.alpha = 0
-        self.give_up_option_sprite.center_x = settings.WINDOW_WIDTH * .65
-        self.give_up_option_sprite.center_y = settings.WINDOW_HEIGHT * .2
+        self.give_up_option_sprite.center_x = int(settings.WINDOW_WIDTH * .65)
+        self.give_up_option_sprite.center_y = int(settings.WINDOW_HEIGHT * .2)
 
-        self.give_up_option_sprite_highlight = arcade.create_text_sprite(
-            text="GIVE UP",
-            font_name="8bitoperator JVE",
-            font_size=48,
-            color=arcade.color.WHITE
-        )
-        self.give_up_option_sprite_highlight.visible = False
-        self.give_up_option_sprite_highlight.center_x = settings.WINDOW_WIDTH * .65
-        self.give_up_option_sprite_highlight.center_y = settings.WINDOW_HEIGHT * .2
+        #self.give_up_option_sprite.append_texture(give_up_option_sprite_texture)
+        self.give_up_option_sprite.append_texture(give_up_option_sprite_highlight_texture)
+        self.give_up_option_sprite.set_texture(0)
+        self.give_up_option_sprite.alpha = 0
 
         self.game_over_title_sprite = Sprite(
             path_or_texture="assets/sprites/game_over_title.png",
@@ -253,8 +273,6 @@ class GameOverAnimation(MultiSpriteAnimation):
                 self.blurry_soul_sprite,
                 self.continue_option_sprite,
                 self.give_up_option_sprite,
-                self.continue_option_sprite_highlight,
-                self.give_up_option_sprite_highlight
             ] + self.soul_fragments
         )
 
@@ -380,10 +398,10 @@ class GameOverAnimation(MultiSpriteAnimation):
                     self.load_continue_options = True
 
             if self.load_continue_options and not self.continue_options_loaded:
-                self.blurry_soul_sprite.alpha = (min(255, self.blurry_soul_sprite.alpha + (255 * delta_time)))
-                self.continue_option_sprite.alpha = (min(128, self.continue_option_sprite.alpha + (128 * delta_time)))
+                self.blurry_soul_sprite.alpha = (min(128, self.blurry_soul_sprite.alpha + (128 * delta_time)))
+                self.continue_option_sprite.alpha = (min(255, self.continue_option_sprite.alpha + (255 * delta_time)))
                 self.give_up_option_sprite.alpha = (min(255, self.give_up_option_sprite.alpha + (255 * delta_time)))
-                if self.blurry_soul_sprite.alpha >= 128:
+                if self.continue_option_sprite.alpha >= 255:
                     self.continue_options_loaded = True
                 else:
                     print(self.give_up_option_sprite.alpha, self.give_up_option_sprite.visible, self.give_up_option_sprite.center_x, self.give_up_option_sprite.center_y)
@@ -454,6 +472,9 @@ class GameOverAnimation(MultiSpriteAnimation):
             self.move_blurry_soul_to_sprite(self.continue_option_sprite)
             self.continue_option_selected = True
             self.give_up_option_selected = False
+            self.continue_option_sprite.set_texture(1)
+            self.give_up_option_sprite.set_texture(0)
+            print(len(self.continue_option_sprite.textures))
 
     def move_blurry_soul_to_give_up_option(self):
         """
@@ -464,3 +485,5 @@ class GameOverAnimation(MultiSpriteAnimation):
             self.move_blurry_soul_to_sprite(self.give_up_option_sprite)
             self.continue_option_selected = False
             self.give_up_option_selected = True
+            self.continue_option_sprite.set_texture(0)
+            self.give_up_option_sprite.set_texture(1)
