@@ -184,11 +184,34 @@ class GameOverAnimation(MultiSpriteAnimation):
 
         self.blurry_soul_sprite = Sprite(
             path_or_texture="assets/sprites/soul/soul_blurry.png",
-            scale=5.0,
+            scale=4.0,
             center_x=settings.WINDOW_CENTER_X,
             center_y=settings.WINDOW_HEIGHT * .2
         )
         self.blurry_soul_sprite.alpha = 0
+
+        # arcade.create_text_sprite has been oddly buggy for this feature. In the interim while I do not know the cause
+        # of this bugginess, I have manually made sprites for the options.
+        self.continue_option_sprite = Sprite(
+            path_or_texture="assets/sprites/game_over_screen/continue.png",
+            center_x=int(settings.WINDOW_WIDTH * .35),
+            center_y=int(settings.WINDOW_HEIGHT * .2)
+        )
+
+        self.continue_option_sprite.append_texture(arcade.load_texture("assets/sprites/game_over_screen/continue_highlighted.png"))
+        self.continue_option_sprite.set_texture(0)
+        self.continue_option_sprite.alpha = 0
+
+        self.give_up_option_sprite = Sprite(
+            path_or_texture="assets/sprites/game_over_screen/give_up.png",
+            center_x=int(settings.WINDOW_WIDTH * .65),
+            center_y=int(settings.WINDOW_HEIGHT * .2)
+        )
+
+        self.give_up_option_sprite.append_texture(
+            arcade.load_texture("assets/sprites/game_over_screen/give_up_highlighted.png"))
+        self.give_up_option_sprite.set_texture(0)
+        self.give_up_option_sprite.alpha = 0
 
         """
         continue_option_sprite_texture = arcade.create_text_sprite(
@@ -197,7 +220,7 @@ class GameOverAnimation(MultiSpriteAnimation):
             font_size=48,
             color=(255, 255, 255, 255)
         ).texture
-        """
+        
 
         continue_option_sprite_highlight_texture = arcade.create_text_sprite(
             text="CONTINUE",
@@ -220,14 +243,14 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.continue_option_sprite.set_texture(0)
         self.continue_option_sprite.alpha = 0
 
-        """
+        
         give_up_option_sprite_texture = arcade.create_text_sprite(
             text="GIVE UP",
             font_name="8bitoperator JVE",
             font_size=48,
             color=(255, 255, 255, 255)
         ).texture
-        """
+        
 
         give_up_option_sprite_highlight_texture = arcade.create_text_sprite(
             text="GIVE UP",
@@ -249,6 +272,7 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.give_up_option_sprite.append_texture(give_up_option_sprite_highlight_texture)
         self.give_up_option_sprite.set_texture(0)
         self.give_up_option_sprite.alpha = 0
+        """
 
         self.game_over_title_sprite = Sprite(
             path_or_texture="assets/sprites/game_over_title.png",
