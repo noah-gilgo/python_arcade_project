@@ -164,11 +164,11 @@ class GameOverAnimation(MultiSpriteAnimation):
     """
     The animation that plays when the game ends in player defeat.
     """
-    def __init__(self, soul: Soul, music_player: MusicPlayer, sprites_and_effects_collection, controller):
+    def __init__(self, soul: Soul, music_player: MusicPlayer, sprites_and_effects_collection, game_view):
         self.soul = soul
         self.music_player = music_player
         self.sprites_and_effects_collection = sprites_and_effects_collection
-        self.controller = controller
+        self.game_view = game_view
 
         self.soul.graze_sprite.visible = False
         self.soul.visible = False
@@ -459,7 +459,9 @@ class GameOverAnimation(MultiSpriteAnimation):
                 self.continue_brightness_sprite.alpha = min(255, self.continue_brightness_sprite.alpha + (96 * delta_time))
                 if self.continue_animation_timer >= self.continue_animation_total_duration:
                     self.terminate_animation()
-                    self.controller.reset_battle()
+                    self.game_view.__init__()
+                    self.game_view.setup()
+                    self.sprites_and_effects_collection.resume_game()
 
     def load_next_dialog_in_text_box(self):
         """

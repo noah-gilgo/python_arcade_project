@@ -65,8 +65,12 @@ class BattleController:
                  sprites_and_effects_collection: SpritesAndEffectsCollection,
                  tp_meter: battle_widgets.TPMeter,
                  bullet_board: BulletBoard,
-                 music_player: MusicPlayer):
+                 music_player: MusicPlayer,
+                 game_view):
         # TODO: move most of these parameters into the BattleController.
+
+        # The core GameView of the game.
+        self.game_view = game_view
 
         # Sprite lists that need to be accessed for animations.
         self.sprites_and_effects_collection = sprites_and_effects_collection
@@ -262,77 +266,6 @@ class BattleController:
         self.down_pressed = False
         self.left_pressed = False
         self.right_pressed = False
-
-    def reset_battle(self):
-        """
-        Reverts the battle back to its original state.
-        :return:
-        """
-        self.state = BattleState.PLAYER_COMMAND
-        self.turn = 0
-        self.selected_command = None
-        self.selected_target = None
-
-        self.players = self.initial_players
-        for player in self.players:
-            player.hp = player.max_hp
-        self.enemies = self.initial_enemies
-        for enemy in self.enemies:
-            enemy.hp = enemy.max_hp
-
-        self.soul.resume_updates()
-        self.soul.center_x = self.soul.player_with_soul.center_x
-        self.soul.center_y = self.soul.player_with_soul.center_y
-        self.soul.visible = False
-        self.soul.soul_movement_enabled = False
-
-        self.tp_meter.update_tp_meter(-100.0)
-
-        self.soul = Soul(self.players[0], self)
-        self.current_player_index = 0
-
-        self.enemies_defeated_violently = 0
-
-        self.game_over_animation = None
-
-        self.current_dialog_exchange = None
-
-        self.active_speech_bubbles = []
-
-        self.update_sprites_on_screen = True
-
-        self.load_bullet_board_called_for_this_turn = False
-
-        # The queue of actions selected by the player for each character.
-        self.actions_queue = ActionsQueue()
-        self.sorted_actions_queue = {}
-
-        self.items = items.consumable_items.initialize_default_consumable_items()
-
-        self.fight_box_sprites_array = []
-        self.fight_crit_box_sprites_array = []
-        self.icon_and_press_sprites_array = []
-        self.blue_divider_lines_sprites_array = []
-        self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
-        self.fight_hit_markers = []
-
-        # All the clocks used by the BattleController.
-        # The clock used by the fight bars.
-        self.fight_bar_clock = 0.0
-        self.fight_bar_clock_is_updating = False
-
-        # The timer used by the enemy attack.
-        self.enemy_attack_time = 0.0
-        self.enemy_attack_duration = 10.0
-        self.enemy_is_attacking = False
-
-        self.battle_idle_callback = None
-        self.battle_idle_target = None
-        self.enemy_hit_sound_player = None
-
-        self.end_enemy_attack()
-        # self.move_to_first_not_downed_player_card()
-        self.sprites_and_effects_collection.resume_game()
 
     def add_key_pressed(self, key):
         """
@@ -590,7 +523,7 @@ class BattleController:
         Begins the game over animation.
         :return: None
         """
-        self.game_over_animation = GameOverAnimation(self.soul, self.music_player, self.sprites_and_effects_collection, self)
+        self.game_over_animation = GameOverAnimation(self.soul, self.music_player, self.sprites_and_effects_collection, self.game_view)
 
         self.sprites_and_effects_collection.effects.append(self.game_over_animation)
 
@@ -613,6 +546,7 @@ class BattleController:
 
         # Stops sprites from being drawn to the screen.
         self.clear_effects()
+        #self.bullet_board.unload_bullet_board(self)
 
         pyglet.clock.schedule_once(lambda dt: self.sprites_and_effects_collection.game_over(), 0.8)
         pyglet.clock.schedule_once(lambda dt: self.spawn_game_over_animation(), 0.8)
@@ -1269,6 +1203,7 @@ class SelectCommand(Command):
     """ A command object representing the user selecting (usually pressing Z in the original game.) """
 
     def execute(self):
+        print(str(self.controller.state))
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
                 self.controller.menu_select_sound.play()

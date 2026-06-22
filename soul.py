@@ -113,6 +113,13 @@ class Soul(arcade.Sprite):
         self.player_hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
         self.graze_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_graze.wav", False)
 
+    def reset_soul(self):
+        """
+        Resets the soul to its original state.
+        :return: None
+        """
+        self.__init__(self.player_with_soul, self.controller)
+
     def kill_updates(self):
         """
         Disables the update loop for the soul.

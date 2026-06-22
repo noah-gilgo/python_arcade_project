@@ -262,7 +262,8 @@ class GameView(arcade.View):
             sprites_and_effects_collection=self.sprites_and_effects_collection,
             tp_meter=self.tp_meter,
             bullet_board=self.bullet_board,
-            music_player=self.music_player
+            music_player=self.music_player,
+            game_view=self
         )
 
     def on_draw(self):
