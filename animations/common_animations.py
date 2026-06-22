@@ -456,7 +456,7 @@ class GameOverAnimation(MultiSpriteAnimation):
 
             if self.continue_option_selected:
                 self.continue_animation_timer += delta_time
-                self.continue_brightness_sprite.alpha = min(255, self.continue_brightness_sprite.alpha + (96 * delta_time))
+                self.continue_brightness_sprite.alpha = min(255, self.continue_brightness_sprite.alpha + (124 * delta_time))
                 if self.continue_animation_timer >= self.continue_animation_total_duration:
                     self.terminate_animation()
                     self.game_view.__init__()

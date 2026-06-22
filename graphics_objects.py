@@ -18,6 +18,9 @@ class AnimatedSprite:
     def reset_age(self):
         self.age = 0.0
 
+    def kill(self):
+        self.sprite.kill()
+
 
 class SimpleLoopAnimation:
     """
