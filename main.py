@@ -1,6 +1,6 @@
 import arcade
 import pyglet
-from arcade import SpriteList
+from arcade import SpriteList, Window
 from arcade.gui import UIManager
 from arcade.types import Color
 

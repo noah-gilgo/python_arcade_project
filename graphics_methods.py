@@ -126,6 +126,7 @@ def instantly_terminate_depths_animation(sprite_list: list[arcade.Sprite]):
     for frame in depths_frame_array:
         if frame.sprite in sprite_list:
             sprite_list.remove(frame.sprite)
+            frame.sprite.kill()
     depths_frame_array.clear()
 
 

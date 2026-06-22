@@ -7,6 +7,7 @@ from arcade.easing import ease_in, ease_out
 #from arcade.easing import ease_in_out, ease_in
 from arcade.types import Color
 
+import graphics_methods
 import settings
 import texture_methods
 from graphics_methods import make_texture_solid_color, ease_out
@@ -389,16 +390,18 @@ class GameOverAnimation(MultiSpriteAnimation):
 
         # Variables used during the CONTINUE animation
         self.continue_animation_timer = 0.0
-        self.continue_animation_total_duration = 4.0
+        self.continue_animation_total_duration = 3.5
 
         # Variables used during the GIVE UP animation
         self.give_up_animation_timer = 0.0
+        self.begin_unloading_continue_options = False
         self.him_text_line_1 = None
         self.him_text_line_2 = None
         self.him_text_line_3 = None
         self.him_text_line_1_not_loaded = True
         self.him_text_line_2_not_loaded = True
         self.him_text_line_3_not_loaded = True
+        self.him_textboxes_not_despawned = True
 
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
@@ -430,7 +433,7 @@ class GameOverAnimation(MultiSpriteAnimation):
                 self.faint_courage_not_playing = False
 
             if self.game_over_title_sprite.alpha < 255:
-                self.game_over_title_sprite.alpha = min(255, self.game_over_title_sprite.alpha + 4)
+                self.game_over_title_sprite.alpha = min(255, self.game_over_title_sprite.alpha + (240 * delta_time))
 
         elif 7.0 <= self.time:
             if self.text_box_not_loaded:
@@ -450,14 +453,26 @@ class GameOverAnimation(MultiSpriteAnimation):
                 else:
                     self.load_continue_options = True
 
-            if self.load_continue_options and not self.continue_options_loaded:
-                self.blurry_soul_sprite.alpha = (min(128, self.blurry_soul_sprite.alpha + (128 * delta_time)))
-                self.continue_option_sprite.alpha = (min(255, self.continue_option_sprite.alpha + (255 * delta_time)))
-                self.give_up_option_sprite.alpha = (min(255, self.give_up_option_sprite.alpha + (255 * delta_time)))
-                if self.continue_option_sprite.alpha >= 255:
-                    self.continue_options_loaded = True
+            if self.load_continue_options:
+                if self.continue_options_loaded:
+                    if self.begin_unloading_continue_options:
+                        if self.give_up_option_sprite.alpha > 0:
+                            # Slowly fade out the options and the blurry soul
+                            self.blurry_soul_sprite.alpha = (max(0, self.blurry_soul_sprite.alpha - (256 * delta_time)))
+                            self.continue_option_sprite.alpha = (
+                                max(0, self.continue_option_sprite.alpha - (512 * delta_time)))
+                            self.give_up_option_sprite.alpha = (max(0, self.give_up_option_sprite.alpha - (512 * delta_time)))
                 else:
-                    print(self.give_up_option_sprite.alpha, self.give_up_option_sprite.visible, self.give_up_option_sprite.center_x, self.give_up_option_sprite.center_y)
+                    # Slowly fade in the options and the blurry soul
+                    self.blurry_soul_sprite.alpha = (min(128, self.blurry_soul_sprite.alpha + (128 * delta_time)))
+                    self.continue_option_sprite.alpha = (
+                        min(255, self.continue_option_sprite.alpha + (255 * delta_time)))
+                    self.give_up_option_sprite.alpha = (min(255, self.give_up_option_sprite.alpha + (255 * delta_time)))
+                    if self.continue_option_sprite.alpha >= 255:
+                        self.continue_options_loaded = True
+                    else:
+                        print(self.give_up_option_sprite.alpha, self.give_up_option_sprite.visible,
+                              self.give_up_option_sprite.center_x, self.give_up_option_sprite.center_y)
 
             if self.continue_options_loaded:
                 if self.blurry_soul_moving:
@@ -479,8 +494,9 @@ class GameOverAnimation(MultiSpriteAnimation):
                         self.him_text_line_1.load_dialog(
                             SpriteTextBoxDialog(
                                 text="THEN THE WORLD",
-                                text_spacing=10,
-                                text_sound_path=""
+                                text_spacing=16,
+                                text_sound_path="",
+                                rate_of_text=0.07
                             )
                         )
                         self.him_text_line_1_not_loaded = False
@@ -491,8 +507,9 @@ class GameOverAnimation(MultiSpriteAnimation):
                         self.him_text_line_2.load_dialog(
                             SpriteTextBoxDialog(
                                 text="WAS COVERED",
-                                text_spacing=10,
-                                text_sound_path=""
+                                text_spacing=16,
+                                text_sound_path="",
+                                rate_of_text=0.07
                             )
                         )
                         self.him_text_line_2_not_loaded = False
@@ -503,13 +520,21 @@ class GameOverAnimation(MultiSpriteAnimation):
                         self.him_text_line_3.load_dialog(
                             SpriteTextBoxDialog(
                                 text="IN DARKNESS.",
-                                text_spacing=10,
-                                text_sound_path=""
+                                text_spacing=16,
+                                text_sound_path="",
+                                rate_of_text=0.07
                             )
                         )
                         self.him_text_line_3_not_loaded = False
                     else:
                         self.him_text_line_3.update_animation(delta_time)
+                elif 9.0 <= self.give_up_animation_timer < 76.0:
+                    if self.him_textboxes_not_despawned:
+                        self.despawn_him_textboxes()
+                        self.music_player.play_sound(sound_name="darkness_falls", loop=False)
+                elif 76.0 <= self.give_up_animation_timer:
+                    # Close the game.
+                    arcade.exit()
 
                 if self.him_text_line_1:
                     self.him_text_line_1.animate_letter_sprites(self.give_up_animation_timer)
@@ -537,13 +562,12 @@ class GameOverAnimation(MultiSpriteAnimation):
         :return:
         """
         self.load_continue_options = True
-
     def unload_continue_options(self):
         """
         Loads the CONTINUE and GIVE UP options, as well as the soul for choosing between them.
         :return:
         """
-        self.load_continue_options = False
+        self.begin_unloading_continue_options = True
 
     def move_blurry_soul_to_sprite(self, sprite: Sprite):
         """
@@ -613,6 +637,8 @@ class GameOverAnimation(MultiSpriteAnimation):
 
         if self.give_up_option_focused:
             self.give_up_option_selected = True
+            self.unload_continue_options()
+            self.game_over_title_sprite.visible = False
             self.him_text_line_1 = HimTextBox(
                 center_x=settings.WINDOW_CENTER_X,
                 center_y=int(settings.WINDOW_HEIGHT * .65),
@@ -636,3 +662,13 @@ class GameOverAnimation(MultiSpriteAnimation):
             )
 
         self.music_player.stop_sound()
+
+    def despawn_him_textboxes(self):
+        """
+        Despawns the HIM textboxes.
+        :return: None
+        """
+        self.him_text_line_1.despawn_text_box()
+        self.him_text_line_2.despawn_text_box()
+        self.him_text_line_3.despawn_text_box()
+        self.him_textboxes_not_despawned = False

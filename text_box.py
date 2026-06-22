@@ -347,3 +347,8 @@ class HimTextBox(SpriteTextBox):
 
         for sprite in self.text_effect_sprites:
             sprite.alpha = alpha
+
+    def despawn_text_box(self):
+        super().despawn_text_box()
+        for sprite in self.text_effect_sprites:
+            sprite.kill()

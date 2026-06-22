@@ -5,7 +5,8 @@ class MusicPlayer:
     def __init__(self):
         self.songs = {
             "another_him": arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav"),
-            "faint_courage": arcade.load_sound("assets/audio/songs/faint-courage.wav")
+            "faint_courage": arcade.load_sound("assets/audio/songs/faint-courage.wav"),
+            "darkness_falls": arcade.load_sound("assets/audio/songs/darkness-falls.wav")
         }
 
         self.currently_playing_song_player = None
