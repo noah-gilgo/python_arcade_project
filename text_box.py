@@ -165,7 +165,6 @@ class SpriteTextBox(Sprite):
 
         character_sprite.center_x = character_x_coordinate
         character_sprite.center_y = character_y_coordinate
-        print(character, character_x_coordinate, character_y_coordinate, character_sprite.width, character_sprite.height, self.character_row_index, self.character_column_index)
 
         self.sprites_and_effects_collection.soul_sprites.append(character_sprite)
         self.sprites_associated_with_text_box.append(character_sprite)
@@ -267,8 +266,6 @@ class SpriteTextBox(Sprite):
         else:
             if not self.last_character_loaded:
                 self.last_character_loaded = True
-                for sprite in self.letter_sprites:
-                    print(sprite.center_x, sprite.center_y, sprite.alpha, sprite.visible)
 
     def despawn_text_box(self):
         """

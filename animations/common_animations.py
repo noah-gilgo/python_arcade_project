@@ -470,9 +470,6 @@ class GameOverAnimation(MultiSpriteAnimation):
                     self.give_up_option_sprite.alpha = (min(255, self.give_up_option_sprite.alpha + (255 * delta_time)))
                     if self.continue_option_sprite.alpha >= 255:
                         self.continue_options_loaded = True
-                    else:
-                        print(self.give_up_option_sprite.alpha, self.give_up_option_sprite.visible,
-                              self.give_up_option_sprite.center_x, self.give_up_option_sprite.center_y)
 
             if self.continue_options_loaded:
                 if self.blurry_soul_moving:

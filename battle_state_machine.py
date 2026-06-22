@@ -1203,7 +1203,6 @@ class SelectCommand(Command):
     """ A command object representing the user selecting (usually pressing Z in the original game.) """
 
     def execute(self):
-        print(str(self.controller.state))
         match self.controller.state:
             case BattleState.PLAYER_COMMAND:
                 self.controller.menu_select_sound.play()
