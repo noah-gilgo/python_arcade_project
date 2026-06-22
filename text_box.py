@@ -1,3 +1,5 @@
+import math
+
 import arcade
 from arcade import Sound, Sprite, Texture
 
@@ -185,6 +187,8 @@ class SpriteTextBox(Sprite):
         else:
             self.character_column_index += 1
 
+        return character_sprite
+
         """
         if self.character_column_index < self.column_count:
             self.character_column_index += 1
@@ -221,7 +225,10 @@ class SpriteTextBox(Sprite):
         self.text_spacing = text_box_dialog.text_spacing
         self.line_spacing = text_box_dialog.line_spacing
         self.rate_of_text = text_box_dialog.rate_of_text
-        self.text_sound = arcade.load_sound(text_box_dialog.text_sound_path)
+        if text_box_dialog.text_sound_path:
+            self.text_sound = arcade.load_sound(text_box_dialog.text_sound_path)
+        else:
+            self.text_sound = None
         self.text_font_name = text_box_dialog.font_name
         self.font_sprite_sheet_path = text_box_dialog.font_sprite_sheet_path
         self.character_width = text_box_dialog.character_width
@@ -255,7 +262,8 @@ class SpriteTextBox(Sprite):
                 self.time_elapsed_since_last_character -= self.rate_of_text
                 # Attempt to add a character to the text box.
                 self.add_character_to_text_box()
-                self.text_sound.play()
+                if self.text_sound:
+                    self.text_sound.play()
         else:
             if not self.last_character_loaded:
                 self.last_character_loaded = True
@@ -271,3 +279,71 @@ class SpriteTextBox(Sprite):
             self.sprites_and_effects_collection.effects.remove(self)
         for sprite in self.sprites_associated_with_text_box:
             sprite.kill()
+
+
+class HimTextBox(SpriteTextBox):
+    """
+    A textbox representing the "voice" that plays in the GONERMAKER section of the game.
+    """
+    def __init__(
+        self,
+        center_x: int = 0,
+        center_y: int = 0,
+        width: int = 200,
+        height: int = 100,
+        sprites_and_effects_collection: SpritesAndEffectsCollection = None
+    ):
+        super().__init__(
+            center_x,
+            center_y,
+            width,
+            height,
+            sprites_and_effects_collection
+        )
+
+        self.text_effect_sprites = []
+
+        self.min_alpha = 24
+        self.max_alpha = 56
+        self.delta_alpha = self.max_alpha - self.min_alpha
+        self.animation_duration = 3
+
+    def add_character_to_text_box(self):
+        character_sprite = super().add_character_to_text_box()
+        offset_in_pixels = int(self.text_font_size / 12)
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if i != 0 or j != 0:
+                    x_offset = offset_in_pixels * i
+                    y_offset = offset_in_pixels * j
+                    adjacent_character_sprite = Sprite(
+                        path_or_texture=character_sprite.texture,
+                        center_x=character_sprite.center_x + x_offset,
+                        center_y=character_sprite.center_y + y_offset
+                    )
+
+                    adjacent_character_sprite.alpha = 16
+
+                    self.text_effect_sprites.append(adjacent_character_sprite)
+                    self.sprites_and_effects_collection.soul_sprites.append(adjacent_character_sprite)
+
+        return character_sprite
+
+    def animate_letter_sprites(self, time: float):
+        """
+        period_adjusted_time = time % self.animation_duration
+        if period_adjusted_time < self.animation_duration * .25:
+            alpha = self.min_alpha + (self.delta_alpha * (period_adjusted_time * (self.animation_duration / 2)))
+        elif self.animation_duration * .25 <= period_adjusted_time < self.animation_duration * .5:
+            alpha = self.max_alpha
+        elif self.animation_duration * .5 <= period_adjusted_time < self.animation_duration * .75:
+            alpha = self.max_alpha - (self.delta_alpha * ((period_adjusted_time - (self.animation_duration / 2)) * (self.animation_duration / 2)))
+        else:
+            alpha = self.min_alpha
+        """
+        theta = (time / self.animation_duration) * (2 * math.pi)
+
+        alpha = self.min_alpha + (self.delta_alpha * (math.sin(theta) + 1) / 2)
+
+        for sprite in self.text_effect_sprites:
+            sprite.alpha = alpha

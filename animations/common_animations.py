@@ -16,7 +16,7 @@ import math
 
 from music_player import MusicPlayer
 from soul import Soul
-from text_box import SpriteTextBox, SpriteTextBoxDialog
+from text_box import SpriteTextBox, SpriteTextBoxDialog, HimTextBox
 
 
 class ShakeAnimation(SingleSpriteAnimation):
@@ -391,6 +391,15 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.continue_animation_timer = 0.0
         self.continue_animation_total_duration = 4.0
 
+        # Variables used during the GIVE UP animation
+        self.give_up_animation_timer = 0.0
+        self.him_text_line_1 = None
+        self.him_text_line_2 = None
+        self.him_text_line_3 = None
+        self.him_text_line_1_not_loaded = True
+        self.him_text_line_2_not_loaded = True
+        self.him_text_line_3_not_loaded = True
+
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
 
@@ -463,6 +472,52 @@ class GameOverAnimation(MultiSpriteAnimation):
                     self.game_view.setup()
                     self.sprites_and_effects_collection.resume_game()
 
+            if self.give_up_option_selected:
+                self.give_up_animation_timer += delta_time
+                if self.give_up_animation_timer < 2.0:
+                    if self.him_text_line_1_not_loaded:
+                        self.him_text_line_1.load_dialog(
+                            SpriteTextBoxDialog(
+                                text="THEN THE WORLD",
+                                text_spacing=10,
+                                text_sound_path=""
+                            )
+                        )
+                        self.him_text_line_1_not_loaded = False
+                    else:
+                        self.him_text_line_1.update_animation(delta_time)
+                elif 2.0 <= self.give_up_animation_timer < 4.0:
+                    if self.him_text_line_2_not_loaded:
+                        self.him_text_line_2.load_dialog(
+                            SpriteTextBoxDialog(
+                                text="WAS COVERED",
+                                text_spacing=10,
+                                text_sound_path=""
+                            )
+                        )
+                        self.him_text_line_2_not_loaded = False
+                    else:
+                        self.him_text_line_2.update_animation(delta_time)
+                elif 4.0 <= self.give_up_animation_timer < 6.0:
+                    if self.him_text_line_3_not_loaded:
+                        self.him_text_line_3.load_dialog(
+                            SpriteTextBoxDialog(
+                                text="IN DARKNESS.",
+                                text_spacing=10,
+                                text_sound_path=""
+                            )
+                        )
+                        self.him_text_line_3_not_loaded = False
+                    else:
+                        self.him_text_line_3.update_animation(delta_time)
+
+                if self.him_text_line_1:
+                    self.him_text_line_1.animate_letter_sprites(self.give_up_animation_timer)
+                if self.him_text_line_2:
+                    self.him_text_line_2.animate_letter_sprites(self.give_up_animation_timer)
+                if self.him_text_line_3:
+                    self.him_text_line_3.animate_letter_sprites(self.give_up_animation_timer)
+
     def load_next_dialog_in_text_box(self):
         """
         Loads the next dialog into the text box.
@@ -482,6 +537,13 @@ class GameOverAnimation(MultiSpriteAnimation):
         :return:
         """
         self.load_continue_options = True
+
+    def unload_continue_options(self):
+        """
+        Loads the CONTINUE and GIVE UP options, as well as the soul for choosing between them.
+        :return:
+        """
+        self.load_continue_options = False
 
     def move_blurry_soul_to_sprite(self, sprite: Sprite):
         """
@@ -527,7 +589,6 @@ class GameOverAnimation(MultiSpriteAnimation):
             self.give_up_option_focused = False
             self.continue_option_sprite.set_texture(1)
             self.give_up_option_sprite.set_texture(0)
-            print(len(self.continue_option_sprite.textures))
 
     def move_blurry_soul_to_give_up_option(self):
         """
@@ -548,8 +609,30 @@ class GameOverAnimation(MultiSpriteAnimation):
         """
         if self.continue_option_focused:
             self.continue_option_selected = True
-            self.music_player.stop_sound()
             self.continue_sound.play()
 
         if self.give_up_option_focused:
             self.give_up_option_selected = True
+            self.him_text_line_1 = HimTextBox(
+                center_x=settings.WINDOW_CENTER_X,
+                center_y=int(settings.WINDOW_HEIGHT * .65),
+                width=700,
+                height=50,
+                sprites_and_effects_collection=self.sprites_and_effects_collection
+            )
+            self.him_text_line_2 = HimTextBox(
+                center_x=settings.WINDOW_CENTER_X,
+                center_y=int(settings.WINDOW_HEIGHT * .56),
+                width=700,
+                height=50,
+                sprites_and_effects_collection=self.sprites_and_effects_collection
+            )
+            self.him_text_line_3 = HimTextBox(
+                center_x=settings.WINDOW_CENTER_X,
+                center_y=int(settings.WINDOW_HEIGHT * .47),
+                width=700,
+                height=50,
+                sprites_and_effects_collection=self.sprites_and_effects_collection
+            )
+
+        self.music_player.stop_sound()
