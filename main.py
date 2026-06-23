@@ -14,6 +14,7 @@ import sound_methods
 import graphics_methods
 import dialogue_box
 import battle_widgets
+from animations.background_animations import DepthsBackgroundAnimation
 from battle_state_machine import BattleController
 import items.armor_items
 from bullet_board import BulletBoard
@@ -151,6 +152,8 @@ class GameView(arcade.View):
         self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(3)
 
+        self.background_animation = None
+
     def setup(self):
         # The bullet board used during the enemy attack.
         self.bullet_board = BulletBoard()
@@ -245,7 +248,9 @@ class GameView(arcade.View):
         sound_methods.gradually_update_pitch(self.music_player.currently_playing_song_player, 1.0, 0.02, 0.05)
 
         # Animate the background of the GONERMAKER.
-        graphics_methods.animate_depths(self.sprites_and_effects_collection.background_sprites)
+        # graphics_methods.animate_depths(self.sprites_and_effects_collection.background_sprites)
+        self.background_animation = DepthsBackgroundAnimation(self.sprites_and_effects_collection)
+        self.sprites_and_effects_collection.effects.append(self.background_animation)
 
         # Initialize the GUI.
         self.text_box = dialogue_box.TextBox()

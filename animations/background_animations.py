@@ -62,8 +62,8 @@ class DepthsBackgroundAnimation:
                 frame.reset_age()
             else:
                 frame.age += delta_time
-                sprite.scale_x += self.depths_animation_scale_increment
-                sprite.scale_y += self.depths_animation_scale_increment
+                sprite.scale_x += self.depths_animation_scale_increment * delta_time * 20
+                sprite.scale_y += self.depths_animation_scale_increment * delta_time * 20
                 alpha = -abs(math.ceil(
                     (self.depths_animation_coefficient * frame.age) - self.depths_animation_max_alpha)) + self.depths_animation_max_alpha
                 if alpha < 0:
