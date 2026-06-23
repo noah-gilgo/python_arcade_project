@@ -144,7 +144,6 @@ class NonPlayerCharacter(character.Character):
 
         if damage_dealt <= 0:
             damage_dealt_text = "MISS"
-            damage_dealt_color = arcade.color.WHITE
 
         else:
             target.hp -= damage_dealt
@@ -156,7 +155,7 @@ class NonPlayerCharacter(character.Character):
                 if target in target.enemies_list:
                     target.enemies_list.remove(target)
                 damage_dealt_text = "LOST"
-                damage_dealt_color = arcade.color.RED
+                damage_dealt_color = arcade.color.WHITE
                 self.enemy_flee_sound.play()
                 enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
                 self.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)

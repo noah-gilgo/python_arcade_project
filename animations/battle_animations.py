@@ -131,8 +131,6 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         else: # if type == int
             text_string = str(text)
 
-        print(text_string)
-
         # If the text string matches one of the pre-existing image textures
         if text_string in ("MISS", "DOWN", "MAX", "UP", "100%", "RECRUIT", "LOST", "FROZEN", "SWOON", "TIRED", "AWAKE",
                            "PURIFIED"):
@@ -176,12 +174,17 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         self.sprite.scale_x = 2.0 * self.scale_multiplier
         self.sprite.scale_y = 0.1 * self.scale_multiplier
+
+        print(color)
+        print(type(color))
+        print(color.rgb if isinstance(color, Color) else color)
+
         if isinstance(color, Color):
             self.sprite.color = color.rgb
-        elif is_iterable(color) and len(color) in (3, 4):
+        elif is_iterable(color) and len(color) == 3:
             self.sprite.color = color
         else:
-            self.sprite.color = (255, 255, 255, 255)
+            self.sprite.color = (255, 255, 255)
 
         self.time_after_initial_slide = 0
 

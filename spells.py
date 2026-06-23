@@ -84,7 +84,7 @@ class Spell:
                 if self.element_id == 8: # Fire/Ice
                     if self.name.lower() == "iceshock":
                         damage_dealt_text = "FROZEN"
-                        damage_dealt_color = arcade.color.CYAN
+                        damage_dealt_color = arcade.color.WHITE
                         freeze_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav", False)
                         freeze_sound.play()
                         target.non_idle_timer = 0
@@ -96,7 +96,7 @@ class Spell:
                         controller.enemies.remove(target)
                 else:
                     damage_dealt_text = "LOST"
-                    damage_dealt_color = arcade.color.RED
+                    damage_dealt_color = arcade.color.WHITE
                     controller.enemy_flee_sound.play()
                     enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
                     controller.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)
