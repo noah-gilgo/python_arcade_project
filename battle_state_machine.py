@@ -1153,6 +1153,9 @@ class BattleController:
             if player.is_defending:
                 player.undefend()
 
+        # Set all the character HUD buttons to focus their first button.
+        self.focus_all_first_battle_hud_buttons()
+
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
         self.stop_enemy_attack_clock()
@@ -1188,6 +1191,21 @@ class BattleController:
         for player in self.players:
             if player.hp > 0:
                 player.set_animation_state("battle_idle")
+
+    def focus_all_first_battle_hud_buttons(self):
+        """
+        Returns focus to the first button in every battle HUD.
+        :return: None
+        """
+        for clamshell in self.battle_player_character_cards:
+            button_layout = clamshell.children[0]
+            button_index = 0
+            for button in button_layout.children:
+                if button_index == 0:
+                    button.focused = True
+                else:
+                    button.focused = False
+                button_index += 1
 
 class Command:
     """ The default command object. Represents the Command design pattern. """

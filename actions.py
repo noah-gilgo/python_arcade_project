@@ -330,8 +330,8 @@ class SpareAction(Action):
             spare_percent_number_animation = NumberBounceAnimation(
                 target=self.target,
                 text="+10%",
-                color=arcade.color.GOLD,
                 sprites_and_effects_collection=self.controller.sprites_and_effects_collection,
+                is_golden=True
             )
 
             pyglet.clock.schedule_once(
