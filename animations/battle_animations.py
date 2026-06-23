@@ -121,7 +121,7 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         self.text_sprites = []
         self.target = target
         self.current_sprite_center_x = self.target.right + 24
-        self.current_sprite_center_y = self.target.center_y - 24 + (self.target.times_struck_this_turn * 40)
+        self.current_sprite_center_y = self.target.center_y - 24 + (self.target.number_bounce_index * 40)
 
         # Prevents the sprites from being tinier than they should be.
         self.scale_multiplier = 4.5
@@ -175,10 +175,6 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         self.sprite.scale_x = 2.0 * self.scale_multiplier
         self.sprite.scale_y = 0.1 * self.scale_multiplier
 
-        print(color)
-        print(type(color))
-        print(color.rgb if isinstance(color, Color) else color)
-
         if isinstance(color, Color):
             self.sprite.color = color.rgb
         elif is_iterable(color) and len(color) == 3:
@@ -191,10 +187,11 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         self.number_has_not_bounced = True
         self.time_after_bounce = 0
         self.total_duration = 3.0
-        self.floor = (self.target.center_y - 56) + (self.target.times_struck_this_turn * 40)
+        self.floor = (self.target.center_y - 56) + (self.target.number_bounce_index * 40)
         self.number_has_not_bounced_again = True
 
-        self.target.times_struck_this_turn += 1
+        self.number_bounce_index_used_by_this_instance = self.target.number_bounce_index
+        self.target.number_bounce_index += 1
 
     def update_animation(self, delta_time: float = settings.FRAMERATE, *args, **kwargs) -> None:
         self.time += delta_time
@@ -234,7 +231,10 @@ class NumberBounceAnimation(SingleSpriteAnimation):
                 self.sprite.center_y += 180 * delta_time
 
         if self.time > self.total_duration:
+            self.terminate_animation()
             self.sprite.kill()
+            if self.number_bounce_index_used_by_this_instance == 0:
+                self.target.number_bounce_index = 0
 
 
 class EnemySparedAnimation(SingleSpriteAnimation):

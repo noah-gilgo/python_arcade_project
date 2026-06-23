@@ -1,5 +1,4 @@
 import random
-from copy import copy, deepcopy
 
 import arcade.color
 import pyglet.clock
@@ -10,7 +9,7 @@ import default_data
 from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
-from spell_animations import IceShockAnimation, FreezeAnimation
+from animations.spell_animations import IceShockAnimation, FreezeAnimation
 
 
 class Spell:
