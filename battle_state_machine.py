@@ -848,12 +848,11 @@ class BattleController:
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
 
-        """
         if is_crit:
             self.add_tp_to_meter(6.0)
         else:
             self.add_tp_to_meter(attack_damage_multiplier * 4.0)
-        """
+
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):
