@@ -55,6 +55,7 @@ class BattleMessageImageDict(dict):
             "6_golden",
             "7_golden",
             "8_golden",
+            "9_golden",
             "+_golden",
             "-_golden",
             "%_golden",
@@ -62,9 +63,11 @@ class BattleMessageImageDict(dict):
         ]
 
         images = load_images_at_filepath_into_image_array("assets/sprites/glyph_sprites/battle_message_sprites/numbers")
+        print("Number of images: " + str(len(images)))
+        print("Number of keys: " + str(len(keys)))
 
         image_index = 0
         for key in keys:
             self[key] = images[image_index]
             image_index += 1
-            print(key, images[image_index])
+            #print(key, images[image_index])

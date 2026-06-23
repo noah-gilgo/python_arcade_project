@@ -201,8 +201,8 @@ class NonPlayerCharacter(character.Character):
         spare_percent_number_animation = NumberBounceAnimation(
             target=self,
             text="+" + str(int(mercy_percentage)) + "%",
-            color=arcade.color.GOLD,
-            sprites_and_effects_collection=self.sprites_and_effects_collection
+            sprites_and_effects_collection=self.sprites_and_effects_collection,
+            is_golden=True
         )
 
         self.sprites_and_effects_collection.effects.append(spare_percent_number_animation)

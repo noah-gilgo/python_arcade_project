@@ -123,6 +123,9 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         self.current_sprite_center_x = self.target.right + 24
         self.current_sprite_center_y = self.target.center_y - 24 + (self.target.times_struck_this_turn * 40)
 
+        # Prevents the sprites from being tinier than they should be.
+        self.scale_multiplier = 4.5
+
         if type(text) == str:
             text_string = text
         else: # if type == int
@@ -171,8 +174,8 @@ class NumberBounceAnimation(SingleSpriteAnimation):
             sprite=text_sprite
         )
 
-        self.sprite.scale_x = 2.0
-        self.sprite.scale_y = 0.1
+        self.sprite.scale_x = 2.0 * self.scale_multiplier
+        self.sprite.scale_y = 0.1 * self.scale_multiplier
         if isinstance(color, Color):
             self.sprite.color = color.rgb
         elif is_iterable(color) and len(color) in (3, 4):
@@ -190,31 +193,20 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         self.target.times_struck_this_turn += 1
 
-    def is_integer_string(self, string: str):
-        """
-        Checks if the provided string can be cast to an integer.
-        :return: bool representing whether it can be cast to an integer
-        """
-        try:
-            int(string)
-            return True
-        except ValueError:
-            return False
-
     def update_animation(self, delta_time: float = settings.FRAMERATE, *args, **kwargs) -> None:
         self.time += delta_time
 
         # Transition the text from being squashed to being normal-sized.
         if self.time < 0.3:
-            if self.sprite.scale_x > 0.9:
-                self.sprite.scale_x = max(2.0 - (self.time * 25), 0.9)
-            if self.sprite.scale_y < 0.9:
-                self.sprite.scale_y = min(self.time * 9, 0.9)
+            if self.sprite.scale_x > 0.9 * self.scale_multiplier:
+                self.sprite.scale_x = max(2.0 - (self.time * 25), 0.9) * self.scale_multiplier
+            if self.sprite.scale_y < 0.9 * self.scale_multiplier:
+                self.sprite.scale_y = min(self.time * 9, 0.9) * self.scale_multiplier
                 self.sprite.center_x += 5 * (delta_time * settings.FRAMES_PER_SECOND)
                 return
 
         # Translate the sprite based on provided coordinates.
-        if self.sprite.scale_y >= 0.9 and self.time < 2.0:
+        if self.sprite.scale_y >= 0.9 * self.scale_multiplier and self.time < 2.0:
             horizontal_velocity = max(420 - (self.time_after_initial_slide * 30 * settings.FRAMES_PER_SECOND), 0)
             self.sprite.center_x += horizontal_velocity * delta_time
             if self.number_has_not_bounced:
@@ -234,7 +226,7 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         if self.time >= 1.3:
             if self.sprite.alpha > 0:
-                self.sprite.scale_y += 1.8 * delta_time
+                self.sprite.scale_y += 1.8 * delta_time * self.scale_multiplier
                 self.sprite.alpha -= 720 * delta_time
                 self.sprite.center_y += 180 * delta_time
 
