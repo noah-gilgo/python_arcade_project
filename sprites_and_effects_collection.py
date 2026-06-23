@@ -2,6 +2,8 @@ import arcade
 from arcade import Camera2D, SpriteList
 from arcade.gui import UIManager
 
+from text_texture_dicts import BattleMessageTextureDict, BattleMessageImageDict
+
 
 class SpritesAndEffectsCollection:
     """
@@ -31,6 +33,10 @@ class SpritesAndEffectsCollection:
         self.is_drawing_speech_bubble_sprites = True
         self.is_drawing_bullet_sprites = True
         self.is_drawing_soul_sprites = True
+
+        # Glyph sprite dictionaries
+        self.battle_message_texture_dict = BattleMessageTextureDict()
+        self.battle_message_image_dict = BattleMessageImageDict()
 
     def draw(self):
         """ Calls the draw function on all the sprite lists contained in this object. """

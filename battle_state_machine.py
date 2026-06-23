@@ -945,7 +945,8 @@ class BattleController:
             damage_healed_animation = NumberBounceAnimation(
                 text=damage_healt_text,
                 color=damage_healed_color,
-                target=target
+                target=target,
+                sprites_and_effects_collection=self.sprites_and_effects_collection
             )
 
             self.sprites_and_effects_collection.effects.append(damage_healed_animation)

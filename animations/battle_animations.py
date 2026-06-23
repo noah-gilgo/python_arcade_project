@@ -3,8 +3,9 @@ import random
 import arcade
 import pyglet
 from PIL import Image, ImageDraw
-from arcade import Sprite, Texture, LRBT, Rect
+from arcade import Sprite, Texture, LRBT, Rect, SpriteSheet
 from arcade.types import Color
+from arcade.utils import is_iterable
 
 #import character
 import settings
@@ -108,29 +109,76 @@ class SparkleAnimation(SingleSpriteAnimation):
 
 
 class NumberBounceAnimation(SingleSpriteAnimation):
-    def __init__(self, text = "", color: Color = arcade.color.WHITE, target = None):
+    def __init__(self, text = "", color = arcade.color.WHITE, target = None,
+                 sprites_and_effects_collection = None, is_golden: bool = False):
+
+        self.battle_message_texture_dict = sprites_and_effects_collection.battle_message_texture_dict
+        self.battle_message_image_dict = sprites_and_effects_collection.battle_message_image_dict
+
+        self.letter_width = 10 # Letter width in pixels
+        self.letter_height = 10 # Letter height in pixels
+
+        self.text_sprites = []
+        self.target = target
+        self.current_sprite_center_x = self.target.right + 24
+        self.current_sprite_center_y = self.target.center_y - 24 + (self.target.times_struck_this_turn * 40)
+
         if type(text) == str:
             text_string = text
-        else:
+        else: # if type == int
             text_string = str(text)
 
-        text_sprite = arcade.create_text_sprite(
-            text=text_string,
-            color=color,
-            font_size=24,
-            font_name="Greater Determination DR Damage"
-        )
+        print(text_string)
+
+        # If the text string matches one of the pre-existing image textures
+        if text_string in ("MISS", "DOWN", "MAX", "UP", "100%", "RECRUIT", "LOST", "FROZEN", "SWOON", "TIRED", "AWAKE",
+                           "PURIFIED"):
+            text_sprite = Sprite(
+                path_or_texture=self.battle_message_texture_dict[text_string],
+                center_x=self.current_sprite_center_x,
+                center_y=self.current_sprite_center_y,
+            )
+        # If the text does not match one of the pre-existing image textures, assume it's an integer or a percentage string.
+        else:
+            text_image = Image.new(
+                mode="RGBA",
+                size=(len(text_string) * self.letter_width, self.letter_height)
+            )
+
+            char_index = 0
+            for character in text_string:
+                if is_golden:
+                    key = character + "_golden"
+                else:
+                    key = character
+                text_image.paste(
+                    im=self.battle_message_image_dict[key],
+                    box=(char_index * self.letter_width, 0)
+                )
+
+                char_index += 1
+
+
+            text_sprite = Sprite(
+                path_or_texture=Texture(
+                    image=text_image,
+                ),
+                center_x = self.current_sprite_center_x,
+                center_y = self.current_sprite_center_y
+            )
 
         super().__init__(
             sprite=text_sprite
         )
 
-        self.target = target
-
-        self.sprite.right = self.target.right + 24
-        self.sprite.center_y = self.target.center_y - 24 + (self.target.times_struck_this_turn * 40)
         self.sprite.scale_x = 2.0
         self.sprite.scale_y = 0.1
+        if isinstance(color, Color):
+            self.sprite.color = color.rgb
+        elif is_iterable(color) and len(color) in (3, 4):
+            self.sprite.color = color
+        else:
+            self.sprite.color = (255, 255, 255, 255)
 
         self.time_after_initial_slide = 0
 
@@ -141,6 +189,17 @@ class NumberBounceAnimation(SingleSpriteAnimation):
         self.number_has_not_bounced_again = True
 
         self.target.times_struck_this_turn += 1
+
+    def is_integer_string(self, string: str):
+        """
+        Checks if the provided string can be cast to an integer.
+        :return: bool representing whether it can be cast to an integer
+        """
+        try:
+            int(string)
+            return True
+        except ValueError:
+            return False
 
     def update_animation(self, delta_time: float = settings.FRAMERATE, *args, **kwargs) -> None:
         self.time += delta_time

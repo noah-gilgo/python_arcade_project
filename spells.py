@@ -107,7 +107,8 @@ class Spell:
             damage_dealt_animation = NumberBounceAnimation(
                 text=damage_dealt_text,
                 color=damage_dealt_color,
-                target=target
+                target=target,
+                sprites_and_effects_collection=controller.sprites_and_effects_collection
             )
 
             shake_animation = ShakeAnimation(

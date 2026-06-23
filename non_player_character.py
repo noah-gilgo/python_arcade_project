@@ -178,7 +178,8 @@ class NonPlayerCharacter(character.Character):
         damage_dealt_animation = NumberBounceAnimation(
             text=damage_dealt_text,
             color=damage_dealt_color,
-            target=target
+            target=target,
+            sprites_and_effects_collection=self.sprites_and_effects_collection
         )
 
         self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
@@ -200,7 +201,8 @@ class NonPlayerCharacter(character.Character):
         spare_percent_number_animation = NumberBounceAnimation(
             target=self,
             text="+" + str(int(mercy_percentage)) + "%",
-            color=arcade.color.GOLD
+            color=arcade.color.GOLD,
+            sprites_and_effects_collection=self.sprites_and_effects_collection
         )
 
         self.sprites_and_effects_collection.effects.append(spare_percent_number_animation)
@@ -228,7 +230,8 @@ class NonPlayerCharacter(character.Character):
         tired_percent_number_animation = NumberBounceAnimation(
             target=self,
             text=number_bounce_text,
-            color=Color(0, 178, 255)
+            color=Color(0, 178, 255),
+            sprites_and_effects_collection=self.sprites_and_effects_collection
         )
 
         self.sprites_and_effects_collection.effects.append(tired_percent_number_animation)
