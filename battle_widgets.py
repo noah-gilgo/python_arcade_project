@@ -1304,6 +1304,10 @@ class TPMeter(UIBoxLayout):
 
     def update_tp_meter(self, tp: float = 0.0):
         tp_meter = self.children[1]
+        if self.get_tp_in_meter() + tp > 100:
+            tp = 100 - self.get_tp_in_meter()
+        elif self.get_tp_in_meter() + tp < 0:
+            tp = -self.get_tp_in_meter()
         tp_meter.update(tp)
 
     def on_update(self, delta_time: float):

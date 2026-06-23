@@ -17,13 +17,14 @@ import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction, ActAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
     StrikeEnemyAnimation, EnemyFleeingAnimation
-from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, SparkleAnimation
+from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, GameOverAnimation
 from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
 from bullet_patterns import RainingDiamondBulletPattern
 from dialog_exchange import DialogExchange
 from dialogue_box import TextBoxDialog
 from focus_stack import FocusStackMember, FocusStack
 from items.consumable_items import ConsumableItem
+from music_player import MusicPlayer
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
@@ -63,11 +64,22 @@ class BattleController:
                  enemies: list[non_player_character.NonPlayerCharacter],
                  sprites_and_effects_collection: SpritesAndEffectsCollection,
                  tp_meter: battle_widgets.TPMeter,
-                 bullet_board: BulletBoard):
+                 bullet_board: BulletBoard,
+                 music_player: MusicPlayer,
+                 game_view):
         # TODO: move most of these parameters into the BattleController.
+
+        # The core GameView of the game.
+        self.game_view = game_view
 
         # Sprite lists that need to be accessed for animations.
         self.sprites_and_effects_collection = sprites_and_effects_collection
+
+        # Music player used to switch between currently playing songs.
+        self.music_player = music_player
+
+        # This variable controls whether to update the sprites on screen or not.
+        self.update_sprites_on_screen = True
 
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
@@ -75,6 +87,12 @@ class BattleController:
         self.tp_meter = tp_meter
         self.players = players
         self.enemies = enemies
+        self.initial_players = []
+        for player in self.players:
+            self.initial_players.append(player)
+        self.initial_enemies = []
+        for enemy in self.enemies:
+            self.initial_enemies.append(enemy)
         self.bullet_board = bullet_board
 
         # This variable controls whether the battle is scripted (typically a boss/miniboss battle).
@@ -92,6 +110,8 @@ class BattleController:
         # Susie: "My weapon's like a hairbrush or something."
         # Gerson: "Geh-hahahahaha! Is that so? Is that SO???"
         # Susie: "Yep. Now shut up and give me that axe!"
+        self.scripted_dialogue = []
+        """
         self.scripted_dialogue = [
             DialogExchange(
                 battle_textbox=self.battle_textbox,
@@ -150,6 +170,7 @@ class BattleController:
                 ]
             )
         ]
+        """
 
         # The current dialog exchange being loaded by the fight.
         self.current_dialog_exchange = None
@@ -172,6 +193,9 @@ class BattleController:
 
         # The amount of enemies defeated through violent means.
         self.enemies_defeated_violently = 0
+
+        # The animation controlling the Game Over screen.
+        self.game_over_animation = None
 
         self.ui_manager.execute_layout()
 
@@ -212,7 +236,7 @@ class BattleController:
         self.press_texture = arcade.load_texture("assets/textures/gui_graphics/battle/fight_graphics/press.png")
         self.fight_hit_markers = []
 
-        # All of the clocks used by the BattleController.
+        # All the clocks used by the BattleController.
         # The clock used by the fight bars.
         self.fight_bar_clock = 0.0
         self.fight_bar_clock_is_updating = False
@@ -227,7 +251,7 @@ class BattleController:
         self.enemy_hit_sound_player = None
 
         # The SOUL the player moves around during enemy attacks.
-        self.soul = Soul(self.players[0], self)
+        self.soul = Soul(self.players[0], self)  # Give the soul to whichever player you prefer. Soul wielders can still use magic if you want them to
         self.sprites_and_effects_collection.soul_sprites.append(self.soul)
 
         # A variable tracking whether the bullet board has been loaded for the current turn.
@@ -300,6 +324,63 @@ class BattleController:
             case arcade.key.RIGHT:
                 self.right_pressed = False
                 return
+
+    def update_sprites_and_effects(self, delta_time: float):
+        """
+        Updates all of the data underlying the various sprites/effects/GUI elements on screen.
+        :param delta_time: the time between each frame
+        :return: None
+        """
+        if self.update_sprites_on_screen:
+            # Update the player's animation.
+            for player in self.players:
+                player.update_animation(delta_time)
+                player.update(delta_time)
+
+            for enemy in self.enemies:
+                enemy.update_animation(delta_time)
+                enemy.update(delta_time)
+
+            for effect in self.sprites_and_effects_collection.effects:
+                if hasattr(effect, "is_terminated") and effect.is_terminated:
+                    self.sprites_and_effects_collection.effects.remove(effect)
+                else:
+                    effect.update_animation(delta_time)
+
+            for soul_sprite in self.sprites_and_effects_collection.soul_sprites:
+                soul_sprite.update(delta_time)
+
+            self.update_clocks(delta_time)
+
+    def enable_sprite_and_effect_updates(self):
+        """
+        Enables sprite and effect updates.
+        :return: None
+        """
+        self.update_sprites_on_screen = True
+
+    def disable_sprite_and_effect_updates(self):
+        """
+        Disables sprite and effect updates.
+        :return: None
+        """
+        self.update_sprites_on_screen = False
+
+    def clear_effects(self):
+        """
+        Clears all the effects being updated by the sprites and effects collection.
+        :return: None
+        """
+        self.sprites_and_effects_collection.effects.clear()
+
+    """
+    def resume_effects(self):
+        
+        #Clears all the effects being updated by the sprites and effects collection.
+        #:return: None
+        
+        self.sprites_and_effects_collection.effects.clear()
+    """
 
     def update_clocks(self, delta_time: float):
         """
@@ -426,6 +507,50 @@ class BattleController:
             win_message = "* You won!\n" + second_line_of_win_message
             self.battle_textbox.load_dialog(TextBoxDialog(text=win_message))
 
+    def check_if_battle_is_lost(self):
+        """
+        Checks if the battle is lost. The loss condition is if all players have an HP less than 0.
+        :return: A boolean representing if all players have an HP less than 0.
+        """
+        for player in self.players:
+            if player.hp > 0:
+                return False
+
+        return True
+
+    def spawn_game_over_animation(self):
+        """
+        Begins the game over animation.
+        :return: None
+        """
+        self.game_over_animation = GameOverAnimation(self.soul, self.music_player, self.sprites_and_effects_collection, self.game_view)
+
+        self.sprites_and_effects_collection.effects.append(self.game_over_animation)
+
+        for sprite in self.game_over_animation.get_sprites():
+            self.sprites_and_effects_collection.soul_sprites.append(sprite)
+
+    def game_over(self):
+        """
+        Ends the battle in defeat. Animates the heart being shattered, with the game over screen being displayed.
+        :return: None
+        """
+        # Tell the controller that the battle has been lost.
+        self.state = BattleState.DEFEAT
+
+        # Stop the BGM from playing.
+        self.music_player.stop_sound()
+
+        # Kill the updates on the soul so that it stops grazing/taking damage.
+        self.soul.kill_updates()
+
+        # Stops sprites from being drawn to the screen.
+        self.clear_effects()
+        #self.bullet_board.unload_bullet_board(self)
+
+        pyglet.clock.schedule_once(lambda dt: self.sprites_and_effects_collection.game_over(), 0.8)
+        pyglet.clock.schedule_once(lambda dt: self.spawn_game_over_animation(), 0.8)
+
     def add_tp_to_meter(self, amount: float = 0.0):
         """
         Adds TP to the TP meter. Negative values should also work.
@@ -507,15 +632,20 @@ class BattleController:
             self.battle_player_character_cards.children[
                 self.current_player_index].change_icon()
 
-    def move_to_first_player_card(self):
+    def move_to_first_not_downed_player_card(self):
         """
-        Moves to the first player card in the HUD. Executed after the enemy turn completes.
+        Moves to the first not downed player card in the HUD. Executed after the enemy turn completes.
         :return:
         """
         if len(self.players) > 0:
             self.state = BattleState.PLAYER_COMMAND
 
             self.current_player_index = 0
+            for player in self.players:
+                if player.hp < 0:
+                    self.current_player_index += 1
+                else:
+                    break
             self.battle_player_character_cards.children[self.current_player_index].focus()
             self.focus_stack.push(
                 self.battle_player_character_cards,
@@ -1015,7 +1145,8 @@ class BattleController:
         # Terminate all the currently active enemy attacks
         if len(self.enemies) > 0:
             for enemy in self.enemies:
-                enemy.terminate_attack()
+                if enemy:
+                    enemy.terminate_attack()
 
         # Set all the defending players to not be defending.
         for player in self.players:
@@ -1296,7 +1427,18 @@ class SelectCommand(Command):
                 self.controller.execute_queued_player_action()
 
             case BattleState.DIALOGUE:
-                self.controller.spawn_next_dialog_from_dialog_exchange()
+                if len(self.controller.scripted_dialogue) > 0:
+                    self.controller.spawn_next_dialog_from_dialog_exchange()
+                else:
+                    self.controller.despawn_speech_bubbles()
+                    self.controller.start_enemy_attack()
+
+            case BattleState.DEFEAT:
+                if not self.controller.game_over_animation.continue_options_loaded:
+                    self.controller.game_over_animation.load_next_dialog_in_text_box()
+                else:
+                    if not (self.controller.game_over_animation.continue_option_selected or self.controller.game_over_animation.give_up_option_selected):
+                        self.controller.game_over_animation.select_option()
 
 
 class CancelCommand(Command):
@@ -1378,6 +1520,10 @@ class RightCommand(Command):
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().act
                         )
+        else:
+            if self.controller.state == BattleState.DEFEAT:
+                if not (self.controller.game_over_animation.continue_option_selected or self.controller.game_over_animation.give_up_option_selected):
+                    self.controller.game_over_animation.move_blurry_soul_to_give_up_option()
 
 
 class LeftCommand(Command):
@@ -1411,6 +1557,10 @@ class LeftCommand(Command):
                         self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
                             self.controller.focus_stack.get_highest_member().get_focused_widget().act
                         )
+        else:
+            if self.controller.state == BattleState.DEFEAT:
+                if not (self.controller.game_over_animation.continue_option_selected or self.controller.game_over_animation.give_up_option_selected):
+                    self.controller.game_over_animation.move_blurry_soul_to_continue_option()
 
 class UpCommand(Command):
     """ A command object representing the user pressing up (usually pressing the up arrow key in the original game.) """

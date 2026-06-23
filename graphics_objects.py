@@ -1,7 +1,7 @@
-import arcade
-from PIL.ImagePath import Path
+#import arcade
+#from PIL.ImagePath import Path
 from arcade import Sprite, Texture
-from pyglet.math import Vec2
+#from pyglet.math import Vec2
 
 import texture_methods
 
@@ -17,6 +17,9 @@ class AnimatedSprite:
 
     def reset_age(self):
         self.age = 0.0
+
+    def kill(self):
+        self.sprite.kill()
 
 
 class SimpleLoopAnimation:
@@ -93,7 +96,7 @@ class SimpleLoopAnimation:
 
 
 class MultiSpriteAnimation:
-    def __init__(self, sprites: list[AnimatedSprite] = [], delta_time: float = 0.05,
+    def __init__(self, sprites: list = [], delta_time: float = 0.05,
                  total_duration: float = 1.0):
         self.sprites = sprites
         self.time = 0.0
@@ -103,13 +106,19 @@ class MultiSpriteAnimation:
         self.total_duration = total_duration
         self.is_terminated = False
 
+    def get_sprites(self):
+        """ Gets the sprites used by the animation. """
+        return self.sprites
+
     def update_animation(self, delta_time):
         """ Skeleton function for child animations to inherit. """
-        pass
+        self.time += delta_time
 
     # Communicates to parent animation lists to remove this animation.
     def terminate_animation(self):
         self.is_terminated = True
+        for sprite in self.sprites:
+            sprite.kill()
 
 
 class SingleSpriteAnimation:

@@ -6,12 +6,12 @@ from arcade import Sprite
 from arcade.geometry import is_point_in_polygon
 from arcade.hitbox import HitBox
 
-import player_character
+#import player_character
 
 
 class Soul(arcade.Sprite):
     """ SOUL Class """
-    def __init__(self, player_with_soul: player_character.PlayerCharacter, battle_controller):
+    def __init__(self, player_with_soul, battle_controller):
         super().__init__(
             center_x=player_with_soul.center_x,
             center_y=player_with_soul.center_y,
@@ -19,6 +19,9 @@ class Soul(arcade.Sprite):
         )
 
         self.player_with_soul = player_with_soul
+
+        # Tracks whether the player has been defeated.
+        self.is_alive = True
 
         self.controller = battle_controller
 
@@ -109,6 +112,27 @@ class Soul(arcade.Sprite):
         # Load sounds used by soul events.
         self.player_hurt_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_hurt1.wav", False)
         self.graze_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_graze.wav", False)
+
+    def reset_soul(self):
+        """
+        Resets the soul to its original state.
+        :return: None
+        """
+        self.__init__(self.player_with_soul, self.controller)
+
+    def kill_updates(self):
+        """
+        Disables the update loop for the soul.
+        :return: None
+        """
+        self.is_alive = False
+
+    def resume_updates(self):
+        """
+        Enable the update loop for the soul.
+        :return: None
+        """
+        self.is_alive = True
 
     def enable_soul_movement(self):
         self.soul_movement_enabled = True
@@ -202,7 +226,11 @@ class Soul(arcade.Sprite):
                         self.player_hurt_sound.play()
                     else:
                         player_to_be_damaged = players_not_knocked[random.randint(0, len(players_not_knocked) - 1)]
-                        player_to_be_damaged.receive_damage(colliding_bullet.base_damage, colliding_bullet.element_id)
+                        player_to_be_damaged.receive_damage(
+                            damage_dealt=colliding_bullet.base_damage,
+                            element_id=colliding_bullet.element_id,
+                            controller=self.controller
+                        )
                 else:
                     self.player_hurt_sound.play()
 
@@ -307,65 +335,66 @@ class Soul(arcade.Sprite):
         return x_change_is_okay, y_change_is_okay
 
     def update(self, delta_time):
-        # If the soul is being moved to/from the bullet board
-        if self.moving_soul_to_bullet_board:
-            self.moving_soul_to_bullet_board_animation_time += delta_time
-            distance_ratio = delta_time / self.moving_soul_to_bullet_board_animation_duration
-            distance_to_move_soul_x = self.total_distance_to_move_soul_x * distance_ratio
-            distance_to_move_soul_y = self.total_distance_to_move_soul_y * distance_ratio
-            self.center_x += distance_to_move_soul_x
-            self.center_y += distance_to_move_soul_y
-            if self.moving_soul_to_bullet_board_animation_time >= self.moving_soul_to_bullet_board_animation_duration:
-                # Terminate the soul movement animation
-                self.center_x = self.bullet_board_center_coordinates[0]
-                self.center_y = self.bullet_board_center_coordinates[1]
-                self.moving_soul_to_bullet_board = False
+        if self.is_alive:
+            # If the soul is being moved to/from the bullet board
+            if self.moving_soul_to_bullet_board:
+                self.moving_soul_to_bullet_board_animation_time += delta_time
+                distance_ratio = delta_time / self.moving_soul_to_bullet_board_animation_duration
+                distance_to_move_soul_x = self.total_distance_to_move_soul_x * distance_ratio
+                distance_to_move_soul_y = self.total_distance_to_move_soul_y * distance_ratio
+                self.center_x += distance_to_move_soul_x
+                self.center_y += distance_to_move_soul_y
+                if self.moving_soul_to_bullet_board_animation_time >= self.moving_soul_to_bullet_board_animation_duration:
+                    # Terminate the soul movement animation
+                    self.center_x = self.bullet_board_center_coordinates[0]
+                    self.center_y = self.bullet_board_center_coordinates[1]
+                    self.moving_soul_to_bullet_board = False
 
-                # Enable player soul movement
-                self.enable_soul_movement()
+                    # Enable player soul movement
+                    self.enable_soul_movement()
 
-                # Indicate that the soul should be inside the bullet board
-                self.soul_should_be_in_bullet_board = True
+                    # Indicate that the soul should be inside the bullet board
+                    self.soul_should_be_in_bullet_board = True
 
-        # If the soul is being moved back to the player
-        if self.moving_soul_to_player:
-            self.moving_soul_to_player_animation_time += delta_time
-            distance_ratio = delta_time / self.moving_soul_to_player_animation_duration
-            distance_to_move_soul_x = self.total_distance_to_move_soul_x * distance_ratio
-            distance_to_move_soul_y = self.total_distance_to_move_soul_y * distance_ratio
-            self.center_x += distance_to_move_soul_x
-            self.center_y += distance_to_move_soul_y
-            if self.moving_soul_to_player_animation_time >= self.moving_soul_to_player_animation_duration:
-                # Terminate the soul movement animation
-                self.center_x = self.player_with_soul.center_x
-                self.center_y = self.player_with_soul.center_y
-                self.moving_soul_to_player = False
+            # If the soul is being moved back to the player
+            if self.moving_soul_to_player:
+                self.moving_soul_to_player_animation_time += delta_time
+                distance_ratio = delta_time / self.moving_soul_to_player_animation_duration
+                distance_to_move_soul_x = self.total_distance_to_move_soul_x * distance_ratio
+                distance_to_move_soul_y = self.total_distance_to_move_soul_y * distance_ratio
+                self.center_x += distance_to_move_soul_x
+                self.center_y += distance_to_move_soul_y
+                if self.moving_soul_to_player_animation_time >= self.moving_soul_to_player_animation_duration:
+                    # Terminate the soul movement animation
+                    self.center_x = self.player_with_soul.center_x
+                    self.center_y = self.player_with_soul.center_y
+                    self.moving_soul_to_player = False
 
-                # Make the soul invisible
-                self.visible = False
+                    # Make the soul invisible
+                    self.visible = False
 
-                # Reverts the battle UI to its original state.
-                self.controller.move_to_first_player_card()
-                self.controller.change_all_player_icons_to_default()
-                self.controller.reset_player_animation_states_before_next_turn()
-                for player in self.controller.players:
-                    if player.hp < 0:
-                        player.modify_hp(ceil(player.max_hp / 3))
+                    # Reverts the battle UI to its original state.
+                    self.controller.move_to_first_not_downed_player_card()
+                    self.controller.change_all_player_icons_to_default()
+                    self.controller.reset_player_animation_states_before_next_turn()
+                    for player in self.controller.players:
+                        if player.hp < 0:
+                            player.modify_hp(ceil(player.max_hp / 3))
 
-        else: # The default movement for the soul.
-            if self.soul_movement_enabled:
-                self.move_soul_with_player_controls()
+            else: # The default movement for the soul.
+                if self.soul_movement_enabled:
+                    self.move_soul_with_player_controls()
 
-            # Perform bullet collision checking with soul/graze area
-            self.check_if_soul_is_colliding_with_bullets(delta_time)
+                # Perform bullet collision checking with soul/graze area
+                self.check_if_soul_is_colliding_with_bullets(delta_time)
 
-            # Update the graze sprite and check if it's colliding with bullets
-            self.check_if_graze_area_is_colliding_with_bullets(delta_time)
+                # Update the graze sprite and check if it's colliding with bullets
+                self.check_if_graze_area_is_colliding_with_bullets(delta_time)
 
-        # Set the center of the graze sprite to the center of the soul sprite
-        self.graze_sprite.center_x = self.center_x
-        self.graze_sprite.center_y = self.center_y
+            # Set the center of the graze sprite to the center of the soul sprite
+            self.graze_sprite.center_x = self.center_x
+            self.graze_sprite.center_y = self.center_y
 
-        # Increment the time since last graze timer if it is less than 1 second.
-        if self.time_since_last_graze < 1.0 and not self.graze_hitbox_still_touching_grazed_bullets:
-            self.time_since_last_graze += delta_time
+            # Increment the time since last graze timer if it is less than 1 second.
+            if self.time_since_last_graze < 1.0 and not self.graze_hitbox_still_touching_grazed_bullets:
+                self.time_since_last_graze += delta_time

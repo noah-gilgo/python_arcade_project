@@ -1,10 +1,11 @@
 import arcade
 import pyglet
-from arcade import SpriteList
+from arcade import SpriteList, Window
 from arcade.gui import UIManager
 from arcade.types import Color
 
 import math_methods
+import music_player
 import non_player_character
 import player_character
 import player_characters
@@ -13,6 +14,7 @@ import sound_methods
 import graphics_methods
 import dialogue_box
 import battle_widgets
+from animations.background_animations import DepthsBackgroundAnimation
 from battle_state_machine import BattleController
 import items.armor_items
 from bullet_board import BulletBoard
@@ -70,6 +72,16 @@ class GameView(arcade.View):
         arcade.load_font("assets/fonts/greater-determination-dr-damage.ttf")
         arcade.load_font("assets/fonts/dotumche-pixel.ttf")
         arcade.load_font("assets/fonts/undertale-deltarune-extended-fixed.ttf")
+
+        """
+        from fontTools.ttLib import TTFont
+
+        font = TTFont("assets/fonts/undertale-deltarune-extended-fixed.ttf")
+
+        for record in font["name"].names:
+            if record.nameID == 1:
+                print(record.toUnicode())
+        """
 
         # Initialize the UIManager.
         self.manager = UIManager()
@@ -134,9 +146,13 @@ class GameView(arcade.View):
 
         self.soul = None
 
+        self.music_player = None
+
         # Initializes the starting positions of the player characters and enemy characters.
         self._holy_arc = math_methods.initialize_holy_arc(3)
         self._unholy_arc = math_methods.initialize_unholy_arc(3)
+
+        self.background_animation = None
 
     def setup(self):
         # The bullet board used during the enemy attack.
@@ -222,16 +238,19 @@ class GameView(arcade.View):
         #    enemy.spawn_speech_bubble(enemy.random_speech_bubble_dialogue[0])
 
         # Start the background music.
-        self.background_music = arcade.load_sound("assets/audio/songs/ANOTHER_HIM.wav", True)
-        self.background_music_player = self.background_music.play()
-        self.background_music_player.pitch = 0.0
-        self.background_music_player.loop = True
-        self.background_music_player.volume = 0.3
+        self.music_player = music_player.MusicPlayer()
+        self.music_player.play_sound(
+            sound_name="another_him",
+            pitch=0.0,
+            volume=0.3
+        )
 
-        sound_methods.gradually_update_pitch(self.background_music_player, 1.0, 0.02, 0.05)
+        sound_methods.gradually_update_pitch(self.music_player.currently_playing_song_player, 1.0, 0.02, 0.05)
 
         # Animate the background of the GONERMAKER.
-        graphics_methods.animate_depths(self.sprites_and_effects_collection.background_sprites)
+        # graphics_methods.animate_depths(self.sprites_and_effects_collection.background_sprites)
+        self.background_animation = DepthsBackgroundAnimation(self.sprites_and_effects_collection)
+        self.sprites_and_effects_collection.effects.append(self.background_animation)
 
         # Initialize the GUI.
         self.text_box = dialogue_box.TextBox()
@@ -249,7 +268,9 @@ class GameView(arcade.View):
             enemies=self.enemies,
             sprites_and_effects_collection=self.sprites_and_effects_collection,
             tp_meter=self.tp_meter,
-            bullet_board=self.bullet_board
+            bullet_board=self.bullet_board,
+            music_player=self.music_player,
+            game_view=self
         )
 
     def on_draw(self):
@@ -270,25 +291,7 @@ class GameView(arcade.View):
     def on_update(self, delta_time):
         """ Movement and game logic """
 
-        # Update the player's animation.
-        for player in self.player_characters:
-            player.update_animation(delta_time)
-            player.update(delta_time)
-
-        for enemy in self.enemies:
-            enemy.update_animation(delta_time)
-            enemy.update(delta_time)
-
-        for effect in self.sprites_and_effects_collection.effects:
-            if hasattr(effect, "is_terminated") and effect.is_terminated:
-                self.sprites_and_effects_collection.effects.remove(effect)
-            else:
-                effect.update_animation(delta_time)
-
-        for soul_sprite in self.sprites_and_effects_collection.soul_sprites:
-            soul_sprite.update(delta_time)
-
-        self.battle_controller.update_clocks(delta_time)
+        self.battle_controller.update_sprites_and_effects(delta_time)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
