@@ -1367,7 +1367,7 @@ class TPMeterGraphic(UIImage):
 
 
 class TPMeter(UIBoxLayout):
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__(
             x=40,
             y=settings.WINDOW_HEIGHT / 2,
@@ -1379,22 +1379,48 @@ class TPMeter(UIBoxLayout):
                 TPMeterGraphic()
             ]
         )
+        self.controller = controller
 
         self.visual_tp = self.children[1].tp_meter_image.visual_tp
 
-    def update_tp_meter(self, tp: float = 0.0):
-        tp_meter = self.children[1]
+        # If the player does something during their turn that increases TP > 100, add it to this.
+        self.tp_overfill = 0.0
+
+    def update_tp_meter(self, tp: float = 0.0, include_overfill: bool = False):
+        """
+        Adds the supplied amount of tp to the tp meter
+        :param tp: the amount of tp to be added. Negative values subtract from the meter.
+        :param include_overfill: if True, adds TP to an internal reservoir that can be tapped into during tp reduction.
+        :return: None
+        """
+        if tp < 0 and include_overfill and self.tp_overfill > 0:
+            tp_cost = -tp
+            overfill_used = min(tp_cost, self.tp_overfill)
+            self.tp_overfill -= overfill_used
+            tp = -(tp_cost - overfill_used)
+
         if self.get_tp_in_meter() + tp > 100:
-            tp = 100 - self.get_tp_in_meter()
-        elif self.get_tp_in_meter() + tp < 0:
+            if include_overfill:
+                tp_to_meter = 100 - self.get_tp_in_meter()
+                self.tp_overfill += tp - tp_to_meter
+                tp = tp_to_meter
+            else:
+                tp = 100 - self.get_tp_in_meter()
+
+        if self.get_tp_in_meter() + tp < 0:
             tp = -self.get_tp_in_meter()
-        tp_meter.update(tp)
+
+        self.children[1].update(tp)
 
     def on_update(self, delta_time: float):
         self.visual_tp = self.children[1].tp_meter_image.visual_tp
 
     def get_tp_in_meter(self):
         return self.children[1].tp_meter_image.tp
+
+    def set_tp_overfill_to_0(self):
+        """ Sets self.tp_overfill to 0 """
+        self.tp_overfill = 0.0
 
 
 class ItemOption(UILabel):

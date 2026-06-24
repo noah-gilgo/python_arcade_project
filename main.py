@@ -88,7 +88,6 @@ class GameView(arcade.View):
         self.manager._pixelated = True
         self.manager.enable()
         self.text_box = None
-        self.tp_meter = None
         self.battle_hud_container = None
         self.battle_player_character_cards = None
 
@@ -254,10 +253,9 @@ class GameView(arcade.View):
 
         # Initialize the GUI.
         self.text_box = dialogue_box.TextBox()
-        self.tp_meter = battle_widgets.TPMeter()
         self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
         self.manager.add(self.battle_player_character_cards)
-        self.manager.add(self.tp_meter)
+        #self.manager.add(self.tp_meter)
         self.manager.add(self.text_box)
 
         self.battle_controller = BattleController(
@@ -267,7 +265,6 @@ class GameView(arcade.View):
             players=self.player_characters,
             enemies=self.enemies,
             sprites_and_effects_collection=self.sprites_and_effects_collection,
-            tp_meter=self.tp_meter,
             bullet_board=self.bullet_board,
             music_player=self.music_player,
             game_view=self
