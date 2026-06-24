@@ -3,32 +3,25 @@ from enum import Enum, auto
 import arcade.key
 import pyglet
 from PIL import Image, ImageDraw
-from arcade import SpriteList, Sprite, Texture
+from arcade import Sprite, Texture
 from arcade.gui import UILayout, UIWidget, UIManager
-from arcade.types import Color
 
-import battle_widgets
 import character
-import default_data
 import items
 import non_player_character
 import player_character
 import settings
 from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction, ItemAction, FightAction, ActAction
-from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation, \
-    StrikeEnemyAnimation, EnemyFleeingAnimation
+from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, GameOverAnimation
-from battle_widgets import SpellList, SpellSelect, EnemySelectOptions, EnemySelect
-from bullet_patterns import RainingDiamondBulletPattern
-from dialog_exchange import DialogExchange
+from battle_widgets import SpellSelect, EnemySelect, TPMeter, PlayerSelect, ActSelect, ItemSelect
 from dialogue_box import TextBoxDialog
-from focus_stack import FocusStackMember, FocusStack
+from focus_stack import FocusStack
 from items.consumable_items import ConsumableItem
 from music_player import MusicPlayer
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
-from speech_bubble import SpeechBubbleDialog
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 """
@@ -63,7 +56,6 @@ class BattleController:
                  players: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
                  sprites_and_effects_collection: SpritesAndEffectsCollection,
-                 tp_meter: battle_widgets.TPMeter,
                  bullet_board: BulletBoard,
                  music_player: MusicPlayer,
                  game_view):
@@ -84,7 +76,8 @@ class BattleController:
         self.battle_player_character_cards = battle_player_character_cards
         self.battle_textbox = battle_textbox
         self.ui_manager = ui_manager
-        self.tp_meter = tp_meter
+        self.tp_meter = TPMeter(self)
+        self.ui_manager.add(self.tp_meter)
         self.players = players
         self.enemies = enemies
         self.initial_players = []
@@ -557,7 +550,10 @@ class BattleController:
         :param amount: The amount of TP to add to the meter.
         :return: None
         """
-        self.tp_meter.update_tp_meter(amount)
+        include_overfill = self.state not in (BattleState.ENEMY_ATTACK, BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS,
+                                             BattleState.PLAYER_ATTACKING)
+
+        self.tp_meter.update_tp_meter(amount, include_overfill)
 
     def move_to_next_player_card(self, action: Action):
         """
@@ -986,7 +982,7 @@ class BattleController:
         Opens the player select menu.
         :return: None
         """
-        player_list_full_layout = battle_widgets.PlayerSelect(self.players)
+        player_list_full_layout = PlayerSelect(self.players)
         player_list_interactive_layout = player_list_full_layout
         self.focus_stack.push(player_list_full_layout, player_list_interactive_layout,
                                          self.state, 1, True)
@@ -1156,6 +1152,9 @@ class BattleController:
         # Set all the character HUD buttons to focus their first button.
         self.focus_all_first_battle_hud_buttons()
 
+        # Sets the internal TP overfill to 0
+        self.tp_meter.set_tp_overfill_to_0()
+
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
         self.stop_enemy_attack_clock()
@@ -1246,7 +1245,7 @@ class SelectCommand(Command):
                             return
                     case 2:  # user selects the ITEM button
                         self.controller.state = BattleState.PLAYER_ITEM_SELECT
-                        item_list_full_layout = battle_widgets.ItemSelect(self.controller.items)
+                        item_list_full_layout = ItemSelect(self.controller.items)
                         item_list_interactive_layout = item_list_full_layout.children[0]
                         self.controller.focus_stack.push(item_list_full_layout, item_list_interactive_layout,
                                                          self.controller.state, 2, True)
@@ -1291,7 +1290,7 @@ class SelectCommand(Command):
 
             case BattleState.PLAYER_ACT_ENEMY_SELECT:
                 self.controller.state = BattleState.PLAYER_ACT_SELECT
-                act_list_full_layout = battle_widgets.ActSelect(
+                act_list_full_layout = ActSelect(
                     self.controller.focus_stack.get_highest_member().get_focused_widget().enemy,
                     self.controller)
                 act_list_interactive_layout = act_list_full_layout.children[0]
