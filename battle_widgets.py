@@ -1182,8 +1182,10 @@ class TPMeterLabel(UIImage):
             height=88,
             texture=arcade.load_texture("assets/textures/gui_graphics/battle/tp_meter/tp_meter_label.png"),
             size_hint=None,
-            align="bottom"
+            align="top"
         )
+
+        #self.with_border(color=arcade.color.NEON_GREEN)
 
 
 class TPMeterNumber(UILabel):
@@ -1201,10 +1203,23 @@ class TPMeterNumber(UILabel):
         # Rendered with a very faint background to avoid layouting every time the text is changed
         self.with_background(color=(0,0,0,1))
 
+        #self.with_border(color=arcade.color.NEON_GREEN)
+
     def on_update(self, dt):
         if self.text != str(int(self.parent.parent.visual_tp)):
             if int(self.parent.parent.visual_tp) == 100 and self.text == "MAX":
+                self.visible = False
+                self.height = 1
+                self.parent.children[2].visible = False
+                self.parent.children[2].height = 1
+                self.parent.children[3].visible = True
                 return
+            else:
+                self.visible = True
+                self.height = 54
+                self.parent.children[2].visible = True
+                self.parent.children[2].height = 54
+                self.parent.children[3].visible = False
 
             if str(int(self.parent.parent.visual_tp)) != "100":
                 self.text = str(int(self.parent.parent.visual_tp))
@@ -1216,12 +1231,80 @@ class TPMeterNumber(UILabel):
 class TPMeterPercentLabel(UILabel):
     def __init__(self):
         super().__init__(
-            width=44,
+            width=60,
             height=54,
             font_name="8bitoperator JVE",
             font_size=48,
-            text="%"
+            text="%",
+            size_hint=None,
+            align="center"
         )
+
+        #self.with_border(color=arcade.color.NEON_GREEN)
+
+class TPMeterM(UILabel):
+    """ The M in MAX."""
+    def __init__(self):
+        super().__init__(
+            width=50,
+            height=52,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.YELLOW,
+            text="M",
+            size_hint=None,
+            align="left"
+        )
+        #self.with_border(color=arcade.color.NEON_GREEN)
+
+
+class TPMeterA(UILabel):
+    """ The A in MAX."""
+    def __init__(self):
+        super().__init__(
+            width=50,
+            height=52,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.YELLOW,
+            text="A",
+            size_hint=None,
+            align="center"
+        )
+        #self.with_border(color=arcade.color.NEON_GREEN)
+
+
+class TPMeterX(UILabel):
+    """ The M in MAX."""
+    def __init__(self):
+        super().__init__(
+            width=50,
+            height=52,
+            font_name="8bitoperator JVE",
+            font_size=48,
+            text_color=arcade.color.YELLOW,
+            text="X",
+            size_hint=None,
+            align="right"
+        )
+        #self.with_border(color=arcade.color.NEON_GREEN)
+
+
+class TPMeterMAXLabel(UIBoxLayout):
+    def __init__(self):
+        super().__init__(
+            vertical=True,
+            width=50,
+            height=160,
+            children=[
+                TPMeterM(),
+                TPMeterA(),
+                TPMeterX()
+            ],
+            align="top",
+            size_hint=None
+        )
+        #self.with_border(color=arcade.color.NEON_GREEN)
 
 
 class TPMeterTextContainer(UIBoxLayout):
@@ -1232,9 +1315,13 @@ class TPMeterTextContainer(UIBoxLayout):
             children=[
                 TPMeterLabel(),
                 TPMeterNumber(),
-                TPMeterPercentLabel()
-            ]
+                TPMeterPercentLabel(),
+                TPMeterMAXLabel()
+            ],
+            align="top"
         )
+
+        self.children[3].visible = False
 
         self.with_padding(top=72)
 
