@@ -93,5 +93,5 @@ class DepthsBackgroundAnimation:
         for frame in self.depths_frame_array:
             if frame.sprite in self.sprites_and_effects_collection.background_sprites:
                 self.sprites_and_effects_collection.background_sprites.remove(frame.sprite)
-                frame.sprite.kill()
+            frame.sprite.kill()
         self.depths_frame_array.clear()

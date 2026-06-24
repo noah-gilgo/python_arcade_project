@@ -3,8 +3,9 @@ import random
 import arcade
 import pyglet
 from PIL import Image, ImageDraw
-from arcade import Sprite, Texture, LRBT, Rect
+from arcade import Sprite, Texture, LRBT, Rect, SpriteSheet
 from arcade.types import Color
+from arcade.utils import is_iterable
 
 #import character
 import settings
@@ -108,54 +109,104 @@ class SparkleAnimation(SingleSpriteAnimation):
 
 
 class NumberBounceAnimation(SingleSpriteAnimation):
-    def __init__(self, text = "", color: Color = arcade.color.WHITE, target = None):
+    def __init__(self, text = "", color = arcade.color.WHITE, target = None,
+                 sprites_and_effects_collection = None, is_golden: bool = False):
+
+        self.battle_message_texture_dict = sprites_and_effects_collection.battle_message_texture_dict
+        self.battle_message_image_dict = sprites_and_effects_collection.battle_message_image_dict
+
+        self.letter_width = 10 # Letter width in pixels
+        self.letter_height = 10 # Letter height in pixels
+
+        self.text_sprites = []
+        self.target = target
+        self.current_sprite_center_x = self.target.right
+        self.current_sprite_center_y = self.target.center_y - 24 + (self.target.number_bounce_index * 40)
+
+        # Prevents the sprites from being tinier than they should be.
+        self.scale_multiplier = 4.5
+
         if type(text) == str:
             text_string = text
-        else:
+        else: # if type == int
             text_string = str(text)
 
-        text_sprite = arcade.create_text_sprite(
-            text=text_string,
-            color=color,
-            font_size=24,
-            font_name="Greater Determination DR Damage"
-        )
+        # If the text string matches one of the pre-existing image textures
+        if text_string in ("MISS", "DOWN", "MAX", "UP", "100%", "RECRUIT", "LOST", "FROZEN", "SWOON", "TIRED", "AWAKE",
+                           "PURIFIED"):
+            text_sprite = Sprite(
+                path_or_texture=self.battle_message_texture_dict[text_string],
+                center_x=self.current_sprite_center_x,
+                center_y=self.current_sprite_center_y,
+            )
+        # If the text does not match one of the pre-existing image textures, assume it's an integer or a percentage string.
+        else:
+            text_image = Image.new(
+                mode="RGBA",
+                size=(len(text_string) * self.letter_width, self.letter_height)
+            )
+
+            char_index = 0
+            for character in text_string:
+                if is_golden:
+                    key = character + "_golden"
+                else:
+                    key = character
+                text_image.paste(
+                    im=self.battle_message_image_dict[key],
+                    box=(char_index * self.letter_width, 0)
+                )
+
+                char_index += 1
+
+
+            text_sprite = Sprite(
+                path_or_texture=Texture(
+                    image=text_image,
+                ),
+                center_x = self.current_sprite_center_x,
+                center_y = self.current_sprite_center_y
+            )
 
         super().__init__(
             sprite=text_sprite
         )
 
-        self.target = target
+        self.sprite.scale_x = 2.0 * self.scale_multiplier
+        self.sprite.scale_y = 0.1 * self.scale_multiplier
 
-        self.sprite.right = self.target.right + 24
-        self.sprite.center_y = self.target.center_y - 24 + (self.target.times_struck_this_turn * 40)
-        self.sprite.scale_x = 2.0
-        self.sprite.scale_y = 0.1
+        if isinstance(color, Color):
+            self.sprite.color = color.rgb
+        elif is_iterable(color) and len(color) == 3:
+            self.sprite.color = color
+        else:
+            self.sprite.color = (255, 255, 255)
 
         self.time_after_initial_slide = 0
 
         self.number_has_not_bounced = True
         self.time_after_bounce = 0
         self.total_duration = 3.0
-        self.floor = (self.target.center_y - 56) + (self.target.times_struck_this_turn * 40)
+        self.floor = (self.target.center_y - 56) + (self.target.number_bounce_index * 40)
         self.number_has_not_bounced_again = True
 
-        self.target.times_struck_this_turn += 1
+        self.number_bounce_index_used_by_this_instance = self.target.number_bounce_index
+        self.target.number_bounce_index += 1
 
     def update_animation(self, delta_time: float = settings.FRAMERATE, *args, **kwargs) -> None:
         self.time += delta_time
 
         # Transition the text from being squashed to being normal-sized.
         if self.time < 0.3:
-            if self.sprite.scale_x > 0.9:
-                self.sprite.scale_x = max(2.0 - (self.time * 25), 0.9)
-            if self.sprite.scale_y < 0.9:
-                self.sprite.scale_y = min(self.time * 9, 0.9)
+            if self.sprite.scale_x > 0.9 * self.scale_multiplier:
+                self.sprite.scale_x = max(2.0 - (self.time * 25), 0.9) * self.scale_multiplier
+            if self.sprite.scale_y < 0.9 * self.scale_multiplier:
+                self.sprite.scale_y = min(self.time * 9, 0.9) * self.scale_multiplier
                 self.sprite.center_x += 5 * (delta_time * settings.FRAMES_PER_SECOND)
                 return
 
         # Translate the sprite based on provided coordinates.
-        if self.sprite.scale_y >= 0.9 and self.time < 2.0:
+        if self.sprite.scale_y >= 0.9 * self.scale_multiplier and self.time < 2.0:
             horizontal_velocity = max(420 - (self.time_after_initial_slide * 30 * settings.FRAMES_PER_SECOND), 0)
             self.sprite.center_x += horizontal_velocity * delta_time
             if self.number_has_not_bounced:
@@ -175,12 +226,15 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         if self.time >= 1.3:
             if self.sprite.alpha > 0:
-                self.sprite.scale_y += 1.8 * delta_time
+                self.sprite.scale_y += 1.8 * delta_time * self.scale_multiplier
                 self.sprite.alpha -= 720 * delta_time
                 self.sprite.center_y += 180 * delta_time
 
         if self.time > self.total_duration:
+            self.terminate_animation()
             self.sprite.kill()
+            if self.number_bounce_index_used_by_this_instance == 0:
+                self.target.number_bounce_index = 0
 
 
 class EnemySparedAnimation(SingleSpriteAnimation):

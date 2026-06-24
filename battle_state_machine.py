@@ -848,12 +848,11 @@ class BattleController:
 
         # TODO: This currently makes the damage numbers above the enemies disappear.
 
-        """
         if is_crit:
             self.add_tp_to_meter(6.0)
         else:
             self.add_tp_to_meter(attack_damage_multiplier * 4.0)
-        """
+
 
     def use_consumable_item_on_targets(self, item: ConsumableItem, actor: player_character.PlayerCharacter,
                                        targets: list[character.Character]):
@@ -945,7 +944,8 @@ class BattleController:
             damage_healed_animation = NumberBounceAnimation(
                 text=damage_healt_text,
                 color=damage_healed_color,
-                target=target
+                target=target,
+                sprites_and_effects_collection=self.sprites_and_effects_collection
             )
 
             self.sprites_and_effects_collection.effects.append(damage_healed_animation)
@@ -1153,6 +1153,9 @@ class BattleController:
             if player.is_defending:
                 player.undefend()
 
+        # Set all the character HUD buttons to focus their first button.
+        self.focus_all_first_battle_hud_buttons()
+
         # Return the state of the battle back to the starting state.
         self.unload_bullet_board()
         self.stop_enemy_attack_clock()
@@ -1188,6 +1191,21 @@ class BattleController:
         for player in self.players:
             if player.hp > 0:
                 player.set_animation_state("battle_idle")
+
+    def focus_all_first_battle_hud_buttons(self):
+        """
+        Returns focus to the first button in every battle HUD.
+        :return: None
+        """
+        for clamshell in self.battle_player_character_cards:
+            button_layout = clamshell.children[0]
+            button_index = 0
+            for button in button_layout.children:
+                if button_index == 0:
+                    button.focused = True
+                else:
+                    button.focused = False
+                button_index += 1
 
 class Command:
     """ The default command object. Represents the Command design pattern. """
@@ -1311,7 +1329,6 @@ class SelectCommand(Command):
                     spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
                 if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
                     self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
-                    self.controller.tp_meter.update_tp_meter(-spell_or_act.tp_cost)
                     self.controller.open_enemy_select_menu()
                     self.controller.menu_select_sound.play()
                 return
@@ -1325,6 +1342,7 @@ class SelectCommand(Command):
                     selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 else:
                     selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                self.controller.tp_meter.update_tp_meter(-selected_spell_or_act.tp_cost)
                 self.controller.focus_stack.pop(remove_widget=True)
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
 

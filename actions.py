@@ -8,6 +8,7 @@ from arcade.gui import UIManager
 import character
 import non_player_character
 import player_character
+import sprites_and_effects_collection
 from act import Act, SimpleAct
 from animations.battle_animations import NumberBounceAnimation, EnemySparedAnimation, TPGainAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation
@@ -329,7 +330,8 @@ class SpareAction(Action):
             spare_percent_number_animation = NumberBounceAnimation(
                 target=self.target,
                 text="+10%",
-                color=arcade.color.GOLD
+                sprites_and_effects_collection=self.controller.sprites_and_effects_collection,
+                is_golden=True
             )
 
             pyglet.clock.schedule_once(

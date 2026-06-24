@@ -51,7 +51,8 @@ class Character(arcade.Sprite):
         self.is_focused = False
         self.focus_animation = None
 
-        self.times_struck_this_turn = 0
+        # This variable controls how high new NumberBounceAnimations spawned around this character should be.
+        self.number_bounce_index = 0
 
         self.non_idle_timer = 0.0
 

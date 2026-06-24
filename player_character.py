@@ -394,7 +394,8 @@ class PlayerCharacter(character.Character):
         damage_dealt_animation = NumberBounceAnimation(
             text=damage_dealt_text,
             color=damage_dealt_color,
-            target=self
+            target=self,
+            sprites_and_effects_collection=self.sprites_and_effects_collection
         )
         self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
         self.sprites_and_effects_collection.effects.append(damage_dealt_animation)

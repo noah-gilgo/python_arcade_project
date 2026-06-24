@@ -171,10 +171,10 @@ class FreezeAnimation(SingleSpriteAnimation):
         for i in range(2):
             freeze_sprite = Sprite(
                 path_or_texture=self.freeze_texture.crop(
-                    0,
-                    self.freeze_texture.image.height - 1,
-                    self.freeze_texture.image.width - 1,
-                    1
+                    x=0,
+                    y=self.freeze_texture.image.height - 1,
+                    width=self.freeze_texture.image.width - 1,
+                    height=1
                 ),
                 center_x=self.sprite.center_x - 5 + (i * 10),
             )
