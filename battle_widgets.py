@@ -509,14 +509,18 @@ class BattleHUDCharacterClamshell(UILayout):
         self.is_character_display_lowering = False
         self.trigger_render()
 
-    def on_update(self, dt):
-        if self.is_character_display_rising or self.is_character_display_lowering:
-            self.trigger_render()
+        # Variables used by the function that moves the HUD display when the clamshell is focused.
+        self.hud_starting_y = 0
+        self.hud_ending_y = 0
+        self.hud_dy = 0
+        self.hud_moving = False
+        self.hud_movement_time = 0.0
+        self.hud_movement_total_duration = 0.2
 
-        if self.is_character_display_rising:
-            self.move_up_character_display_slightly(dt)
-        elif self.is_character_display_lowering:
-            self.move_down_character_display_slightly(dt)
+    def on_update(self, dt):
+        if self.hud_moving:
+            self.move_character_hud_vertically_slightly(dt)
+            self.trigger_render()
 
     def do_layout(self):
         super().do_layout()
@@ -537,65 +541,55 @@ class BattleHUDCharacterClamshell(UILayout):
         self.battle_hud_button_layout.center_x = rect.center_x
         self.battle_hud_button_layout.center_y = rect.center_y
 
-    def move_up_character_display_slightly(self, dt):
-        self.character_display_transition_time += dt
-        new_hud_center_y = self.hud_lowered_center_y + (-self.distance_hud_raised * (self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) * ((self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) - 2))
-        self.battle_hud_character_data.center_y = new_hud_center_y
-        if self.character_display_transition_time > self.hud_raise_animation_time:
-            self.battle_hud_character_data.center_y = self.hud_raised_center_y
-            self.character_display_transition_time = 0
-            self.is_character_display_rising = False
-
-    def move_up_character_data_display(self):
-        self.character_display_transition_time = 0
-
-        if self.is_focused:
-            self.hud_raised_center_y = self.battle_hud_character_data.center_y
-            self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
+    def move_character_hud_vertically(self, is_moving_down: bool = True):
+        """
+        Moves the character hud vertically so that it's center_y coordinate is at a certain height.
+        :param is_moving_down: the bool representing whether the hud is being moved up or down.
+        :return: None
+        """
+        self.hud_starting_y = self.battle_hud_character_data.center_y
+        if is_moving_down:
+            self.hud_ending_y = self.battle_hud_button_layout.center_y
         else:
-            self.hud_lowered_center_y = self.battle_hud_character_data.center_y
-            self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
+            self.hud_ending_y = self.battle_hud_button_layout.center_y + self.battle_hud_character_data.height - 6
 
-        self.is_character_display_rising = True
-        self.is_character_display_lowering = False
+        self.hud_dy = self.hud_ending_y - self.hud_starting_y
+        self.hud_moving = True
+
+        self.hud_movement_time = 0.0
+
+    def move_character_hud_vertically_slightly(self, dt: float):
+        """
+        The function that moves the HUD to the supplied coordinates each frame.
+        :return: None
+        """
+        self.hud_movement_time += dt
+
+        fraction_of_distance_travelled = ease_out(
+            self.hud_movement_time / self.hud_movement_total_duration)
+
+        self.battle_hud_character_data.center_y = self.hud_starting_y + (
+                    self.hud_dy * fraction_of_distance_travelled)
+
+        if self.hud_movement_time >= self.hud_movement_total_duration:
+            self.hud_moving = False
+            self.battle_hud_character_data.center_y = self.hud_ending_y
 
     def focus(self):
         """ Moves the character data display up so the buttons can be shown. """
         if self.is_focused:
             return
-        self.move_up_character_data_display()
+        self.move_character_hud_vertically(is_moving_down=False)
         self.is_focused = True
         self.battle_hud_character_data.with_border(width=3, color=self.player_character.battle_ui_color)
         battle_hud_button_layout = self.children[0]
         battle_hud_button_layout.is_focused = True
 
-    def move_down_character_display_slightly(self, dt):
-        self.character_display_transition_time += dt
-        new_hud_center_y = self.hud_raised_center_y - (-self.distance_hud_raised * (self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) * ((self.inverse_of_hud_raise_animation_time * self.character_display_transition_time) - 2))
-        self.battle_hud_character_data.center_y = new_hud_center_y
-        if self.character_display_transition_time > self.hud_raise_animation_time:
-            self.battle_hud_character_data.center_y = self.hud_lowered_center_y
-            self.character_display_transition_time = 0
-            self.is_character_display_lowering = False
-
-    def move_down_character_data_display(self):
-        self.character_display_transition_time = 0
-
-        if self.is_focused:
-            self.hud_raised_center_y = self.battle_hud_character_data.center_y
-            self.hud_lowered_center_y = self.battle_hud_character_data.center_y - self.distance_hud_raised
-        else:
-            self.hud_lowered_center_y = self.battle_hud_character_data.center_y
-            self.hud_raised_center_y = self.battle_hud_character_data.center_y + self.distance_hud_raised
-
-        self.is_character_display_lowering = True
-        self.is_character_display_rising = False
-
     def unfocus(self):
         """ Moves the character data display up so the buttons can be shown. """
         if not self.is_focused:
             return
-        self.move_down_character_data_display()
+        self.move_character_hud_vertically(is_moving_down=True)
         self.is_focused = False
         self.battle_hud_character_data.with_border(width=0, color=self.player_character.battle_ui_color)
         battle_hud_button_layout = self.children[0]
@@ -1225,7 +1219,6 @@ class TPMeterNumber(UILabel):
                 self.text = str(int(self.parent.parent.visual_tp))
             else:
                 self.text = "MAX"
-
 
 
 class TPMeterPercentLabel(UILabel):

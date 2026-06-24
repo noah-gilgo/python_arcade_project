@@ -120,7 +120,7 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         self.text_sprites = []
         self.target = target
-        self.current_sprite_center_x = self.target.right + 24
+        self.current_sprite_center_x = self.target.right
         self.current_sprite_center_y = self.target.center_y - 24 + (self.target.number_bounce_index * 40)
 
         # Prevents the sprites from being tinier than they should be.
