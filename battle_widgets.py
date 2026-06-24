@@ -175,7 +175,6 @@ class BattleHUDButtonLayout(UIBoxLayout):
                     line[2] = distance
                     line[4][3] = min(255, int(max(255 - (distance * self.alpha_loss_magnifier), 0)))
                 arcade.draw_line(line[0], line[1], line[2], line[3], line[4], line[5])
-                # print("start x = " + str(line[0]) + ", end x = " + str(line[2]) + ", time = " + str(line[6]))
 
             for line in self.lines_coming_from_right:
                 # Check if the line is older than the max line lifetime

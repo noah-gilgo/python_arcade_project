@@ -23,6 +23,5 @@ def load_images_at_filepath_into_image_array(folder_path: str) -> list[Image]:
             image_path = os.path.join(folder_path, filename)
             image = arcade.load_image(image_path)
             images.append(image)
-            print(filename)
 
     return images
