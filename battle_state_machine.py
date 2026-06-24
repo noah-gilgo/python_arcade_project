@@ -1329,7 +1329,6 @@ class SelectCommand(Command):
                     spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
                 if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
                     self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
-                    self.controller.tp_meter.update_tp_meter(-spell_or_act.tp_cost)
                     self.controller.open_enemy_select_menu()
                     self.controller.menu_select_sound.play()
                 return
@@ -1343,6 +1342,7 @@ class SelectCommand(Command):
                     selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
                 else:
                     selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                self.controller.tp_meter.update_tp_meter(-selected_spell_or_act.tp_cost)
                 self.controller.focus_stack.pop(remove_widget=True)
                 current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
 
