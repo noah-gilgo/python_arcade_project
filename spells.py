@@ -9,7 +9,7 @@ import default_data
 from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
-from animations.spell_animations import IceShockAnimation, FreezeAnimation
+from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation
 
 
 class Spell:
@@ -158,6 +158,29 @@ class IceShock(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=IceShockAnimation()
+        )
+
+    def spell_damage_function(self, caster) -> float:
+        """ Calculates the damage dealt by the spell depending on caster stats.
+        :return: None
+        """
+
+        return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
+
+
+class FireShock(Spell):
+    def __init__(self):
+        super().__init__(
+            name="FireShock",
+            description="Damage w/ FIRE",
+            tp_cost=16,
+            element_id=8,
+            base_health_change=100,
+            is_friendly_spell=False,
+            is_healing_spell=False,
+            is_pacifying_spell=False,
+            is_aoe_spell=False,
+            animation=FireShockAnimation()
         )
 
     def spell_damage_function(self, caster) -> float:
