@@ -4,6 +4,8 @@ import arcade
 from arcade import Sprite, Sound, play_sound
 from math import sin, cos, atan2
 
+from arcade.easing import ease_in
+
 import character
 from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, AnimatedSprite, SingleSpriteAnimation
@@ -225,41 +227,41 @@ class FireShockAnimation(MultiSpriteAnimation):
                                   center_x=self.triangle[1][0], center_y=self.triangle[1][1], visible=False), 2),
             AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_flame.png", scale=3.0,
                                   center_x=self.triangle[2][0], center_y=self.triangle[2][1], visible=False), 3),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[0][0], center_y=self.triangle[0][1], visible=False), 4),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[0][0], center_y=self.triangle[0][1], visible=False), 5),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[0][0], center_y=self.triangle[0][1], visible=False), 6),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[0][0], center_y=self.triangle[0][1], visible=False), 7),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[0][0], center_y=self.triangle[0][1], visible=False), 8),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[0][0], center_y=self.triangle[0][1], visible=False), 9),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[1][0], center_y=self.triangle[1][1], visible=False), 10),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[1][0], center_y=self.triangle[1][1], visible=False), 11),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[1][0], center_y=self.triangle[1][1], visible=False), 12),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[1][0], center_y=self.triangle[1][1], visible=False), 13),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[1][0], center_y=self.triangle[1][1], visible=False), 14),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[1][0], center_y=self.triangle[1][1], visible=False), 15),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[2][0], center_y=self.triangle[2][1], visible=False), 16),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[2][0], center_y=self.triangle[2][1], visible=False), 17),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[2][0], center_y=self.triangle[2][1], visible=False), 18),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[2][0], center_y=self.triangle[2][1], visible=False), 19),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[2][0], center_y=self.triangle[2][1], visible=False), 20),
-            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=1.2,
+            AnimatedSprite(Sprite(path_or_texture="assets/sprites/effects/spr_firespell_smallflame.png", scale=3.0,
                                   center_x=self.triangle[2][0], center_y=self.triangle[2][1], visible=False), 21)
         ]
 
@@ -273,7 +275,7 @@ class FireShockAnimation(MultiSpriteAnimation):
         self.flag3 = False
         self.flag4 = False
 
-        self.fireshock_sound = Sound("assets/audio/magic/snd_firespell.ogg", False)
+        self.fireshock_sound = Sound("assets/audio/magic/snd_firespell.wav", False)
 
         self.total_duration = 2.0
 
@@ -300,11 +302,12 @@ class FireShockAnimation(MultiSpriteAnimation):
             sprite_index = 0
             for sprite in self.sprites[3:]:
                 sprite.sprite.visible = True
-                angle = math.radians((sprite_index * 60) % 360)
+                angle = math.radians(((sprite_index * 60) % 360) + 180)
                 sprite_velocity_x = cos(angle)
                 sprite_velocity_y = sin(angle)
                 sprite.sprite.velocity = (sprite_velocity_x, sprite_velocity_y)
                 sprite_index += 1
+                sprite.sprite.angle = angle
 
             self.circle_active = True
             self.flag4 = True
@@ -312,11 +315,11 @@ class FireShockAnimation(MultiSpriteAnimation):
         if self.time > 0.40:
             # dt = self.time # (self.time - 0.4) * 2
             sprite_index = 0
+            new_alpha = max(0, int(255 * (1 - (ease_in(self.time / 1.5) ** 2))))
             for sprite in self.sprites[3:]:
                 center = self.triangle[sprite_index // 6]
                 center_x = center[0]
                 center_y = center[1]
-                sprite.sprite.turn_left(4.0)
                 sprite.sprite.update()
                 dx = sprite.sprite.center_x - center_x
                 dy = sprite.sprite.center_y - center_y
@@ -334,8 +337,11 @@ class FireShockAnimation(MultiSpriteAnimation):
                 sprite_velocity_x = radial_velocity_x + tangent_velocity_x
                 sprite_velocity_y = radial_velocity_y + tangent_velocity_y
                 sprite.sprite.velocity = (sprite_velocity_x, sprite_velocity_y)
-                sprite.sprite.alpha = max(0, int(255 * (1 - (self.time/1.5))))
+                sprite.sprite.alpha = new_alpha
                 sprite_index += 1
+
+                #sprite.sprite.turn_left(3.0)
+                sprite.sprite.angle = math.degrees(-angle) - 60
 
         if self.time >= self.total_duration:
             for sprite in self.sprites:
