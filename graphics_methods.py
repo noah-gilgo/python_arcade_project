@@ -135,9 +135,10 @@ def make_texture_solid_color(texture: arcade.Texture, color: Color = None) -> Te
     image = texture.image.convert("RGBA")
     data = image.getdata()
 
-    default_color = arcade.color.WHITE
     if color:
         default_color = color
+    else:
+        default_color = arcade.color.WHITE
 
     new_pixel_matrix = []
     for r, g, b, a in data:

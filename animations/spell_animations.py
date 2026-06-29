@@ -360,3 +360,63 @@ class FireShockAnimation(MultiSpriteAnimation):
 
             self.circle_radius += 5
             self.circle_alpha = self.circle_alpha - 18 if self.circle_alpha - 18 > 0 else 0
+
+
+class BurnAnimation(SingleSpriteAnimation):
+    def __init__(self, target: character.Character):
+        super().__init__(
+            sprite=target
+        )
+
+        self.burn_texture = make_texture_solid_color(
+            texture=self.sprite.texture,
+            color=arcade.color.SMOKY_BLACK
+        )
+
+        self.burn_sprites = []
+
+        for i in range(2):
+            ash_sprite = Sprite(
+                path_or_texture=self.burn_texture.crop(
+                    x=0,
+                    y=self.burn_texture.image.height - 1,
+                    width=self.burn_texture.image.width - 1,
+                    height=1
+                ),
+                center_x=self.sprite.center_x - 5 + (i * 10),
+            )
+            ash_sprite.width = self.sprite.width
+            ash_sprite.alpha = 174
+            ash_sprite.bottom = self.sprite.bottom
+            self.burn_sprites.append(ash_sprite)
+
+        self.total_duration = 1.2
+
+        self.target_is_not_darkened = True
+
+    def update_animation(self, delta_time):
+        if self.time < self.total_duration:
+            self.time += delta_time
+
+            # Darken the target on the first frame of the attack.
+            if self.target_is_not_darkened:
+                self.sprite.color = arcade.color.SMOKY_BLACK
+                self.target_is_not_darkened = False
+
+            full_height = self.burn_texture.image.height
+            height = max(int(full_height * (self.time / self.total_duration)), 1)
+            y = full_height - height
+
+            for freeze_sprite in self.burn_sprites:
+                freeze_sprite.texture = self.burn_texture.crop(
+                    0,
+                    y,
+                    self.burn_texture.image.width - 1,
+                    height
+                )
+                freeze_sprite.height = max(int(self.sprite.height * (self.time / self.total_duration)), 1)
+                freeze_sprite.center_y = int(self.sprite.center_y - ((self.sprite.height - freeze_sprite.height) / 2))
+
+
+    def get_sprites(self):
+        return self.burn_sprites

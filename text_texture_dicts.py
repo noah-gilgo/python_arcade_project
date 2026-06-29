@@ -18,7 +18,8 @@ class BattleMessageTextureDict(dict):
             "SWOON",
             "TIRED",
             "AWAKE",
-            "PURIFIED"
+            "PURIFIED",
+            "BURNED"
         ]
 
         textures = load_textures_at_filepath_into_texture_array("assets/sprites/glyph_sprites/battle_message_sprites/words")

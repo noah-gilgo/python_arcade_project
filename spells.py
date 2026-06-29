@@ -9,7 +9,7 @@ import default_data
 from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
-from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation
+from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation, BurnAnimation
 
 
 class Spell:
@@ -91,6 +91,19 @@ class Spell:
                         freeze_animation = FreezeAnimation(target=target)
                         controller.sprites_and_effects_collection.effects.append(freeze_animation)
                         for sprite in freeze_animation.get_sprites():
+                            controller.sprites_and_effects_collection.effects_sprites.append(sprite)
+                        controller.enemies.remove(target)
+                    elif self.name.lower() == "fireshock":
+                        damage_dealt_text = "BURNED"
+                        damage_dealt_color = arcade.color.WHITE
+                        burn_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav",
+                                                         False)
+                        burn_sound.play()
+                        target.non_idle_timer = 0
+                        target.set_animation_state("battle_hurt")
+                        burn_animation = BurnAnimation(target=target)
+                        controller.sprites_and_effects_collection.effects.append(burn_animation)
+                        for sprite in burn_animation.get_sprites():
                             controller.sprites_and_effects_collection.effects_sprites.append(sprite)
                         controller.enemies.remove(target)
                 else:
