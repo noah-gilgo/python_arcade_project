@@ -35,7 +35,7 @@ class BattleState(Enum):
     PLAYER_COMMAND = auto()
     PLAYER_ATTACK_SELECT = auto()
     PLAYER_ACT_ENEMY_SELECT = auto()
-    PLAYER_MAGIC_ENEMY_SELECT = auto()
+    PLAYER_MAGIC_CHARACTER_SELECT = auto()
     PLAYER_ACT_SELECT = auto()
     PLAYER_ITEM_SELECT = auto()
     PLAYER_ITEM_PLAYER_SELECT = auto()
@@ -1322,19 +1322,28 @@ class SelectCommand(Command):
                 return
 
             case BattleState.PLAYER_MAGIC_SELECT:
+                is_friendly_spell = None
                 if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell"):
                     spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                    is_friendly_spell = spell_or_act.is_friendly_spell
                 else:
                     spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
                 if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
-                    self.controller.state = BattleState.PLAYER_MAGIC_ENEMY_SELECT
-                    self.controller.open_enemy_select_menu()
+                    self.controller.state = BattleState.PLAYER_MAGIC_CHARACTER_SELECT
+                    if is_friendly_spell is not None:
+                        if is_friendly_spell:
+                            self.controller.open_player_select_menu()
+                        else:
+                            self.controller.open_enemy_select_menu()
                     self.controller.menu_select_sound.play()
                 return
 
-            case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
-                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
-                selected_target_enemy.unfocus()
+            case BattleState.PLAYER_MAGIC_CHARACTER_SELECT:
+                if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "enemy"):
+                    selected_target_character = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                else:
+                    selected_target_character = self.controller.focus_stack.get_highest_member().get_focused_widget().player
+                selected_target_character.unfocus()
                 self.controller.focus_stack.pop(remove_widget=True)
                 is_spell = hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell")
                 if is_spell:
@@ -1348,14 +1357,14 @@ class SelectCommand(Command):
                 if is_spell:
                     spell_or_act_action = SpellAction(
                         actor=current_player_character,
-                        targets=[selected_target_enemy],
+                        targets=[selected_target_character],
                         spell=selected_spell_or_act,
                         controller=self.controller
                     )
                 else:
                     spell_or_act_action = ActAction(
                         actor=current_player_character,
-                        target=selected_target_enemy,
+                        target=selected_target_character,
                         act=selected_spell_or_act,
                         controller=self.controller
                     )
@@ -1469,9 +1478,12 @@ class CancelCommand(Command):
                 previous_player.set_animation_state("battle_idle")
             case BattleState.PLAYER_MAGIC_SELECT:
                 self.backup_out_of_focus_stack()
-            case BattleState.PLAYER_MAGIC_ENEMY_SELECT:
-                focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
-                focused_enemy.unfocus()
+            case BattleState.PLAYER_MAGIC_CHARACTER_SELECT:
+                if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "enemy"):
+                    focused_character = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                else:
+                    focused_character = self.controller.focus_stack.get_highest_member().get_focused_widget().player
+                focused_character.unfocus()
                 self.backup_out_of_focus_stack()
             case BattleState.PLAYER_ATTACK_SELECT:
                 focused_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
@@ -1596,13 +1608,25 @@ class UpCommand(Command):
 
     def execute(self):
         match self.controller.state:
-            case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
+            case BattleState.PLAYER_ATTACK_SELECT | \
                  BattleState.PLAYER_SPARE_SELECT | BattleState.PLAYER_ACT_ENEMY_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
                 self.controller.move_focus_between_enemies_in_enemy_select(
                     previously_focused_widget,
                     currently_focused_widget
                 )
+            case BattleState.PLAYER_MAGIC_CHARACTER_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
+                if hasattr(previously_focused_widget, "enemy"):
+                    self.controller.move_focus_between_enemies_in_enemy_select(
+                        previously_focused_widget,
+                        currently_focused_widget
+                    )
+                else:
+                    self.controller.move_focus_between_players_in_player_select(
+                        previously_focused_widget,
+                        currently_focused_widget
+                    )
             case BattleState.PLAYER_ITEM_PLAYER_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_up_in_ui()
 
@@ -1652,13 +1676,25 @@ class DownCommand(Command):
 
     def execute(self):
         match self.controller.state:
-            case BattleState.PLAYER_MAGIC_ENEMY_SELECT | BattleState.PLAYER_ATTACK_SELECT | \
+            case BattleState.PLAYER_ATTACK_SELECT | \
                  BattleState.PLAYER_SPARE_SELECT | BattleState.PLAYER_ACT_ENEMY_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
                 self.controller.move_focus_between_enemies_in_enemy_select(
                     previously_focused_widget,
                     currently_focused_widget
                 )
+            case BattleState.PLAYER_MAGIC_CHARACTER_SELECT:
+                previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
+                if hasattr(previously_focused_widget, "enemy"):
+                    self.controller.move_focus_between_enemies_in_enemy_select(
+                        previously_focused_widget,
+                        currently_focused_widget
+                    )
+                else:
+                    self.controller.move_focus_between_players_in_player_select(
+                        previously_focused_widget,
+                        currently_focused_widget
+                    )
             case BattleState.PLAYER_ITEM_PLAYER_SELECT:
                 previously_focused_widget, currently_focused_widget = self.attempt_to_move_down_in_ui()
                 self.controller.move_focus_between_players_in_player_select(

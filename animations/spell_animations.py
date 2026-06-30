@@ -462,3 +462,8 @@ class BurnAnimation(SingleSpriteAnimation):
 
     def terminate_animation(self):
         pass
+
+"""
+class HealPrayerAnimation(MultiSpriteAnimation):
+    def __init__(self, target: character.Character):
+"""

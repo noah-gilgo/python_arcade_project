@@ -7,7 +7,7 @@ from arcade.types import Color
 
 import character
 import default_data
-from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation
+from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation, HealAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
 from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation, BurnAnimation
@@ -39,6 +39,13 @@ class Spell:
         """
         return self.base_health_change * caster.magic
 
+    def spell_healing_function(self, caster) -> float:
+        """
+        Calculates the damage healed by the spell depending on caster stats.
+        :return:
+        """
+        return self.base_health_change * caster.magic
+
     def affect_targets_with_spell(self, caster, targets, controller):
         """ Perform the calculations required after a spell is cast on a character. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
@@ -50,13 +57,15 @@ class Spell:
             schedule_battle_idle = True
             if target not in targets:
                 target = target[0]
-            damage_dealt = 0
             if self.is_friendly_spell:
-                new_hp = target.hp + self.base_health_change
+                new_hp = target.hp + self.spell_healing_function(caster)
+                """
                 if new_hp < target.max_hp:
                     target.hp = new_hp
                 else:
                     target.hp = target.max_hp
+                """
+                target.modify_hp(new_hp)
             else:
                 damage_dealt = self.spell_damage_function(caster)
                 if self.element_id:
@@ -69,71 +78,71 @@ class Spell:
 
                 target.hp -= int(damage_dealt)
 
-            damage_dealt_text = str(damage_dealt)
+                damage_dealt_text = str(damage_dealt)
 
-            damage_dealt_color = Color.from_iterable([
-                int((caster.battle_ui_color.r + 255) / 2),
-                int((caster.battle_ui_color.g + 255) / 2),
-                int((caster.battle_ui_color.b + 255) / 2),
-                int(caster.battle_ui_color.a)
-            ])
+                damage_dealt_color = Color.from_iterable([
+                    int((caster.battle_ui_color.r + 255) / 2),
+                    int((caster.battle_ui_color.g + 255) / 2),
+                    int((caster.battle_ui_color.b + 255) / 2),
+                    int(caster.battle_ui_color.a)
+                ])
 
-            # If the attack reduces the enemy HP to 0
-            if target.hp <= 0:
-                controller.enemies_defeated_violently += 1
-                schedule_battle_idle = False
-                if self.element_id == 8: # Fire/Ice
-                    if self.name.lower() == "iceshock":
-                        damage_dealt_text = "FROZEN"
+                # If the attack reduces the enemy HP to 0
+                if target.hp <= 0:
+                    controller.enemies_defeated_violently += 1
+                    schedule_battle_idle = False
+                    if self.element_id == 8: # Fire/Ice
+                        if self.name.lower() == "iceshock":
+                            damage_dealt_text = "FROZEN"
+                            damage_dealt_color = arcade.color.WHITE
+                            freeze_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav", False)
+                            freeze_sound.play()
+                            target.non_idle_timer = 0
+                            target.set_animation_state("battle_hurt")
+                            freeze_animation = FreezeAnimation(target=target)
+                            controller.sprites_and_effects_collection.effects.append(freeze_animation)
+                            for sprite in freeze_animation.get_sprites():
+                                controller.sprites_and_effects_collection.effects_sprites.append(sprite)
+                            controller.enemies.remove(target)
+                        elif self.name.lower() == "fireshock":
+                            damage_dealt_text = "BURNED"
+                            damage_dealt_color = arcade.color.WHITE
+                            target.non_idle_timer = 0
+                            controller.enemies.remove(target)
+                    else:
+                        damage_dealt_text = "LOST"
                         damage_dealt_color = arcade.color.WHITE
-                        freeze_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav", False)
-                        freeze_sound.play()
-                        target.non_idle_timer = 0
-                        target.set_animation_state("battle_hurt")
-                        freeze_animation = FreezeAnimation(target=target)
-                        controller.sprites_and_effects_collection.effects.append(freeze_animation)
-                        for sprite in freeze_animation.get_sprites():
+                        controller.enemy_flee_sound.play()
+                        enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
+                        controller.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)
+                        for sprite in enemy_fleeing_animation.get_sprites():
                             controller.sprites_and_effects_collection.effects_sprites.append(sprite)
                         controller.enemies.remove(target)
-                    elif self.name.lower() == "fireshock":
-                        damage_dealt_text = "BURNED"
-                        damage_dealt_color = arcade.color.WHITE
-                        target.non_idle_timer = 0
-                        controller.enemies.remove(target)
-                else:
-                    damage_dealt_text = "LOST"
-                    damage_dealt_color = arcade.color.WHITE
-                    controller.enemy_flee_sound.play()
-                    enemy_fleeing_animation = EnemyFleeingAnimation(actor=target)
-                    controller.sprites_and_effects_collection.effects.append(enemy_fleeing_animation)
-                    for sprite in enemy_fleeing_animation.get_sprites():
-                        controller.sprites_and_effects_collection.effects_sprites.append(sprite)
-                    controller.enemies.remove(target)
 
-            damage_dealt_animation = NumberBounceAnimation(
-                text=damage_dealt_text,
-                color=damage_dealt_color,
-                target=target,
-                sprites_and_effects_collection=controller.sprites_and_effects_collection
-            )
+                damage_dealt_animation = NumberBounceAnimation(
+                    text=damage_dealt_text,
+                    color=damage_dealt_color,
+                    target=target,
+                    sprites_and_effects_collection=controller.sprites_and_effects_collection
+                )
 
-            shake_animation = ShakeAnimation(
-                sprite=target
-            )
+                shake_animation = ShakeAnimation(
+                    sprite=target
+                )
 
-            color_filter_animation = FadeInFadeOutColorAnimation(
-                sprite=target,
-                color=self.magic_color
-            )
+                color_filter_animation = FadeInFadeOutColorAnimation(
+                    sprite=target,
+                    color=self.magic_color
+                )
 
-            target.set_animation_state("battle_hurt")
-            controller.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
-            controller.sprites_and_effects_collection.effects.append(damage_dealt_animation)
-            controller.sprites_and_effects_collection.effects.append(shake_animation)
-            controller.sprites_and_effects_collection.effects.append(color_filter_animation)
-            controller.sprites_and_effects_collection.effects_sprites.append(color_filter_animation.filter_sprite)
-            if schedule_battle_idle:
-                pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
+                target.set_animation_state("battle_hurt")
+                controller.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
+                controller.sprites_and_effects_collection.effects.append(damage_dealt_animation)
+                controller.sprites_and_effects_collection.effects.append(shake_animation)
+                controller.sprites_and_effects_collection.effects.append(color_filter_animation)
+                controller.sprites_and_effects_collection.effects_sprites.append(color_filter_animation.filter_sprite)
+                if schedule_battle_idle:
+                    pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
 
     def animate_spell(self, targets: list[character.Character], sprites_and_effects_collection: SpritesAndEffectsCollection):
         """ Animate the spell being cast. """
@@ -143,12 +152,18 @@ class Spell:
                 sprites_and_effects_collection.effects.append(new_animation)
                 new_animation.center_x = target.center_x
                 new_animation.center_y = target.center_y
-                for animated_sprite in new_animation.sprites:
-                    if isinstance(animated_sprite, Sprite):
-                        sprites_and_effects_collection.effects_sprites.append(animated_sprite)
-                    else:
-                        sprites_and_effects_collection.effects_sprites.append(animated_sprite.sprite)
-
+                if hasattr(new_animation, "sprites"):
+                    for animated_sprite in new_animation.sprites:
+                        if isinstance(animated_sprite, Sprite):
+                            sprites_and_effects_collection.effects_sprites.append(animated_sprite)
+                        else:
+                            sprites_and_effects_collection.effects_sprites.append(animated_sprite.sprite)
+                elif hasattr(new_animation, "get_sprites"):
+                    for animated_sprite in new_animation.get_sprites():
+                        if isinstance(animated_sprite, Sprite):
+                            sprites_and_effects_collection.effects_sprites.append(animated_sprite)
+                        else:
+                            sprites_and_effects_collection.effects_sprites.append(animated_sprite.sprite)
 
 def generate_basic_spells():
     """ Generates some basic spells from Deltarune. """
@@ -199,3 +214,25 @@ class FireShock(Spell):
         """
 
         return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
+
+
+class HealPrayer(Spell):
+    def __init__(self):
+        super().__init__(
+            name="Heal Prayer",
+            description="Heal Ally",
+            tp_cost=32,
+            base_health_change=0,
+            is_friendly_spell=True,
+            is_healing_spell=True,
+            is_pacifying_spell=False,
+            is_aoe_spell=False,
+            animation=HealAnimation(target=None)
+        )
+
+    def spell_healing_function(self, caster) -> float:
+        """
+        Calculates the damage healed by the spell depending on caster stats.
+        :return:
+        """
+        return 5 * caster.magic
