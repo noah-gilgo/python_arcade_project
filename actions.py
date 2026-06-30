@@ -162,7 +162,7 @@ class SpellAction(Action):
                 text="* " + self.actor.name + " cast " + self.spell.name + "!",
                 rate_of_text=0.03
             ))
-            pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(targeted_enemies, self.sprite_list, self.animation_list), 0.5)
+            pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(targeted_enemies, self.controller.sprites_and_effects_collection), 0.5)
             pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, targeted_enemies, self.controller), 1.0)
             pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
         else:
