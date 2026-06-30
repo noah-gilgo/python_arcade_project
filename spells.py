@@ -2,6 +2,7 @@ import random
 
 import arcade.color
 import pyglet.clock
+from arcade import Sprite
 from arcade.types import Color
 
 import character
@@ -9,7 +10,8 @@ import default_data
 from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
-from animations.spell_animations import IceShockAnimation, FreezeAnimation
+from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation, BurnAnimation
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
 class Spell:
@@ -93,6 +95,11 @@ class Spell:
                         for sprite in freeze_animation.get_sprites():
                             controller.sprites_and_effects_collection.effects_sprites.append(sprite)
                         controller.enemies.remove(target)
+                    elif self.name.lower() == "fireshock":
+                        damage_dealt_text = "BURNED"
+                        damage_dealt_color = arcade.color.WHITE
+                        target.non_idle_timer = 0
+                        controller.enemies.remove(target)
                 else:
                     damage_dealt_text = "LOST"
                     damage_dealt_color = arcade.color.WHITE
@@ -128,16 +135,19 @@ class Spell:
             if schedule_battle_idle:
                 pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
 
-    def animate_spell(self, targets: list[character.Character], spell_sprite_list, animation_list):
+    def animate_spell(self, targets: list[character.Character], sprites_and_effects_collection: SpritesAndEffectsCollection):
         """ Animate the spell being cast. """
         if self.animation:
             for target in targets:
-                new_animation = self.animation.__class__(target.center_x, target.center_y)
-                animation_list.append(new_animation)
+                new_animation = self.animation.__class__(target)
+                sprites_and_effects_collection.effects.append(new_animation)
                 new_animation.center_x = target.center_x
                 new_animation.center_y = target.center_y
                 for animated_sprite in new_animation.sprites:
-                    spell_sprite_list.append(animated_sprite.sprite)
+                    if isinstance(animated_sprite, Sprite):
+                        sprites_and_effects_collection.effects_sprites.append(animated_sprite)
+                    else:
+                        sprites_and_effects_collection.effects_sprites.append(animated_sprite.sprite)
 
 
 def generate_basic_spells():
@@ -158,6 +168,29 @@ class IceShock(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=IceShockAnimation()
+        )
+
+    def spell_damage_function(self, caster) -> float:
+        """ Calculates the damage dealt by the spell depending on caster stats.
+        :return: None
+        """
+
+        return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
+
+
+class FireShock(Spell):
+    def __init__(self):
+        super().__init__(
+            name="FireShock",
+            description="Damage w/ FIRE",
+            tp_cost=16,
+            element_id=8,
+            base_health_change=100,
+            is_friendly_spell=False,
+            is_healing_spell=False,
+            is_pacifying_spell=False,
+            is_aoe_spell=False,
+            animation=FireShockAnimation()
         )
 
     def spell_damage_function(self, caster) -> float:
