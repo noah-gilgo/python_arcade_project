@@ -10,6 +10,7 @@ from arcade.utils import is_iterable
 #import character
 import settings
 import texture_methods
+from animations.common_animations import FadeInFadeOutColorAnimation
 #from character import Character
 from graphics_methods import make_texture_solid_color, ease_out
 from graphics_objects import MultiSpriteAnimation, SingleSpriteAnimation
@@ -374,8 +375,16 @@ class HealAnimation(SparkleAnimation):
     def __init__(self, target: Sprite):
         if target:
             target_rect = target.rect
+            self.color_filter_animation = FadeInFadeOutColorAnimation(
+                sprite=target,
+                color=arcade.color.WHITE,
+                total_duration=0.3
+            )
+            target.sprites_and_effects_collection.effects.append(self.color_filter_animation)
+            target.sprites_and_effects_collection.effects_sprites.append(self.color_filter_animation.filter_sprite)
         else:
             target_rect = LBWH(0,0,1,1)
+            self.color_filter_animation = None
 
         super().__init__(
             target=target,
@@ -384,6 +393,16 @@ class HealAnimation(SparkleAnimation):
             particle_starting_rect=target_rect,
             number_of_particles=10
         )
+
+    def update_animation(self, delta_time: float):
+        super().update_animation(delta_time)
+        if self.color_filter_animation:
+            self.color_filter_animation.update_animation(delta_time)
+
+    def terminate_animation(self):
+        super().terminate_animation()
+        if self.color_filter_animation:
+            self.color_filter_animation.terminate_animation()
 
 
 class TPGainAnimation(SparkleAnimation):

@@ -896,6 +896,7 @@ class BattleController:
             if damage_healt > 0:
                 player_healed = True
                 damage_healed_color = arcade.color.NEON_GREEN # Color(0, 214, 0, 255)
+                """
                 color_filter_animation = FadeInFadeOutColorAnimation(
                     sprite=target,
                     color=arcade.color.WHITE,
@@ -903,6 +904,7 @@ class BattleController:
                 )
                 self.sprites_and_effects_collection.effects.append(color_filter_animation)
                 self.sprites_and_effects_collection.effects_sprites.append(color_filter_animation.filter_sprite)
+                """
 
                 sparkle_animation = HealAnimation(
                     target=target
