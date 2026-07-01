@@ -380,16 +380,18 @@ class PlayerCharacter(character.Character):
                     self.sprites_and_effects_collection.effects.append(shake_animation)
             else:
                 self.player_heal_sound.play()
-
                 damage_dealt_color = arcade.color.NEON_GREEN
-                if self.hp > 0:
-                    if previous_hp < 0:
-                        damage_dealt_text = "UP"
-                        self.set_animation_state("battle_idle")
-                        self.hp = int(self.max_hp / 5)
+                if self.hp + hp_change >= self.max_hp:
+                    self.hp = self.max_hp
+                    damage_dealt_text = "MAX"
                 else:
-                    damage_dealt_text = str(int(hp_change))
-                    damage_dealt_color = arcade.color.NEON_GREEN
+                    if self.hp > 0:
+                        if previous_hp < 0:
+                            damage_dealt_text = "UP"
+                            self.set_animation_state("battle_idle")
+                            self.hp = int(self.max_hp / 5)
+                    else:
+                        damage_dealt_text = str(int(hp_change))
 
         damage_dealt_animation = NumberBounceAnimation(
             text=damage_dealt_text,

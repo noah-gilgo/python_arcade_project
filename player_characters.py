@@ -1,8 +1,9 @@
 from arcade.types import Color
 
+import graphics_objects
 from acts import RalseiRudinnAction1, NoelleRudinnAction1
 from player_character import PlayerCharacter
-from spells import IceShock, Spell, FireShock
+from spells import IceShock, Spell, FireShock, HealPrayer
 
 
 class Kris(PlayerCharacter):
@@ -53,10 +54,26 @@ class Ralsei(PlayerCharacter):
             battle_ui_icon_color=Color(181, 230, 29, 255),
             fight_box_color=Color(0, 255, 0, 255),
             fight_crit_box_color=Color(181, 230, 29, 255),
-            spells=[FireShock()]
+            spells=[HealPrayer(), FireShock()]
         )
 
         self.magic_user_acts = [RalseiRudinnAction1(self)]
+
+        self.animations_by_state.update(
+            {
+                "battle_magic_ready_fireshock": graphics_objects.SimpleLoopAnimation(
+                    sprite_pack_path=self._sprite_pack_path + "/battle_magic_ready_fireshock",
+                    frame_duration=0.2,
+                    loop_animation=True
+                ),
+
+                "battle_magic_fireshock": graphics_objects.SimpleLoopAnimation(
+                    sprite_pack_path=self._sprite_pack_path + "/battle_magic_fireshock",
+                    frame_duration=0.12,
+                    loop_animation=False
+                )
+            }
+        )
 
 
 class Noelle(PlayerCharacter):
@@ -74,17 +91,6 @@ class Noelle(PlayerCharacter):
             fight_crit_box_color=Color(254, 254, 255, 255),
             spells=[
                 Spell(
-                    name="Heal Prayer",
-                    description="Heal Ally",
-                    tp_cost=32,
-                    element_id=2,
-                    base_health_change=30,
-                    is_friendly_spell=True,
-                    is_healing_spell=True,
-                    is_pacifying_spell=False,
-                    is_aoe_spell=False
-                ),
-                Spell(
                     name="Sleep Mist",
                     description="Spare TIRED foes",
                     tp_cost=32,
@@ -95,6 +101,7 @@ class Noelle(PlayerCharacter):
                     is_pacifying_spell=True,
                     is_aoe_spell=True
                 ),
+                HealPrayer(),
                 IceShock(),
                 Spell(
                     name="SnowGrave",
