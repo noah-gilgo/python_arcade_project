@@ -113,6 +113,9 @@ class MultiSpriteAnimation:
     def update_animation(self, delta_time):
         """ Skeleton function for child animations to inherit. """
         self.time += delta_time
+        for sprite in self.sprites:
+            if hasattr(sprite, "update_animation"):
+                sprite.update_animation(delta_time)
 
     # Communicates to parent animation lists to remove this animation.
     def terminate_animation(self):

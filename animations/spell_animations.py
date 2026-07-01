@@ -15,7 +15,7 @@ from texture_methods import load_textures_at_filepath_into_texture_array
 
 
 class IceShockAnimation(MultiSpriteAnimation):
-    def __init__(self, target: character.Character = None):
+    def __init__(self, caster: character.Character = None, target: character.Character = None):
         if target:
             self.target = target
 
@@ -217,7 +217,7 @@ class FreezeAnimation(SingleSpriteAnimation):
 
 
 class FireShockAnimation(MultiSpriteAnimation):
-    def __init__(self, target: character.Character = None):
+    def __init__(self, caster: character.Character = None, target: character.Character = None):
         if target:
             self.target = target
             self.triangle = (
@@ -539,11 +539,79 @@ class RudeBusterImpactBeam(RudeBusterBeam):
 
 
 class RudeBusterAnimation(MultiSpriteAnimation):
-    def __init__(self, caster: player_character.PlayerCharacter, target: character.Character):
-        self.caster = caster
-        self.target = target
+    def __init__(self, caster: character.Character = None, target: character.Character = None):
+        if caster is not None and target is not None:
+            self.caster = caster
+            self.target = target
 
-        self.rude_buster_beam_textures = load_textures_at_filepath_into_texture_array(
-            folder_path="assets/sprites/effects/rude_buster_beam"
+            self.rude_buster_beam_textures = load_textures_at_filepath_into_texture_array(
+                folder_path="assets/sprites/effects/rude_buster_beam"
+            )
+            self.number_of_wave_sprites = 14
+            self.trajectory_arc_height = 1
+
+            self.rude_buster_arc_coordinates = self.calculate_parabolic_coordinates_of_rude_buster_beam()
+
+            self.time_for_beam_to_connect_to_target = 0.8  # The time it takes for the beam to reach the target
+            self.time_between_each_beam_spawn = self.time_for_beam_to_connect_to_target / self.number_of_wave_sprites
+            self.time_since_last_beam_spawn = 0.0
+            self.current_arc_coordinate_index = 0
+
+        super().__init__(
+            sprites=[]
         )
-        self.number_of_wave_sprites = 20
+
+    def update_animation(self, delta_time):
+        self.time += delta_time
+        self.time_since_last_beam_spawn += delta_time
+        if self.current_arc_coordinate_index < self.number_of_wave_sprites:
+            if self.time_since_last_beam_spawn > self.time_between_each_beam_spawn:
+                self.time_since_last_beam_spawn -= self.time_between_each_beam_spawn
+                self.sprites.append(
+                    RudeBusterTrailingBeam(
+                        beam_textures=self.rude_buster_beam_textures,
+                        center_x=self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][0],
+                        center_y=self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][1]
+                    )
+                )
+                self.current_arc_coordinate_index += 1
+
+
+    def calculate_parabolic_coordinates_of_rude_buster_beam(self):
+        """
+        Calculates the coordinates and angles of every pre-impact sprite of the Rude Buster beam.
+        :return: A list of all the coordinates for each Rude Buster wave sprite.
+        """
+        caster_x = self.caster.center_x
+        caster_y = self.caster.center_y
+        target_x = self.target.center_x
+        target_y = self.target.center_y
+
+        # Distance between caster and target along x and y dimensions
+        dx = target_x - caster_x
+        dy = target_y - caster_y
+
+        # Horizontal angle between caster and target
+        theta = math.atan2(dy, dx)
+
+        # Horizontal/vertical displacement of the coordinates based on the spell angle
+        cos_theta = math.cos(theta)
+        sin_theta = math.sin(theta)
+
+        # Array containing the points to be returned
+        points = []
+        for i in range(self.number_of_wave_sprites):
+            t = i / self.number_of_wave_sprites
+            y = 4 * self.trajectory_arc_height * t * (1 - t)
+
+            # Local coordinates
+            lx = dx * t
+            ly = y
+
+            # World coordinates
+            wx = caster_x + lx * cos_theta - ly * sin_theta
+            wy = caster_y + lx * sin_theta + ly * cos_theta
+
+            points.append([wx, wy])
+
+        return points
