@@ -4,7 +4,7 @@ import arcade
 from arcade import Sprite, Sound, play_sound, Texture
 from math import sin, cos, atan2
 
-from arcade.easing import ease_in
+from arcade.easing import ease_in, ease_out
 
 import character
 import player_character
@@ -471,7 +471,7 @@ class RudeBusterBeam(Sprite):
     The "wave" sprite that makes up the Rude Buster when Susie casts it.
     """
     def __init__(self, beam_textures: list[Texture], center_x: float = 0.0, center_y: float = 0.0,
-                 height: float = 100.0, angle: float = 0.0):
+                 height: float = 200.0, angle: float = 0.0):
         """
         :param beam_textures: The textures that the beam sprites cycle through to create the illusion of movement.
         :param center_x: The x coordinate of the center of the beam.
@@ -488,7 +488,7 @@ class RudeBusterBeam(Sprite):
         self.textures = beam_textures
         self.texture_cycle_rate = 0.1 # Amount of time that passes between texture changes
         self.time = 0.0
-        self.lifetime = 2.0
+        self.lifetime = 3.0
 
         self.number_of_textures = len(self.textures)
 
@@ -499,6 +499,43 @@ class RudeBusterBeam(Sprite):
 
         current_texture_index = int((self.time // self.texture_cycle_rate) % self.number_of_textures)
         self.set_texture(current_texture_index)
+
+
+class RudeBusterTrailingBeam(RudeBusterBeam):
+    """
+    The trailing beam that follows the main beam.
+    """
+    def __init__(self, beam_textures: list[Texture], center_x: float = 0.0, center_y: float = 0.0,
+                 height: float = 150.0, angle: float = 0.0):
+        super().__init__(beam_textures, center_x, center_y, height, angle)
+        self.alpha = 128
+
+    def update_animation(self, delta_time):
+        super().update_animation(delta_time)
+        if self.time > 0.2:
+            self.alpha -= 600 * delta_time
+            self.height -= 600 * delta_time
+
+
+class RudeBusterImpactBeam(RudeBusterBeam):
+    """
+    The Rude Buster sprites created on impact with the target.
+    """
+    def __init__(self, beam_textures: list[Texture], center_x: float = 0.0, center_y: float = 0.0,
+                 height: float = 200.0, angle: float = 0.0):
+        super().__init__(beam_textures, center_x, center_y, height, angle)
+        self.starting_width = 50  # The starting width of the sprite in pixels
+        self.width = self.starting_width
+        self.total_shrink_duration = 0.8
+
+
+    def update_animation(self, delta_time):
+        super().update_animation(delta_time)
+        if self.time < self.total_shrink_duration:
+            self.width = max(1.0, self.starting_width * ease_out(self.time / self.total_shrink_duration))
+            self.alpha = max(1.0, 255 * ease_out(self.time / self.total_shrink_duration))
+        else:
+            self.kill()
 
 
 class RudeBusterAnimation(MultiSpriteAnimation):
