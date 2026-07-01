@@ -78,8 +78,8 @@ class Spell:
             if target not in targets:
                 target = target[0]
             if self.is_friendly_spell:
-                new_hp = target.hp + self.spell_healing_function(caster)
-                target.modify_hp(new_hp)
+                # new_hp = target.hp + self.spell_healing_function(caster)
+                target.modify_hp(self.spell_healing_function(caster))
             else:
                 damage_dealt = self.spell_damage_function(caster)
                 if self.element_id:
@@ -286,7 +286,7 @@ class HealPrayer(Spell):
         Calculates the damage healed by the spell depending on caster stats.
         :return:
         """
-        return 5 * caster.magic
+        return 5 * caster.get_total_magic()
 
     def cast_spell(self, caster, targeted_characters, controller):
         """

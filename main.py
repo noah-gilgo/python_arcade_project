@@ -190,7 +190,7 @@ class GameView(arcade.View):
         self.player_three.center_y = self._holy_arc[1][1]
 
         self.player_three.equip_weapon(ScarfMark())
-        self.player_three.equip_armor_to_slot_1(WhiteRibbon())
+        self.player_three.equip_armor_to_slot_1(MysticBand())
         self.player_three.equip_armor_to_slot_2(WaferGuard())
         self.player_characters.append(self.player_three)
 
@@ -202,7 +202,7 @@ class GameView(arcade.View):
 
         self.player_four.equip_weapon(SnowRing())
         self.player_four.equip_armor_to_slot_1(RoyalPin())
-        self.player_four.equip_armor_to_slot_2(MysticBand())
+        self.player_four.equip_armor_to_slot_2(WhiteRibbon())
         self.player_characters.append(self.player_four)
 
         self.player_four.get_valid_animation_states()

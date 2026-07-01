@@ -242,6 +242,20 @@ class PlayerCharacter(character.Character):
         # If there was already armor in that slot, return it.
         return armor_previously_in_slot_2
 
+    def get_total_magic(self) -> int:
+        """
+        Returns the total magic stat of the user including weapons and armor.
+        :return: The total magic stat of the user including weapons and armor.
+        """
+        magic_stat = self.magic
+        if self.weapon_slot:
+            magic_stat += self.weapon_slot.magic_points
+        if self.armor_slot_1:
+            magic_stat += self.armor_slot_1.magic_points
+        if self.armor_slot_2:
+            magic_stat += self.armor_slot_2.magic_points
+
+        return magic_stat
 
     def calculate_received_damage(self, base_damage: float, element_id: int = 0):
         """
