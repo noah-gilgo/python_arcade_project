@@ -167,14 +167,19 @@ class SpellAction(Action):
                 text="* " + self.actor.name + " cast " + self.spell.name + "!",
                 rate_of_text=0.03
             ))
-            pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(targeted_characters, self.controller.sprites_and_effects_collection), 0.5)
-            pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, targeted_characters, self.controller), 1.0)
-            pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
+            #pyglet.clock.schedule_once(lambda dt: self.spell.animate_spell(targeted_characters, self.controller.sprites_and_effects_collection), 0.5)
+            #pyglet.clock.schedule_once(lambda dt: self.spell.affect_targets_with_spell(self.actor, targeted_characters, self.controller), 1.0)
+            self.spell.cast_spell(
+                caster=self.actor,
+                targeted_characters=targeted_characters,
+                controller=self.controller
+            )
+            # pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
         else:
             self.actor.set_animation_state("battle_idle")
 
     def ready_act(self):
-        self.actor.set_animation_state("battle_magic_ready")
+        self.actor.set_animation_state(self.spell.ready_animation_state)
 
         self.controller.change_player_icon("assets/textures/gui_graphics/action_icons/magic_icon.png")
 

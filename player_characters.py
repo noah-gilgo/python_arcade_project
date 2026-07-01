@@ -1,5 +1,6 @@
 from arcade.types import Color
 
+import graphics_objects
 from acts import RalseiRudinnAction1, NoelleRudinnAction1
 from player_character import PlayerCharacter
 from spells import IceShock, Spell, FireShock, HealPrayer
@@ -57,6 +58,22 @@ class Ralsei(PlayerCharacter):
         )
 
         self.magic_user_acts = [RalseiRudinnAction1(self)]
+
+        self.animations_by_state.update(
+            {
+                "battle_magic_ready_fireshock": graphics_objects.SimpleLoopAnimation(
+                    sprite_pack_path=self._sprite_pack_path + "/battle_magic_ready_fireshock",
+                    frame_duration=0.2,
+                    loop_animation=True
+                ),
+
+                "battle_magic_fireshock": graphics_objects.SimpleLoopAnimation(
+                    sprite_pack_path=self._sprite_pack_path + "/battle_magic_fireshock",
+                    frame_duration=0.12,
+                    loop_animation=False
+                )
+            }
+        )
 
 
 class Noelle(PlayerCharacter):

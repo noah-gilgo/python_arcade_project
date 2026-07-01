@@ -19,7 +19,8 @@ class Spell:
     def __init__(self, name: str = "Default Spell", description: str = "", tp_cost: int = 0, element_id: int = 0,
                  base_health_change: int = 0, is_friendly_spell: bool = False, is_healing_spell: bool = False,
                  is_pacifying_spell: bool = False, is_aoe_spell: bool = False, animation: MultiSpriteAnimation = None,
-                 magic_color: Color = arcade.color.WHITE):
+                 magic_color: Color = arcade.color.WHITE, ready_animation_state: str = "battle_magic_ready",
+                 cast_animation_state: str = "battle_magic", time_before_battle_idle: float = 0.0):
         self.name = name  # Name of the spell
         self.description = description  # Description of the spell
         self.tp_cost = tp_cost  # TP cost of the spell
@@ -31,6 +32,25 @@ class Spell:
         self.is_aoe_spell = is_aoe_spell  # True if the spell affects all targets on the targeted side
         self.animation = animation  # The animation that plays when casting the spell.
         self.magic_color = magic_color  # The color that the enemy flashes when hit with the spell.
+
+        self.ready_animation_state = ready_animation_state  # The animation state given to the character when they've been told to cast the spell.
+        self.cast_animation_state = cast_animation_state  # The animation state given to the character when they cast the spell.
+        self.time_before_battle_idle = time_before_battle_idle  # If provided, the amount of time that will pass before the casters animation state is returned to battle_idle.
+
+    def cast_spell(self, caster, targeted_characters, controller):
+        """
+        Casts the spell.
+        :param caster: The PlayerCharacter casting the spell.
+        :param targeted_characters: The targeted characters that the spell is being cast upon.
+        :param controller: The battle controller.
+        :return: None
+        """
+
+        self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
+        self.affect_targets_with_spell(caster, targeted_characters, controller)
+        caster.set_animation_state(self.cast_animation_state)
+        if self.time_before_battle_idle > 0.0:
+            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
     def spell_damage_function(self, caster) -> float:
         """
@@ -59,12 +79,6 @@ class Spell:
                 target = target[0]
             if self.is_friendly_spell:
                 new_hp = target.hp + self.spell_healing_function(caster)
-                """
-                if new_hp < target.max_hp:
-                    target.hp = new_hp
-                else:
-                    target.hp = target.max_hp
-                """
                 target.modify_hp(new_hp)
             else:
                 damage_dealt = self.spell_damage_function(caster)
@@ -182,7 +196,8 @@ class IceShock(Spell):
             is_healing_spell=False,
             is_pacifying_spell=False,
             is_aoe_spell=False,
-            animation=IceShockAnimation()
+            animation=IceShockAnimation(),
+            time_before_battle_idle=1.0
         )
 
     def spell_damage_function(self, caster) -> float:
@@ -191,6 +206,22 @@ class IceShock(Spell):
         """
 
         return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
+
+    def cast_spell(self, caster, targeted_characters, controller):
+        """
+        Casts the spell.
+        :param caster: The PlayerCharacter casting the spell.
+        :param targeted_characters: The targeted characters that the spell is being cast upon.
+        :param controller: The battle controller.
+        :return: None
+        """
+
+        # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
+        caster.set_animation_state(self.cast_animation_state)
+        pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.9)
+        pyglet.clock.schedule_once(lambda dt: self.animate_spell(targeted_characters, controller.sprites_and_effects_collection), 0.5)
+        if self.time_before_battle_idle > 0.0:
+            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
 
 class FireShock(Spell):
@@ -205,7 +236,10 @@ class FireShock(Spell):
             is_healing_spell=False,
             is_pacifying_spell=False,
             is_aoe_spell=False,
-            animation=FireShockAnimation()
+            animation=FireShockAnimation(),
+            time_before_battle_idle=1.0,
+            ready_animation_state="battle_magic_ready_fireshock",
+            cast_animation_state="battle_magic_fireshock"
         )
 
     def spell_damage_function(self, caster) -> float:
@@ -214,6 +248,22 @@ class FireShock(Spell):
         """
 
         return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
+
+    def cast_spell(self, caster, targeted_characters, controller):
+        """
+        Casts the spell.
+        :param caster: The PlayerCharacter casting the spell.
+        :param targeted_characters: The targeted characters that the spell is being cast upon.
+        :param controller: The battle controller.
+        :return: None
+        """
+
+        # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
+        caster.set_animation_state(self.cast_animation_state)
+        pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.5)
+        pyglet.clock.schedule_once(lambda dt: self.animate_spell(targeted_characters, controller.sprites_and_effects_collection), 0.5)
+        if self.time_before_battle_idle > 0.0:
+            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
 
 class HealPrayer(Spell):
@@ -227,7 +277,8 @@ class HealPrayer(Spell):
             is_healing_spell=True,
             is_pacifying_spell=False,
             is_aoe_spell=False,
-            animation=HealAnimation(target=None)
+            animation=HealAnimation(target=None),
+            time_before_battle_idle=0.7
         )
 
     def spell_healing_function(self, caster) -> float:
