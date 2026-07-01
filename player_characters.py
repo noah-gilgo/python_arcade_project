@@ -91,17 +91,6 @@ class Noelle(PlayerCharacter):
             fight_crit_box_color=Color(254, 254, 255, 255),
             spells=[
                 Spell(
-                    name="Heal Prayer",
-                    description="Heal Ally",
-                    tp_cost=32,
-                    element_id=2,
-                    base_health_change=30,
-                    is_friendly_spell=True,
-                    is_healing_spell=True,
-                    is_pacifying_spell=False,
-                    is_aoe_spell=False
-                ),
-                Spell(
                     name="Sleep Mist",
                     description="Spare TIRED foes",
                     tp_cost=32,
@@ -112,6 +101,7 @@ class Noelle(PlayerCharacter):
                     is_pacifying_spell=True,
                     is_aoe_spell=True
                 ),
+                HealPrayer(),
                 IceShock(),
                 Spell(
                     name="SnowGrave",

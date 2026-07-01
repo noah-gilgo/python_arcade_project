@@ -278,7 +278,7 @@ class HealPrayer(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=HealAnimation(target=None),
-            time_before_battle_idle=0.7
+            time_before_battle_idle=0.9
         )
 
     def spell_healing_function(self, caster) -> float:
