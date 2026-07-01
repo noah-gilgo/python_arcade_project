@@ -391,7 +391,7 @@ class FireShockAnimation(MultiSpriteAnimation):
             )
 
             self.circle_radius += 5
-            self.circle_alpha = self.circle_alpha - 18 if self.circle_alpha - 18 > 0 else 0
+            self.circle_alpha = self.circle_alpha - 12 if self.circle_alpha - 12 > 0 else 0
 
     def terminate_animation(self):
         for sprite in self.sprites[3:]:

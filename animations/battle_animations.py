@@ -394,11 +394,6 @@ class HealAnimation(SparkleAnimation):
             number_of_particles=10
         )
 
-    def update_animation(self, delta_time: float):
-        super().update_animation(delta_time)
-        if self.color_filter_animation:
-            self.color_filter_animation.update_animation(delta_time)
-
     def terminate_animation(self):
         super().terminate_animation()
         if self.color_filter_animation:

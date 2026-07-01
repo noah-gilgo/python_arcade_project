@@ -237,7 +237,7 @@ class FireShock(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=FireShockAnimation(),
-            time_before_battle_idle=1.0,
+            time_before_battle_idle=1.4,
             ready_animation_state="battle_magic_ready_fireshock",
             cast_animation_state="battle_magic_fireshock"
         )
@@ -260,7 +260,7 @@ class FireShock(Spell):
 
         # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
         caster.set_animation_state(self.cast_animation_state)
-        pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.5)
+        pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.9)
         pyglet.clock.schedule_once(lambda dt: self.animate_spell(targeted_characters, controller.sprites_and_effects_collection), 0.5)
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
@@ -287,3 +287,19 @@ class HealPrayer(Spell):
         :return:
         """
         return 5 * caster.magic
+
+    def cast_spell(self, caster, targeted_characters, controller):
+        """
+        Casts the spell.
+        :param caster: The PlayerCharacter casting the spell.
+        :param targeted_characters: The targeted characters that the spell is being cast upon.
+        :param controller: The battle controller.
+        :return: None
+        """
+
+        # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
+        caster.set_animation_state(self.cast_animation_state)
+        pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.5)
+        pyglet.clock.schedule_once(lambda dt: self.animate_spell(targeted_characters, controller.sprites_and_effects_collection), 0.5)
+        if self.time_before_battle_idle > 0.0:
+            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
