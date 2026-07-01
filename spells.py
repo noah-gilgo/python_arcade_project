@@ -79,7 +79,6 @@ class Spell:
             if target not in targets:
                 target = target[0]
             if self.is_friendly_spell:
-                # new_hp = target.hp + self.spell_healing_function(caster)
                 target.modify_hp(self.spell_healing_function(caster))
             else:
                 damage_dealt = self.spell_damage_function(caster, target)
@@ -163,7 +162,7 @@ class Spell:
         """ Animate the spell being cast. """
         if self.animation:
             for target in targets:
-                new_animation = self.animation.__class__(caster, target)
+                new_animation = self.animation.__class__(caster, target, sprites_and_effects_collection)
                 sprites_and_effects_collection.effects.append(new_animation)
                 new_animation.center_x = target.center_x
                 new_animation.center_y = target.center_y
@@ -312,21 +311,22 @@ class RudeBuster(Spell):
             name="Rude Buster",
             description="Rude Damage",
             tp_cost=50,
+            element_id=5,
             base_health_change=0,
             is_friendly_spell=False,
             is_healing_spell=False,
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=RudeBusterAnimation(caster=None, target=None),
-            time_before_battle_idle=2.0
+            time_before_battle_idle=1.4
         )
 
     def cast_spell(self, caster, targeted_characters, controller):
         caster.set_animation_state(self.cast_animation_state)
         pyglet.clock.schedule_once(
-            lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.8)
+            lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 1.3)
         pyglet.clock.schedule_once(
-            lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
+            lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.8)
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"),
                                        self.time_before_battle_idle)
