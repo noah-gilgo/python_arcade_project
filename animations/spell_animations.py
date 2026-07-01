@@ -1,15 +1,17 @@
 import math
 
 import arcade
-from arcade import Sprite, Sound, play_sound
+from arcade import Sprite, Sound, play_sound, Texture
 from math import sin, cos, atan2
 
 from arcade.easing import ease_in
 
 import character
+import player_character
 from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, AnimatedSprite, SingleSpriteAnimation
 from sprites_and_effects_collection import SpritesAndEffectsCollection
+from texture_methods import load_textures_at_filepath_into_texture_array
 
 
 class IceShockAnimation(MultiSpriteAnimation):
@@ -453,7 +455,7 @@ class BurnAnimation(SingleSpriteAnimation):
                     self.burn_texture.image.width - 1,
                     height
                 )
-                burn_sprite.height = max(int(self.sprite.height * (self.time / self.total_duration)), 1)
+                burn_sprite.height = min(self.sprite.height, max(int(self.sprite.height * (self.time / self.total_duration)), 1))
                 burn_sprite.center_y = int(self.sprite.center_y - ((self.sprite.height - burn_sprite.height) / 2))
 
 
@@ -463,7 +465,48 @@ class BurnAnimation(SingleSpriteAnimation):
     def terminate_animation(self):
         pass
 
-"""
-class HealPrayerAnimation(MultiSpriteAnimation):
-    def __init__(self, target: character.Character):
-"""
+
+class RudeBusterBeam(Sprite):
+    """
+    The "wave" sprite that makes up the Rude Buster when Susie casts it.
+    """
+    def __init__(self, beam_textures: list[Texture], center_x: float = 0.0, center_y: float = 0.0,
+                 height: float = 100.0, angle: float = 0.0):
+        """
+        :param beam_textures: The textures that the beam sprites cycle through to create the illusion of movement.
+        :param center_x: The x coordinate of the center of the beam.
+        :param center_y: The y coordinate of the center of the beam.
+        :param height: The height of the sprite when spawned.
+        :param angle: The angle of the sprite when spawned.
+        """
+        super().__init__(
+            center_x=center_x,
+            center_y=center_y,
+            angle=angle,
+            height=height
+        )
+        self.textures = beam_textures
+        self.texture_cycle_rate = 0.1 # Amount of time that passes between texture changes
+        self.time = 0.0
+        self.lifetime = 2.0
+
+        self.number_of_textures = len(self.textures)
+
+    def update_animation(self, delta_time):
+        self.time += delta_time
+        if self.time > self.lifetime or self.alpha == 0:
+            self.kill()
+
+        current_texture_index = int((self.time // self.texture_cycle_rate) % self.number_of_textures)
+        self.set_texture(current_texture_index)
+
+
+class RudeBusterAnimation(MultiSpriteAnimation):
+    def __init__(self, caster: player_character.PlayerCharacter, target: character.Character):
+        self.caster = caster
+        self.target = target
+
+        self.rude_buster_beam_textures = load_textures_at_filepath_into_texture_array(
+            folder_path="assets/sprites/effects/rude_buster_beam"
+        )
+        self.number_of_wave_sprites = 20

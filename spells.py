@@ -237,7 +237,7 @@ class FireShock(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=FireShockAnimation(),
-            time_before_battle_idle=1.4,
+            time_before_battle_idle=1.8,
             ready_animation_state="battle_magic_ready_fireshock",
             cast_animation_state="battle_magic_fireshock"
         )
