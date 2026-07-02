@@ -1095,9 +1095,12 @@ class BattleController:
         # Clear any text from the battle textbox.
         self.battle_textbox.load_dialog(TextBoxDialog(text=""))
 
+        speech_bubble_counter = 0
+
         for enemy in self.enemies:
             speech_bubble = enemy.spawn_speech_bubble_this_turn()
             self.active_speech_bubbles.append(speech_bubble)
+            speech_bubble_counter += 1
 
     def despawn_speech_bubbles(self):
         """

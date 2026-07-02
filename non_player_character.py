@@ -295,7 +295,6 @@ class Rudinn(NonPlayerCharacter):
             max_hp=90,
             attack=10,
             defense=2,
-            tired=100,
             dark_dollars_given_on_defeat=30,
             element_id=0,
             attacks=[

@@ -57,7 +57,7 @@ class RudinnLecture(SimpleAct):
                     text="(Yawn)...\nWhat? OK..",
                     row_count=2,
                     column_count=10,
-                    actor=target
+                    actor=enemy
                 )
             )
 
