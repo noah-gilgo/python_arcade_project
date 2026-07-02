@@ -7,11 +7,12 @@ from arcade.types import Color
 
 import character
 import default_data
-from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation, HealAnimation
+from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation, HealAnimation, \
+    EnemySparedAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
 from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation, BurnAnimation, \
-    RudeBusterAnimation
+    RudeBusterAnimation, SleepMistAnimation
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
@@ -39,6 +40,8 @@ class Spell:
         self.time_before_battle_idle = time_before_battle_idle  # If provided, the amount of time that will pass before the casters animation state is returned to battle_idle.
 
         self.sprites_and_effects_collection = None # Passed in during the cast spell call.
+
+        self.spare_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_spare.wav", False)
 
     def cast_spell(self, caster, targeted_characters, controller):
         """
@@ -77,11 +80,31 @@ class Spell:
         if len(targets) == 0:
             return
 
+        enemies_to_be_removed_by_pacify = []
+
         for target in targets:
             schedule_battle_idle = True
             if target not in targets:
                 target = target[0]
-            if self.is_friendly_spell:
+            if self.is_pacifying_spell:
+
+                if target.tired >= 100:
+                    # Animate the enemy being spared.
+                    target.set_animation_state("battle_spared")
+
+                    spare_animation = EnemySparedAnimation(target=target)
+                    spare_animation_sprites = spare_animation.get_sprites()
+
+                    self.sprites_and_effects_collection.effects.append(spare_animation)
+                    for spare_animation_sprite in spare_animation_sprites:
+                        self.sprites_and_effects_collection.effects_sprites.append(spare_animation_sprite)
+
+                    # Play the spare sound.
+                    self.spare_sound.play()
+
+                    # Remove the enemy from the battle.
+                    enemies_to_be_removed_by_pacify.append(target)
+            elif self.is_friendly_spell:
                 target.modify_hp(self.spell_healing_function(caster))
             else:
                 damage_dealt = self.spell_damage_function(caster, target)
@@ -122,7 +145,7 @@ class Spell:
                                 controller.sprites_and_effects_collection.effects_sprites.append(sprite)
                             controller.enemies.remove(target)
                         elif self.name.lower() == "fireshock":
-                            damage_dealt_text = "BURNED"
+                            damage_dealt_text = "CHARRED"
                             damage_dealt_color = arcade.color.WHITE
                             target.non_idle_timer = 0
                             controller.enemies.remove(target)
@@ -160,6 +183,10 @@ class Spell:
                 controller.sprites_and_effects_collection.effects_sprites.append(color_filter_animation.filter_sprite)
                 if schedule_battle_idle:
                     pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
+
+            for enemy in enemies_to_be_removed_by_pacify:
+                if enemy in controller.enemies:
+                    controller.enemies.remove(enemy)
 
     def animate_spell(self, caster, targets: list[character.Character], sprites_and_effects_collection: SpritesAndEffectsCollection):
         """ Animate the spell being cast. """
@@ -354,3 +381,34 @@ class RudeBuster(Spell):
 
     def spell_damage_function(self, caster, target):
         return (caster.get_total_attack() * 11) + (caster.get_total_magic() * 5) - (target.defense * 3)
+
+
+class SleepMist(Spell):
+    def __init__(self):
+        super().__init__(
+            name="Sleep Mist",
+            description="Spare TIRED foes",
+            tp_cost=32,
+            base_health_change=0,
+            is_friendly_spell=False,
+            is_healing_spell=False,
+            is_pacifying_spell=True,
+            is_aoe_spell=True,
+            animation=SleepMistAnimation(),
+            time_before_battle_idle=1.4
+        )
+
+        self.sleepmist_sound = arcade.load_sound("assets/audio/magic/snd_ghostappear.ogg")
+
+    def cast_spell(self, caster, targeted_characters, controller):
+        self.sprites_and_effects_collection = controller.sprites_and_effects_collection
+        caster.set_animation_state(self.cast_animation_state)
+        pyglet.clock.schedule_once(
+            lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 1.3)
+        pyglet.clock.schedule_once(
+            lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
+        pyglet.clock.schedule_once(
+            lambda dt: self.sleepmist_sound.play(), 0.7)
+        if self.time_before_battle_idle > 0.0:
+            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"),
+                                       self.time_before_battle_idle)

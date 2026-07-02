@@ -1,4 +1,5 @@
 import math
+import random
 
 import arcade
 from arcade import Sprite, Sound, play_sound, Texture
@@ -8,6 +9,7 @@ from arcade.easing import ease_in, ease_out, ease_in_sin, ease_out_sin
 
 import character
 import player_character
+import sprites_and_effects_collection
 from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, AnimatedSprite, SingleSpriteAnimation
 from math_methods import ease_in_circ, ease_out_circ
@@ -737,3 +739,125 @@ class RudeBusterAnimation(MultiSpriteAnimation):
             points.append([wx, wy, angle])
 
         return points
+
+
+class SpinningSnowflake(Sprite):
+    """ One of the miniature snowflakes spawned by the SleepMist animation."""
+    def __init__(self, texture: Texture, center_x: float, center_y: float,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection):
+        super().__init__(
+            path_or_texture=texture,
+            center_x=center_x,
+            center_y=center_y,
+            scale=0.8
+        )
+
+        self.sprites_and_effects_collection = sprites_and_effects_collection
+
+        self.time = 0.0
+
+    def update_animation(self, delta_time: float):
+        self.time += delta_time
+
+        self.turn_left(50 * delta_time)
+
+        if self.time > 0.6:
+            self.alpha = max(0, int(255 * ease_in((1.0 - self.time) * 2.5)))
+
+        if self.alpha == 0:
+            if self in self.sprites_and_effects_collection.effects:
+                self.sprites_and_effects_collection.effects.remove(self)
+            self.kill()
+
+
+class SleepMistAnimation(MultiSpriteAnimation):
+    def __init__(self, caster: character.Character = None, target: character.Character = None,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection = None):
+        if caster is not None and target is not None and sprites_and_effects_collection is not None:
+            self.caster = caster
+            self.target = target
+            self.sprites_and_effects_collection = sprites_and_effects_collection
+
+            self.target_initial_x = self.target.center_x
+            self.target_initial_y = self.target.center_y
+
+            self.sleep_mist_texture = arcade.load_texture(
+                file_path="assets/sprites/effects/sleep_mist.png"
+            )
+
+            self.snowflake_texture = arcade.load_texture("assets/sprites/effects/snowflake.png")
+            self.snowflake_spawning_attempts = 0
+            self.interval_between_snowflake_spawning_attempts = 0.1
+
+            self.sleep_mist_sprites = []
+            for i in range(2):
+                sleep_mist_sprite = Sprite(
+                    path_or_texture=self.sleep_mist_texture,
+                    scale=(8.0, 4.0),
+                    center_x=self.target.center_x,
+                    center_y=self.target.center_y
+                )
+                sleep_mist_sprite.alpha = 0
+                self.sleep_mist_sprites.append(sleep_mist_sprite)
+                self.sprites_and_effects_collection.effects.append(sleep_mist_sprite)
+
+            super().__init__(self.sleep_mist_sprites)
+
+            self.mist_duration = 3.5
+            self.half_of_mist_duration = self.mist_duration / 2
+
+            self.total_duration = 5.0
+            self.radius = 0.0
+            self.angle = 0.0  # measured in radians
+
+            # A rectangle measures around the animation. Controls the area in which snowflakes can spawn.
+            self.snowflake_min_x = int(self.target_initial_x - 200)
+            self.snowflake_max_x = int(self.target_initial_x + 200)
+
+            self.snowflake_min_y = int(self.target_initial_y - 100)
+            self.snowflake_max_y = int(self.target_initial_y + 100)
+
+    def update_animation(self, delta_time: float):
+        self.time += self.delta_time
+        self.angle += self.delta_time * 1.8
+
+        # Randomly spawn snowflakes
+        if self.time < 2.0 and self.time // self.interval_between_snowflake_spawning_attempts != self.snowflake_spawning_attempts:
+            if random.randint(0, 3) == 0:
+                snowflake_center_x = random.randint(self.snowflake_min_x, self.snowflake_max_x)
+                snowflake_center_y = random.randint(self.snowflake_min_y, self.snowflake_max_y)
+                spinning_snowflake = SpinningSnowflake(
+                    texture=self.snowflake_texture,
+                    center_x=snowflake_center_x,
+                    center_y=snowflake_center_y,
+                    sprites_and_effects_collection=self.sprites_and_effects_collection
+                )
+                self.sprites_and_effects_collection.effects.append(spinning_snowflake)
+                self.sprites_and_effects_collection.effects_sprites_2.append(spinning_snowflake)
+
+            self.snowflake_spawning_attempts += 1
+
+        if self.time < self.mist_duration:
+            is_odd = True
+            for sprite in self.sleep_mist_sprites:
+                if self.time < self.half_of_mist_duration:
+                    coefficient = (1 - ease_out_circ(self.time / self.half_of_mist_duration))
+                    self.radius = 40 * coefficient
+                    sprite.alpha = 128 * coefficient
+                else:
+                    coefficient = (1 - ease_in_sin((self.time - self.half_of_mist_duration) / self.half_of_mist_duration))
+                    self.radius = 40 * coefficient
+                    sprite.alpha = 128 * coefficient
+                if is_odd:
+                    angle = self.angle
+                else:
+                    angle = self.angle + math.pi
+
+                dx = self.radius * math.cos(angle)
+                dy = self.radius * math.sin(angle)
+
+                sprite.center_x = self.target_initial_x + dx
+                sprite.center_y = self.target_initial_y + dy
+
+                is_odd = not is_odd
+
