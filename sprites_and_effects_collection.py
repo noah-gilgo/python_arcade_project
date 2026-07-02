@@ -21,6 +21,9 @@ class SpritesAndEffectsCollection:
         self.background_sprites = SpriteList()  # Background sprites, like the animated background in battle.
         self.character_sprites = SpriteList()  # Character sprites, like for player characters/non player characters
         self.effects_sprites = SpriteList()  # Effects sprites, like the animations for attacking/spells
+        self.effects_sprites_2 = SpriteList()
+        self.effects_sprites_3 = SpriteList()
+        self.effects_sprites_4 = SpriteList()
         self.bullet_sprites = SpriteList()  # Bullet sprites, like the ones spawned by enemies in their attacks
         self.speech_bubble_sprites = SpriteList()  # Speech bubbles, such as the ones characters talk with in battle
         self.soul_sprites = SpriteList()  # The SOUL sprite and related sprites, like the yellow soul bullets
@@ -50,6 +53,9 @@ class SpritesAndEffectsCollection:
                     self.manager.draw()
                 if self.is_drawing_effects_sprites:
                     self.effects_sprites.draw(pixelated=True)
+                    self.effects_sprites_2.draw(pixelated=True)
+                    self.effects_sprites_3.draw(pixelated=True)
+                    self.effects_sprites_4.draw(pixelated=True)
                 if self.is_drawing_speech_bubble_sprites:
                     self.speech_bubble_sprites.draw(pixelated=True)
                 if self.is_drawing_bullet_sprites:

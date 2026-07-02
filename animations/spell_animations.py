@@ -291,10 +291,9 @@ class FireShockAnimation(MultiSpriteAnimation):
 
         self.fireshock_sound = Sound("assets/audio/magic/snd_firespell.wav", False)
 
-        self.burn_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav",
-                                       False)
-
         self.total_duration = 2.0
+
+        self.burn_animation_spawned = False
 
     def update_animation(self, delta_time):
         self.time += delta_time
@@ -318,7 +317,6 @@ class FireShockAnimation(MultiSpriteAnimation):
             self.sprites[2].sprite.visible = False
             sprite_index = 0
             self.target.set_animation_state("battle_hurt")
-            self.burn_sound.play(speed=0.5)  # the speed modifier doesn't do anything for some reason
 
             for sprite in self.sprites[3:]:
                 sprite.sprite.visible = True
@@ -328,25 +326,37 @@ class FireShockAnimation(MultiSpriteAnimation):
                 sprite.sprite.velocity = (sprite_velocity_x, sprite_velocity_y)
                 sprite_index += 1
                 sprite.sprite.angle = angle
+                """
                 if sprite.sprite in self.target.sprites_and_effects_collection.effects_sprites:
                     self.target.sprites_and_effects_collection.effects_sprites.remove(sprite.sprite)
-
-            # Spawn burn animation
-            self.burn_animation = BurnAnimation(self.target)
-            self.sprites = self.burn_animation.get_sprites() + self.sprites
-
-            for sprite in self.sprites[6:]:
                 self.target.sprites_and_effects_collection.effects_sprites.append(sprite.sprite)
+                """
+
+            """
+            # Spawn burn animation
+            if self.target.hp < 0:
+                self.burn_animation = BurnAnimation(self.target)
+                self.sprites = self.burn_animation.get_sprites() + self.sprites
+
+                for sprite in self.sprites[6:]:
+                    self.target.sprites_and_effects_collection.effects_sprites.append(sprite.sprite)
+
+                self.burn_animation_spawned = True
+            else:
+                print(self.target.hp)
+            """
 
             self.circle_active = True
             self.flag4 = True
 
         if self.time > 0.40:
-            self.burn_animation.update_animation(delta_time)
-            # dt = self.time # (self.time - 0.4) * 2
+            """
+            if self.burn_animation_spawned:
+                self.burn_animation.update_animation(delta_time)
+            """
             sprite_index = 0
             new_alpha = max(0, int(255 * (1 - (ease_in(self.time / 1.5) ** 2))))
-            for sprite in self.sprites[6:]:
+            for sprite in self.sprites[3:]:
                 center = self.triangle[sprite_index // 6]
                 center_x = center[0]
                 center_y = center[1]

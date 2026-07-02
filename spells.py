@@ -38,6 +38,8 @@ class Spell:
         self.cast_animation_state = cast_animation_state  # The animation state given to the character when they cast the spell.
         self.time_before_battle_idle = time_before_battle_idle  # If provided, the amount of time that will pass before the casters animation state is returned to battle_idle.
 
+        self.sprites_and_effects_collection = None # Passed in during the cast spell call.
+
     def cast_spell(self, caster, targeted_characters, controller):
         """
         Casts the spell.
@@ -46,8 +48,9 @@ class Spell:
         :param controller: The battle controller.
         :return: None
         """
+        self.sprites_and_effects_collection = controller.sprites_and_effects_collection
 
-        self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
+        self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection)
         self.affect_targets_with_spell(caster, targeted_characters, controller)
         caster.set_animation_state(self.cast_animation_state)
         if self.time_before_battle_idle > 0.0:
@@ -150,7 +153,7 @@ class Spell:
                 )
 
                 target.set_animation_state("battle_hurt")
-                controller.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
+                controller.sprites_and_effects_collection.effects_sprites_4.append(damage_dealt_animation.sprite)
                 controller.sprites_and_effects_collection.effects.append(damage_dealt_animation)
                 controller.sprites_and_effects_collection.effects.append(shake_animation)
                 controller.sprites_and_effects_collection.effects.append(color_filter_animation)
@@ -169,15 +172,15 @@ class Spell:
                 if hasattr(new_animation, "sprites"):
                     for animated_sprite in new_animation.sprites:
                         if isinstance(animated_sprite, Sprite):
-                            sprites_and_effects_collection.effects_sprites.append(animated_sprite)
+                            sprites_and_effects_collection.effects_sprites_3.append(animated_sprite)
                         else:
-                            sprites_and_effects_collection.effects_sprites.append(animated_sprite.sprite)
+                            sprites_and_effects_collection.effects_sprites_3.append(animated_sprite.sprite)
                 elif hasattr(new_animation, "get_sprites"):
                     for animated_sprite in new_animation.get_sprites():
                         if isinstance(animated_sprite, Sprite):
-                            sprites_and_effects_collection.effects_sprites.append(animated_sprite)
+                            sprites_and_effects_collection.effects_sprites_3.append(animated_sprite)
                         else:
-                            sprites_and_effects_collection.effects_sprites.append(animated_sprite.sprite)
+                            sprites_and_effects_collection.effects_sprites_3.append(animated_sprite.sprite)
 
 def generate_basic_spells():
     """ Generates some basic spells from Deltarune. """
@@ -231,6 +234,7 @@ class FireShock(Spell):
             description="Damage w/ FIRE",
             tp_cost=16,
             element_id=8,
+            magic_color=arcade.color.ORANGE,
             base_health_change=100,
             is_friendly_spell=False,
             is_healing_spell=False,
@@ -241,6 +245,9 @@ class FireShock(Spell):
             ready_animation_state="battle_magic_ready_fireshock",
             cast_animation_state="battle_magic_fireshock"
         )
+
+        self.burn_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav",
+                                            False)
 
     def spell_damage_function(self, caster, target) -> float:
         """ Calculates the damage dealt by the spell depending on caster stats.
@@ -257,6 +264,7 @@ class FireShock(Spell):
         :param controller: The battle controller.
         :return: None
         """
+        self.sprites_and_effects_collection = controller.sprites_and_effects_collection
 
         # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
         caster.set_animation_state(self.cast_animation_state)
@@ -264,6 +272,19 @@ class FireShock(Spell):
         pyglet.clock.schedule_once(lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
+
+    def affect_targets_with_spell(self, caster, targets, controller):
+        super().affect_targets_with_spell(caster, targets, controller)
+        # Spawn burn animation
+        for target in targets:
+            if target.hp < 0:
+                self.burn_sound.play(speed=0.5)  # the speed modifier doesn't do anything for some reason
+                burn_animation = BurnAnimation(target)
+                for sprite in burn_animation.get_sprites():
+                    if sprite not in self.sprites_and_effects_collection.effects_sprites:
+                        self.sprites_and_effects_collection.effects_sprites_2.append(sprite)
+                if burn_animation not in self.sprites_and_effects_collection.effects:
+                    self.sprites_and_effects_collection.effects.append(burn_animation)
 
 
 class HealPrayer(Spell):
