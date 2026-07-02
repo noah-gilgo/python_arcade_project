@@ -122,7 +122,7 @@ class Spell:
                                 controller.sprites_and_effects_collection.effects_sprites.append(sprite)
                             controller.enemies.remove(target)
                         elif self.name.lower() == "fireshock":
-                            damage_dealt_text = "BURNED"
+                            damage_dealt_text = "CHARRED"
                             damage_dealt_color = arcade.color.WHITE
                             target.non_idle_timer = 0
                             controller.enemies.remove(target)

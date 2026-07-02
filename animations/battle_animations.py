@@ -139,7 +139,7 @@ class NumberBounceAnimation(SingleSpriteAnimation):
 
         # If the text string matches one of the pre-existing image textures
         if text_string in ("MISS", "DOWN", "MAX", "UP", "100%", "RECRUIT", "LOST", "FROZEN", "SWOON", "TIRED", "AWAKE",
-                           "PURIFIED", "BURNED"):
+                           "PURIFIED", "BURNED", "CHARRED"):
             text_sprite = Sprite(
                 path_or_texture=self.battle_message_texture_dict[text_string],
                 center_x=self.current_sprite_center_x,
