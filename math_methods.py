@@ -1,3 +1,5 @@
+import math
+
 import settings
 
 
@@ -55,3 +57,6 @@ def initialize_unholy_arc(number_of_opponents: int = 1):
         unholy_arc.append((settings.WINDOW_WIDTH - position[0], position[1]))
 
     return unholy_arc
+
+def ease_in_circ(percent: float):
+    return 1 - math.sqrt(1 - (percent ** 2))

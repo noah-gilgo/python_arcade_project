@@ -1,19 +1,22 @@
 import math
 
 import arcade
-from arcade import Sprite, Sound, play_sound
+from arcade import Sprite, Sound, play_sound, Texture
 from math import sin, cos, atan2
 
-from arcade.easing import ease_in
+from arcade.easing import ease_in, ease_out, ease_in_sin, ease_out_sin
 
 import character
+import player_character
 from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, AnimatedSprite, SingleSpriteAnimation
 from sprites_and_effects_collection import SpritesAndEffectsCollection
+from texture_methods import load_textures_at_filepath_into_texture_array
 
 
 class IceShockAnimation(MultiSpriteAnimation):
-    def __init__(self, target: character.Character = None):
+    def __init__(self, caster: character.Character = None, target: character.Character = None,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection = None):
         if target:
             self.target = target
 
@@ -215,7 +218,8 @@ class FreezeAnimation(SingleSpriteAnimation):
 
 
 class FireShockAnimation(MultiSpriteAnimation):
-    def __init__(self, target: character.Character = None):
+    def __init__(self, caster: character.Character = None, target: character.Character = None,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection = None):
         if target:
             self.target = target
             self.triangle = (
@@ -453,7 +457,7 @@ class BurnAnimation(SingleSpriteAnimation):
                     self.burn_texture.image.width - 1,
                     height
                 )
-                burn_sprite.height = max(int(self.sprite.height * (self.time / self.total_duration)), 1)
+                burn_sprite.height = min(self.sprite.height, max(int(self.sprite.height * (self.time / self.total_duration)), 1))
                 burn_sprite.center_y = int(self.sprite.center_y - ((self.sprite.height - burn_sprite.height) / 2))
 
 
@@ -463,7 +467,256 @@ class BurnAnimation(SingleSpriteAnimation):
     def terminate_animation(self):
         pass
 
-"""
-class HealPrayerAnimation(MultiSpriteAnimation):
-    def __init__(self, target: character.Character):
-"""
+
+class RudeBusterBeam(Sprite):
+    """
+    The "wave" sprite that makes up the Rude Buster when Susie casts it.
+    """
+    def __init__(self, beam_textures: list[Texture], center_x: float = 0.0, center_y: float = 0.0,
+                 scale: float = 4.5, angle: float = 0.0):
+        """
+        :param beam_textures: The textures that the beam sprites cycle through to create the illusion of movement.
+        :param center_x: The x coordinate of the center of the beam.
+        :param center_y: The y coordinate of the center of the beam.
+        :param height: The height of the sprite when spawned.
+        :param angle: The angle of the sprite when spawned.
+        """
+        super().__init__(
+            center_x=center_x,
+            center_y=center_y,
+            angle=angle,
+            scale=scale
+        )
+        for texture in beam_textures:
+            self.append_texture(texture)
+        self.set_texture(0)
+        self.texture_cycle_rate = 0.1 # Amount of time that passes between texture changes
+        self.time = 0.0
+        self.lifetime = 3.0
+
+        self.number_of_textures = len(self.textures)
+
+    def update_animation(self, delta_time):
+        self.time += delta_time
+        if self.time > self.lifetime:
+            self.kill()
+        else:
+            current_texture_index = int((self.time // self.texture_cycle_rate) % self.number_of_textures)
+            self.set_texture(current_texture_index)
+
+
+class RudeBusterTrailingBeam(RudeBusterBeam):
+    """
+    The trailing beam that follows the main beam.
+    """
+    def __init__(self, beam_textures: list[Texture], center_x: float = 0.0, center_y: float = 0.0,
+                 scale: float = 2.5, angle: float = 0.0):
+        super().__init__(beam_textures, center_x, center_y, scale, angle)
+        self.alpha = 128
+        self.scale = 3.0
+
+    def update_animation(self, delta_time):
+        super().update_animation(delta_time)
+        if self.time > 0.12:
+            self.alpha -= 600 * delta_time
+            self.scale_y -= 8 * delta_time
+
+
+class RudeBusterImpactAnimation(MultiSpriteAnimation):
+    """
+    The Rude Buster sprites created on impact with the target.
+    """
+    def __init__(self, beam_textures: list[Texture], center_x: float = 0.0, center_y: float = 0.0):
+        sprites=[
+            RudeBusterBeam(beam_textures, center_x + 50, center_y - 50, 4.0, 45.0),
+            RudeBusterBeam(beam_textures, center_x + 50, center_y - 50, 4.0, 45.0),
+            RudeBusterBeam(beam_textures, center_x - 50, center_y - 50, 4.0, 135.0),
+            RudeBusterBeam(beam_textures, center_x - 50, center_y - 50, 4.0, 135.0),
+            RudeBusterBeam(beam_textures, center_x - 50, center_y + 50, 4.0, 225.0),
+            RudeBusterBeam(beam_textures, center_x - 50, center_y + 50, 4.0, 225.0),
+            RudeBusterBeam(beam_textures, center_x + 50, center_y + 50, 4.0, 315.0),
+            RudeBusterBeam(beam_textures, center_x + 50, center_y + 50, 4.0, 315.0)
+        ]
+
+        super().__init__(sprites)
+        self.total_shrink_duration = 1.5
+
+    def update_animation(self, delta_time):
+        super().update_animation(delta_time)
+        if self.time < self.total_shrink_duration:
+            sprite_index = 0
+
+            # This has to be calculated a lot for this function
+            one_minus_ease_in_sine = (1 - ease_in_sin(self.time / self.total_shrink_duration))
+
+            for sprite in self.sprites:
+                if sprite_index < 2 or sprite_index > 5:
+                    dx = max(0.1, 1.7 * one_minus_ease_in_sine)
+                else:
+                    dx = -max(0.1, 1.7 * one_minus_ease_in_sine)
+                if sprite_index > 3:
+                    dy = max(0.1, 1.7 * one_minus_ease_in_sine)
+                else:
+                    dy = -max(0.1, 1.7 * one_minus_ease_in_sine)
+                if sprite_index % 2 == 0:
+                    if dx > 0:
+                        dx += 0.4 * one_minus_ease_in_sine
+                    else:
+                        dx -= 0.4 * one_minus_ease_in_sine
+                    if dy > 0:
+                        dy += 0.4 * one_minus_ease_in_sine
+                    else:
+                        dy -= 0.4 * one_minus_ease_in_sine
+
+                sprite.center_x += dx
+                sprite.center_y += dy
+
+                one_minus_ease_out_sine = (1 - ease_out_sin(self.time / self.total_shrink_duration))
+
+                sprite.scale_x = max(0.1, 4.0 * one_minus_ease_out_sine)
+                sprite.alpha = max(1.0, 255 * one_minus_ease_out_sine)
+                sprite_index += 1
+        else:
+            for sprite in self.sprites:
+                sprite.kill()
+
+
+class RudeBusterAnimation(MultiSpriteAnimation):
+    def __init__(self, caster: character.Character = None, target: character.Character = None,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection = None):
+        if caster is not None and target is not None and sprites_and_effects_collection is not None:
+            self.caster = caster
+            self.target = target
+            self.sprites_and_effects_collection = sprites_and_effects_collection
+
+            self.rude_buster_beam_textures = load_textures_at_filepath_into_texture_array(
+                folder_path="assets/sprites/effects/rude_buster_beam"
+            )
+            self.number_of_wave_sprites = 18
+            self.trajectory_arc_height = -70
+
+            self.rude_buster_arc_coordinates = self.calculate_parabolic_coordinates_of_rude_buster_beam()
+
+            self.time_for_beam_to_connect_to_target = 0.4  # The time it takes for the beam to reach the target
+            self.time_between_each_beam_spawn = self.time_for_beam_to_connect_to_target / self.number_of_wave_sprites
+            self.time_since_last_beam_spawn = 0.0
+            self.current_arc_coordinate_index = 0
+
+            self.leading_rude_buster_beam = RudeBusterBeam(
+                beam_textures=self.rude_buster_beam_textures,
+                center_x=self.rude_buster_arc_coordinates[0][0],
+                center_y=self.rude_buster_arc_coordinates[0][1],
+                angle=self.rude_buster_arc_coordinates[0][2]
+            )
+
+            super().__init__(
+                sprites=[self.leading_rude_buster_beam]
+            )
+
+            self.rude_buster_swing_sound = arcade.load_sound(path="assets/audio/magic/snd_rudebuster_swing.wav")
+            self.rude_buster_hit_sound = arcade.load_sound(path="assets/audio/magic/snd_rudebuster_hit.wav")
+
+            self.rude_buster_swing_sound.play()
+
+            self.spell_traveling_to_target = True
+
+            self.rude_buster_impact_animation = None
+
+    def update_animation(self, delta_time):
+        self.time += delta_time
+        self.time_since_last_beam_spawn += delta_time
+        if self.current_arc_coordinate_index < self.number_of_wave_sprites:
+            if self.time_since_last_beam_spawn > self.time_between_each_beam_spawn:
+                self.time_since_last_beam_spawn -= self.time_between_each_beam_spawn
+                trailing_beam_sprite = RudeBusterTrailingBeam(
+                    beam_textures=self.rude_buster_beam_textures,
+                    center_x=self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][0],
+                    center_y=self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][1],
+                    angle=self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][2]
+                )
+                self.current_arc_coordinate_index += 1
+                if self.current_arc_coordinate_index < self.number_of_wave_sprites:
+                    self.leading_rude_buster_beam.center_x = self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][0]
+                    self.leading_rude_buster_beam.center_y = self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][1]
+                    self.leading_rude_buster_beam.angle = self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][2]
+                    self.leading_rude_buster_beam.update_animation(delta_time)
+                else:
+                    self.leading_rude_buster_beam.kill()
+                self.sprites.append(trailing_beam_sprite)
+                self.sprites_and_effects_collection.effects_sprites.append(trailing_beam_sprite)
+                self.sprites_and_effects_collection.effects.append(trailing_beam_sprite)
+        else:
+            # If Rude Buster has impacted the target
+            if self.spell_traveling_to_target:
+                self.spell_traveling_to_target = False
+                self.rude_buster_hit_sound.play()
+                self.rude_buster_impact_animation = RudeBusterImpactAnimation(
+                    beam_textures=self.rude_buster_beam_textures,
+                    center_x=self.target.center_x,
+                    center_y=self.target.center_y,
+                )
+                for sprite in self.rude_buster_impact_animation.get_sprites():
+                    self.sprites_and_effects_collection.effects_sprites.append(sprite)
+
+                self.sprites_and_effects_collection.effects.append(self.rude_buster_impact_animation)
+            else:
+                self.rude_buster_impact_animation.update_animation(delta_time)
+
+    def terminate_animation(self):
+        for sprite in self.sprites:
+            sprite.kill()
+
+        for sprite in self.rude_buster_impact_animation.get_sprites():
+            sprite.kill()
+
+        self.sprites_and_effects_collection.effects.remove(self.rude_buster_impact_animation)
+        self.sprites_and_effects_collection.effects.remove(self)
+
+
+    def calculate_parabolic_coordinates_of_rude_buster_beam(self):
+        """
+        Calculates the coordinates and angles of every pre-impact sprite of the Rude Buster beam.
+        :return: A list of all the coordinates for each Rude Buster wave sprite.
+        """
+        caster_x = self.caster.center_x
+        caster_y = self.caster.center_y
+        target_x = self.target.center_x
+        target_y = self.target.center_y
+
+        # Distance between caster and target along x and y dimensions
+        dx = target_x - caster_x
+        dy = target_y - caster_y
+
+        # Horizontal angle between caster and target
+        theta = math.atan2(dy, dx)
+
+        # Horizontal/vertical displacement of the coordinates based on the spell angle
+        cos_theta = math.cos(theta)
+        sin_theta = math.sin(theta)
+
+        # Array containing the points to be returned
+        points = []
+        for i in range(self.number_of_wave_sprites):
+            t = i / (self.number_of_wave_sprites - 1)
+            y = 4 * self.trajectory_arc_height * t * (1 - t)
+
+            # Local coordinates
+            lx = dx * t
+            ly = y
+
+            # World coordinates
+            wx = caster_x + lx * cos_theta - ly * sin_theta
+            wy = caster_y + lx * sin_theta + ly * cos_theta
+
+            # Calculate angle of each rude buster wave
+            ldx = dx
+            ldy = 4 * self.trajectory_arc_height * (1 - 2 * t)
+
+            tx = ldx * cos_theta - ldy * sin_theta
+            ty = ldx * sin_theta + ldy * cos_theta
+
+            angle = 360 - math.degrees(math.atan2(ty, tx))
+
+            points.append([wx, wy, angle])
+
+        return points

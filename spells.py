@@ -10,7 +10,8 @@ import default_data
 from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation, HealAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
-from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation, BurnAnimation
+from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation, BurnAnimation, \
+    RudeBusterAnimation
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
@@ -52,7 +53,7 @@ class Spell:
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
-    def spell_damage_function(self, caster) -> float:
+    def spell_damage_function(self, caster, target) -> float:
         """
         Calculates the damage dealt by the spell depending on caster stats.
         :return:
@@ -78,10 +79,9 @@ class Spell:
             if target not in targets:
                 target = target[0]
             if self.is_friendly_spell:
-                new_hp = target.hp + self.spell_healing_function(caster)
-                target.modify_hp(new_hp)
+                target.modify_hp(self.spell_healing_function(caster))
             else:
-                damage_dealt = self.spell_damage_function(caster)
+                damage_dealt = self.spell_damage_function(caster, target)
                 if self.element_id:
                     for element in default_data.ELEMENTAL_PAIRS:
                         if element.element_id == self.element_id:
@@ -158,11 +158,11 @@ class Spell:
                 if schedule_battle_idle:
                     pyglet.clock.schedule_once(lambda dt: target.set_animation_state("battle_idle"), 1.0)
 
-    def animate_spell(self, targets: list[character.Character], sprites_and_effects_collection: SpritesAndEffectsCollection):
+    def animate_spell(self, caster, targets: list[character.Character], sprites_and_effects_collection: SpritesAndEffectsCollection):
         """ Animate the spell being cast. """
         if self.animation:
             for target in targets:
-                new_animation = self.animation.__class__(target)
+                new_animation = self.animation.__class__(caster, target, sprites_and_effects_collection)
                 sprites_and_effects_collection.effects.append(new_animation)
                 new_animation.center_x = target.center_x
                 new_animation.center_y = target.center_y
@@ -200,7 +200,7 @@ class IceShock(Spell):
             time_before_battle_idle=1.0
         )
 
-    def spell_damage_function(self, caster) -> float:
+    def spell_damage_function(self, caster, target) -> float:
         """ Calculates the damage dealt by the spell depending on caster stats.
         :return: None
         """
@@ -219,7 +219,7 @@ class IceShock(Spell):
         # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
         caster.set_animation_state(self.cast_animation_state)
         pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.9)
-        pyglet.clock.schedule_once(lambda dt: self.animate_spell(targeted_characters, controller.sprites_and_effects_collection), 0.5)
+        pyglet.clock.schedule_once(lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
@@ -237,12 +237,12 @@ class FireShock(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=FireShockAnimation(),
-            time_before_battle_idle=1.4,
+            time_before_battle_idle=1.8,
             ready_animation_state="battle_magic_ready_fireshock",
             cast_animation_state="battle_magic_fireshock"
         )
 
-    def spell_damage_function(self, caster) -> float:
+    def spell_damage_function(self, caster, target) -> float:
         """ Calculates the damage dealt by the spell depending on caster stats.
         :return: None
         """
@@ -261,7 +261,7 @@ class FireShock(Spell):
         # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
         caster.set_animation_state(self.cast_animation_state)
         pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.9)
-        pyglet.clock.schedule_once(lambda dt: self.animate_spell(targeted_characters, controller.sprites_and_effects_collection), 0.5)
+        pyglet.clock.schedule_once(lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
@@ -286,7 +286,7 @@ class HealPrayer(Spell):
         Calculates the damage healed by the spell depending on caster stats.
         :return:
         """
-        return 5 * caster.magic
+        return 5 * caster.get_total_magic()
 
     def cast_spell(self, caster, targeted_characters, controller):
         """
@@ -300,6 +300,36 @@ class HealPrayer(Spell):
         # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
         caster.set_animation_state(self.cast_animation_state)
         pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.5)
-        pyglet.clock.schedule_once(lambda dt: self.animate_spell(targeted_characters, controller.sprites_and_effects_collection), 0.5)
+        pyglet.clock.schedule_once(lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
+
+
+class RudeBuster(Spell):
+    def __init__(self):
+        super().__init__(
+            name="Rude Buster",
+            description="Rude Damage",
+            tp_cost=50,
+            element_id=5,
+            base_health_change=0,
+            is_friendly_spell=False,
+            is_healing_spell=False,
+            is_pacifying_spell=False,
+            is_aoe_spell=False,
+            animation=RudeBusterAnimation(caster=None, target=None),
+            time_before_battle_idle=1.4
+        )
+
+    def cast_spell(self, caster, targeted_characters, controller):
+        caster.set_animation_state(self.cast_animation_state)
+        pyglet.clock.schedule_once(
+            lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 1.3)
+        pyglet.clock.schedule_once(
+            lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.8)
+        if self.time_before_battle_idle > 0.0:
+            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"),
+                                       self.time_before_battle_idle)
+
+    def spell_damage_function(self, caster, target):
+        return (caster.get_total_attack() * 11) + (caster.get_total_magic() * 5) - (target.defense * 3)

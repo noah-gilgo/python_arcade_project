@@ -103,9 +103,32 @@ class RalseiRudinnAction1(MagicUserAct):
         super().perform_act(actor, target, dialogue_box)
         target.assign_speech_bubble_dialog_this_turn(
             SpeechBubbleDialog(
-                text="My last house\nwas a\nmatchbox...",
+                text="My last house\nwasn't a full\none, but...",
                 row_count=3,
                 column_count=13,
+                actor=target
+            )
+        )
+
+class SusieRudinnAction1(MagicUserAct):
+    def __init__(self, player):
+        from non_player_character import Rudinn
+
+        super().__init__(
+            player=player,
+            enemy_type=Rudinn,
+            description="Wisecrack,\nSPARE 50%",
+            perform_act_text="* Susie tries to make a joke about UNO and Xboxes.",
+            mercy_percentage=30
+        )
+
+    def perform_act(self, actor, target, dialogue_box):
+        super().perform_act(actor, target, dialogue_box)
+        target.assign_speech_bubble_dialog_this_turn(
+            SpeechBubbleDialog(
+                text="Oh yeah, never\nheard that one\nbefore...",
+                row_count=3,
+                column_count=14,
                 actor=target
             )
         )
