@@ -10,6 +10,7 @@ import character
 import player_character
 from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, AnimatedSprite, SingleSpriteAnimation
+from math_methods import ease_in_circ, ease_out_circ
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 from texture_methods import load_textures_at_filepath_into_texture_array
 
@@ -291,10 +292,9 @@ class FireShockAnimation(MultiSpriteAnimation):
 
         self.fireshock_sound = Sound("assets/audio/magic/snd_firespell.wav", False)
 
-        self.burn_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav",
-                                       False)
-
         self.total_duration = 2.0
+
+        self.burn_animation_spawned = False
 
     def update_animation(self, delta_time):
         self.time += delta_time
@@ -318,7 +318,6 @@ class FireShockAnimation(MultiSpriteAnimation):
             self.sprites[2].sprite.visible = False
             sprite_index = 0
             self.target.set_animation_state("battle_hurt")
-            self.burn_sound.play(speed=0.5)  # the speed modifier doesn't do anything for some reason
 
             for sprite in self.sprites[3:]:
                 sprite.sprite.visible = True
@@ -328,25 +327,37 @@ class FireShockAnimation(MultiSpriteAnimation):
                 sprite.sprite.velocity = (sprite_velocity_x, sprite_velocity_y)
                 sprite_index += 1
                 sprite.sprite.angle = angle
+                """
                 if sprite.sprite in self.target.sprites_and_effects_collection.effects_sprites:
                     self.target.sprites_and_effects_collection.effects_sprites.remove(sprite.sprite)
-
-            # Spawn burn animation
-            self.burn_animation = BurnAnimation(self.target)
-            self.sprites = self.burn_animation.get_sprites() + self.sprites
-
-            for sprite in self.sprites[6:]:
                 self.target.sprites_and_effects_collection.effects_sprites.append(sprite.sprite)
+                """
+
+            """
+            # Spawn burn animation
+            if self.target.hp < 0:
+                self.burn_animation = BurnAnimation(self.target)
+                self.sprites = self.burn_animation.get_sprites() + self.sprites
+
+                for sprite in self.sprites[6:]:
+                    self.target.sprites_and_effects_collection.effects_sprites.append(sprite.sprite)
+
+                self.burn_animation_spawned = True
+            else:
+                print(self.target.hp)
+            """
 
             self.circle_active = True
             self.flag4 = True
 
         if self.time > 0.40:
-            self.burn_animation.update_animation(delta_time)
-            # dt = self.time # (self.time - 0.4) * 2
+            """
+            if self.burn_animation_spawned:
+                self.burn_animation.update_animation(delta_time)
+            """
             sprite_index = 0
             new_alpha = max(0, int(255 * (1 - (ease_in(self.time / 1.5) ** 2))))
-            for sprite in self.sprites[6:]:
+            for sprite in self.sprites[3:]:
                 center = self.triangle[sprite_index // 6]
                 center_x = center[0]
                 center_y = center[1]
@@ -539,7 +550,13 @@ class RudeBusterImpactAnimation(MultiSpriteAnimation):
         ]
 
         super().__init__(sprites)
+        self.sprite_initial_positions = []
+        for sprite in self.sprites:
+            self.sprite_initial_positions.append([sprite.center_x, sprite.center_y])
+
         self.total_shrink_duration = 1.5
+
+        self.beam_total_distance_traveled = 50  # The total distance the wave travels before despawning
 
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
@@ -547,34 +564,34 @@ class RudeBusterImpactAnimation(MultiSpriteAnimation):
             sprite_index = 0
 
             # This has to be calculated a lot for this function
-            one_minus_ease_in_sine = (1 - ease_in_sin(self.time / self.total_shrink_duration))
+            one_minus_ease_in_circ = (1 - ease_in_circ(self.time / self.total_shrink_duration))
 
             for sprite in self.sprites:
                 if sprite_index < 2 or sprite_index > 5:
-                    dx = max(0.1, 1.7 * one_minus_ease_in_sine)
+                    dx = max(0.1, 1.9 * one_minus_ease_in_circ)
                 else:
-                    dx = -max(0.1, 1.7 * one_minus_ease_in_sine)
+                    dx = -max(0.1, 1.9 * one_minus_ease_in_circ)
                 if sprite_index > 3:
-                    dy = max(0.1, 1.7 * one_minus_ease_in_sine)
+                    dy = max(0.1, 1.9 * one_minus_ease_in_circ)
                 else:
-                    dy = -max(0.1, 1.7 * one_minus_ease_in_sine)
+                    dy = -max(0.1, 1.9 * one_minus_ease_in_circ)
                 if sprite_index % 2 == 0:
                     if dx > 0:
-                        dx += 0.4 * one_minus_ease_in_sine
+                        dx *= 1.2
                     else:
-                        dx -= 0.4 * one_minus_ease_in_sine
+                        dx *= 1.2
                     if dy > 0:
-                        dy += 0.4 * one_minus_ease_in_sine
+                        dy *= 1.2
                     else:
-                        dy -= 0.4 * one_minus_ease_in_sine
+                        dy *= 1.2
 
                 sprite.center_x += dx
                 sprite.center_y += dy
 
-                one_minus_ease_out_sine = (1 - ease_out_sin(self.time / self.total_shrink_duration))
+                one_minus_ease_out_circ = ease_out_circ(self.time / self.total_shrink_duration)
 
-                sprite.scale_x = max(0.1, 4.0 * one_minus_ease_out_sine)
-                sprite.alpha = max(1.0, 255 * one_minus_ease_out_sine)
+                sprite.scale_x = max(0.1, 5.0 * one_minus_ease_out_circ)
+                sprite.alpha = max(1.0, 255 * one_minus_ease_out_circ)
                 sprite_index += 1
         else:
             for sprite in self.sprites:
