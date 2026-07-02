@@ -500,8 +500,9 @@ class RudeBusterBeam(Sprite):
         self.time += delta_time
         if self.time > self.lifetime:
             self.kill()
-        current_texture_index = int((self.time // self.texture_cycle_rate) % self.number_of_textures)
-        self.set_texture(current_texture_index)
+        else:
+            current_texture_index = int((self.time // self.texture_cycle_rate) % self.number_of_textures)
+            self.set_texture(current_texture_index)
 
 
 class RudeBusterTrailingBeam(RudeBusterBeam):
@@ -541,7 +542,7 @@ class RudeBusterImpactAnimation(MultiSpriteAnimation):
         self.total_shrink_duration = 1.5
 
     def update_animation(self, delta_time):
-        self.time += delta_time
+        super().update_animation(delta_time)
         if self.time < self.total_shrink_duration:
             sprite_index = 0
 
@@ -638,6 +639,7 @@ class RudeBusterAnimation(MultiSpriteAnimation):
                     self.leading_rude_buster_beam.center_x = self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][0]
                     self.leading_rude_buster_beam.center_y = self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][1]
                     self.leading_rude_buster_beam.angle = self.rude_buster_arc_coordinates[self.current_arc_coordinate_index][2]
+                    self.leading_rude_buster_beam.update_animation(delta_time)
                 else:
                     self.leading_rude_buster_beam.kill()
                 self.sprites.append(trailing_beam_sprite)
