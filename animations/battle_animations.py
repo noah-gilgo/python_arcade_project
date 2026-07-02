@@ -372,7 +372,7 @@ class HealAnimation(SparkleAnimation):
     """
     The default heal animation. (green sparkles drifting up with a flash)
     """
-    def __init__(self, target: Sprite):
+    def __init__(self, caster = None, target: Sprite = None, sprites_and_effects_collection = None):
         if target:
             target_rect = target.rect
             self.color_filter_animation = FadeInFadeOutColorAnimation(
