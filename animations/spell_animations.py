@@ -764,10 +764,11 @@ class SleepMistAnimation(MultiSpriteAnimation):
                 )
                 sleep_mist_sprite.alpha = 0
                 self.sleep_mist_sprites.append(sleep_mist_sprite)
-                self.sprites.append(sleep_mist_sprite)
                 self.sprites_and_effects_collection.effects.append(sleep_mist_sprite)
 
-        self.mist_duration = 2.5
+            super().__init__(self.sleep_mist_sprites)
+
+        self.mist_duration = 3.5
         self.half_of_mist_duration = self.mist_duration / 2
 
         self.total_duration = 5.0
@@ -776,16 +777,19 @@ class SleepMistAnimation(MultiSpriteAnimation):
 
     def update_animation(self, delta_time: float):
         self.time += self.delta_time
+        self.angle += self.delta_time * 1.8
 
         if self.time < self.mist_duration:
             is_odd = True
             for sprite in self.sleep_mist_sprites:
                 if self.time < self.half_of_mist_duration:
-                    self.radius = 40 * ease_out_circ(self.time / self.half_of_mist_duration)
-                    sprite.alpha = 128 * ease_out_circ(self.time / self.half_of_mist_duration)
+                    coefficient = (1-ease_out_circ(self.time / self.half_of_mist_duration))
+                    self.radius = 40 * coefficient
+                    sprite.alpha = 128 * coefficient
                 else:
-                    self.radius = 40 * (1 - ease_in_circ((self.time - self.half_of_mist_duration) / self.half_of_mist_duration))
-                    sprite.alpha = 128 * (1 - ease_in_circ((self.time - self.half_of_mist_duration) / self.half_of_mist_duration))
+                    coefficient = (1 - ease_in_sin((self.time - self.half_of_mist_duration) / self.half_of_mist_duration))
+                    self.radius = 40 * coefficient
+                    sprite.alpha = 128 * coefficient
                 if is_odd:
                     angle = self.angle
                 else:

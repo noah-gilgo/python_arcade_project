@@ -3,7 +3,7 @@ from arcade.types import Color
 import graphics_objects
 from acts import RalseiRudinnAction1, NoelleRudinnAction1, SusieRudinnAction1
 from player_character import PlayerCharacter
-from spells import IceShock, Spell, FireShock, HealPrayer, RudeBuster
+from spells import IceShock, Spell, FireShock, HealPrayer, RudeBuster, SleepMist
 
 
 class Kris(PlayerCharacter):
@@ -92,17 +92,7 @@ class Noelle(PlayerCharacter):
             fight_box_color=Color(255, 255, 0, 255),
             fight_crit_box_color=Color(254, 254, 255, 255),
             spells=[
-                Spell(
-                    name="Sleep Mist",
-                    description="Spare TIRED foes",
-                    tp_cost=32,
-                    element_id=8,
-                    base_health_change=0,
-                    is_friendly_spell=False,
-                    is_healing_spell=False,
-                    is_pacifying_spell=True,
-                    is_aoe_spell=True
-                ),
+                SleepMist(),
                 HealPrayer(),
                 IceShock(),
                 Spell(

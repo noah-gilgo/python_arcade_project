@@ -11,7 +11,7 @@ from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnim
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
 from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation, BurnAnimation, \
-    RudeBusterAnimation
+    RudeBusterAnimation, SleepMistAnimation
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
@@ -354,3 +354,19 @@ class RudeBuster(Spell):
 
     def spell_damage_function(self, caster, target):
         return (caster.get_total_attack() * 11) + (caster.get_total_magic() * 5) - (target.defense * 3)
+
+
+class SleepMist(Spell):
+    def __init__(self):
+        super().__init__(
+            name="Sleep Mist",
+            description="Spare TIRED foes",
+            tp_cost=32,
+            base_health_change=0,
+            is_friendly_spell=False,
+            is_healing_spell=False,
+            is_pacifying_spell=True,
+            is_aoe_spell=True,
+            animation=SleepMistAnimation(),
+            time_before_battle_idle=1.4
+        )
