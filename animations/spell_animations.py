@@ -10,6 +10,7 @@ import character
 import player_character
 from graphics_methods import make_texture_solid_color
 from graphics_objects import MultiSpriteAnimation, AnimatedSprite, SingleSpriteAnimation
+from math_methods import ease_in_circ, ease_out_circ
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 from texture_methods import load_textures_at_filepath_into_texture_array
 
@@ -549,7 +550,13 @@ class RudeBusterImpactAnimation(MultiSpriteAnimation):
         ]
 
         super().__init__(sprites)
+        self.sprite_initial_positions = []
+        for sprite in self.sprites:
+            self.sprite_initial_positions.append([sprite.center_x, sprite.center_y])
+
         self.total_shrink_duration = 1.5
+
+        self.beam_total_distance_traveled = 50  # The total distance the wave travels before despawning
 
     def update_animation(self, delta_time):
         super().update_animation(delta_time)
@@ -557,34 +564,34 @@ class RudeBusterImpactAnimation(MultiSpriteAnimation):
             sprite_index = 0
 
             # This has to be calculated a lot for this function
-            one_minus_ease_in_sine = (1 - ease_in_sin(self.time / self.total_shrink_duration))
+            one_minus_ease_in_circ = (1 - ease_in_circ(self.time / self.total_shrink_duration))
 
             for sprite in self.sprites:
                 if sprite_index < 2 or sprite_index > 5:
-                    dx = max(0.1, 1.7 * one_minus_ease_in_sine)
+                    dx = max(0.1, 1.9 * one_minus_ease_in_circ)
                 else:
-                    dx = -max(0.1, 1.7 * one_minus_ease_in_sine)
+                    dx = -max(0.1, 1.9 * one_minus_ease_in_circ)
                 if sprite_index > 3:
-                    dy = max(0.1, 1.7 * one_minus_ease_in_sine)
+                    dy = max(0.1, 1.9 * one_minus_ease_in_circ)
                 else:
-                    dy = -max(0.1, 1.7 * one_minus_ease_in_sine)
+                    dy = -max(0.1, 1.9 * one_minus_ease_in_circ)
                 if sprite_index % 2 == 0:
                     if dx > 0:
-                        dx += 0.4 * one_minus_ease_in_sine
+                        dx *= 1.2
                     else:
-                        dx -= 0.4 * one_minus_ease_in_sine
+                        dx *= 1.2
                     if dy > 0:
-                        dy += 0.4 * one_minus_ease_in_sine
+                        dy *= 1.2
                     else:
-                        dy -= 0.4 * one_minus_ease_in_sine
+                        dy *= 1.2
 
                 sprite.center_x += dx
                 sprite.center_y += dy
 
-                one_minus_ease_out_sine = (1 - ease_out_sin(self.time / self.total_shrink_duration))
+                one_minus_ease_out_circ = ease_out_circ(self.time / self.total_shrink_duration)
 
-                sprite.scale_x = max(0.1, 4.0 * one_minus_ease_out_sine)
-                sprite.alpha = max(1.0, 255 * one_minus_ease_out_sine)
+                sprite.scale_x = max(0.1, 5.0 * one_minus_ease_out_circ)
+                sprite.alpha = max(1.0, 255 * one_minus_ease_out_circ)
                 sprite_index += 1
         else:
             for sprite in self.sprites:

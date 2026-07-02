@@ -60,3 +60,6 @@ def initialize_unholy_arc(number_of_opponents: int = 1):
 
 def ease_in_circ(percent: float):
     return 1 - math.sqrt(1 - (percent ** 2))
+
+def ease_out_circ(percent: float):
+    return 1 - math.sqrt(1 - ((percent - 1) ** 2))
