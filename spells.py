@@ -7,7 +7,8 @@ from arcade.types import Color
 
 import character
 import default_data
-from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation, HealAnimation
+from animations.battle_animations import NumberBounceAnimation, EnemyFleeingAnimation, HealAnimation, \
+    EnemySparedAnimation
 from animations.common_animations import ShakeAnimation, FadeInFadeOutColorAnimation
 from graphics_objects import MultiSpriteAnimation
 from animations.spell_animations import IceShockAnimation, FreezeAnimation, FireShockAnimation, BurnAnimation, \
@@ -39,6 +40,8 @@ class Spell:
         self.time_before_battle_idle = time_before_battle_idle  # If provided, the amount of time that will pass before the casters animation state is returned to battle_idle.
 
         self.sprites_and_effects_collection = None # Passed in during the cast spell call.
+
+        self.spare_sound = arcade.load_sound("assets/audio/battle/player_character/common/snd_spare.wav", False)
 
     def cast_spell(self, caster, targeted_characters, controller):
         """
@@ -81,7 +84,28 @@ class Spell:
             schedule_battle_idle = True
             if target not in targets:
                 target = target[0]
-            if self.is_friendly_spell:
+            if self.is_pacifying_spell:
+                if target.tired >= 100:
+                    # Animate the enemy being spared.
+                    target.set_animation_state("battle_spared")
+
+                    spare_animation = EnemySparedAnimation(target=target)
+                    spare_animation_sprites = spare_animation.get_sprites()
+
+                    pyglet.clock.schedule_once(
+                        lambda dt: self.sprites_and_effects_collection.effects.append(spare_animation), 0.5)
+                    for spare_animation_sprite in spare_animation_sprites:
+                        pyglet.clock.schedule_once(
+                            lambda dt, sprite=spare_animation_sprite: self.sprites_and_effects_collection.effects_sprites.append(sprite), 0.5)
+
+                    # Play the spare sound.
+                    pyglet.clock.schedule_once(
+                        lambda dt: self.spare_sound.play(), 0.5)
+
+                    # Remove the enemy from the battle.
+                    controller.enemies.remove(target)
+
+            elif self.is_friendly_spell:
                 target.modify_hp(self.spell_healing_function(caster))
             else:
                 damage_dealt = self.spell_damage_function(caster, target)
