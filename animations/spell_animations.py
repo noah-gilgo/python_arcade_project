@@ -737,3 +737,65 @@ class RudeBusterAnimation(MultiSpriteAnimation):
             points.append([wx, wy, angle])
 
         return points
+
+
+class SleepMistAnimation(MultiSpriteAnimation):
+    def __init__(self, caster: character.Character = None, target: character.Character = None,
+                 sprites_and_effects_collection: SpritesAndEffectsCollection = None):
+        if caster is not None and target is not None and sprites_and_effects_collection is not None:
+            self.caster = caster
+            self.target = target
+            self.sprites_and_effects_collection = sprites_and_effects_collection
+
+            self.target_initial_x = self.target.center_x
+            self.target_initial_y = self.target.center_y
+
+            self.sleep_mist_texture = arcade.load_texture(
+                file_path="assets/sprites/effects/sleep_mist.png"
+            )
+
+            self.sleep_mist_sprites = []
+            for i in range(2):
+                sleep_mist_sprite = Sprite(
+                    path_or_texture=self.sleep_mist_texture,
+                    scale=(8.0, 4.0),
+                    center_x=self.target.center_x,
+                    center_y=self.target.center_y
+                )
+                sleep_mist_sprite.alpha = 0
+                self.sleep_mist_sprites.append(sleep_mist_sprite)
+                self.sprites.append(sleep_mist_sprite)
+                self.sprites_and_effects_collection.effects.append(sleep_mist_sprite)
+
+        self.mist_duration = 2.5
+        self.half_of_mist_duration = self.mist_duration / 2
+
+        self.total_duration = 5.0
+        self.radius = 0.0
+        self.angle = 0.0  # measured in radians
+
+    def update_animation(self, delta_time: float):
+        self.time += self.delta_time
+
+        if self.time < self.mist_duration:
+            is_odd = True
+            for sprite in self.sleep_mist_sprites:
+                if self.time < self.half_of_mist_duration:
+                    self.radius = 40 * ease_out_circ(self.time / self.half_of_mist_duration)
+                    sprite.alpha = 128 * ease_out_circ(self.time / self.half_of_mist_duration)
+                else:
+                    self.radius = 40 * (1 - ease_in_circ((self.time - self.half_of_mist_duration) / self.half_of_mist_duration))
+                    sprite.alpha = 128 * (1 - ease_in_circ((self.time - self.half_of_mist_duration) / self.half_of_mist_duration))
+                if is_odd:
+                    angle = self.angle
+                else:
+                    angle = self.angle + math.pi
+
+                dx = self.radius * math.cos(angle)
+                dy = self.radius * math.sin(angle)
+
+                sprite.center_x = self.target_initial_x + dx
+                sprite.center_y = self.target_initial_y + dy
+
+                is_odd = not is_odd
+
