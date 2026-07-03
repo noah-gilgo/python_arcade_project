@@ -1333,23 +1333,26 @@ class SelectCommand(Command):
                     is_friendly_spell = spell_or_act.is_friendly_spell
                 else:
                     spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
-                if isinstance(spell_or_act, Spell) and spell_or_act.is_aoe_spell:  # If item affects all party members
-                    if spell_or_act.is_friendly_spell:
-                        targets=self.controller.players
-                    else:
-                        targets=self.controller.enemies
-                    self.controller.focus_stack.pop(remove_widget=True)
-                    current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                    spell_action = SpellAction(
-                        actor=current_player_character,
-                        targets=targets,
-                        spell=spell_or_act,
-                        controller=self.controller,
-                    )
-                    self.controller.move_to_next_player_card(spell_action)
-                    return
 
                 if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
+                    if isinstance(spell_or_act,
+                                  Spell) and spell_or_act.is_aoe_spell:  # If item affects all party members
+                        if spell_or_act.is_friendly_spell:
+                            targets = self.controller.players
+                        else:
+                            targets = self.controller.enemies
+                        self.controller.focus_stack.pop(remove_widget=True)
+                        current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                        spell_action = SpellAction(
+                            actor=current_player_character,
+                            targets=targets,
+                            spell=spell_or_act,
+                            controller=self.controller,
+                        )
+                        self.controller.move_to_next_player_card(spell_action)
+                        self.controller.add_tp_to_meter(-spell_or_act.tp_cost)
+                        self.controller.menu_select_sound.play()
+                        return
                     self.controller.state = BattleState.PLAYER_MAGIC_CHARACTER_SELECT
                     if is_friendly_spell is not None:
                         if is_friendly_spell:

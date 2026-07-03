@@ -137,7 +137,7 @@ class Character(arcade.Sprite):
             if not is_temporary:
                 self.non_idle_timer = 0.0
         else:
-            raise ValueError("set_animation_state was given a state that is not present in self._animations_by_state.")
+            raise ValueError("set_animation_state was given a state that is not present in self._animations_by_state:" + str(state))
 
     def set_position(self, center_x: int = settings.WINDOW_WIDTH/2, center_y: int = settings.WINDOW_HEIGHT/2):
         """
@@ -199,3 +199,11 @@ class Character(arcade.Sprite):
         )
 
         return speech_bubble
+
+    def set_scale(self, scale: float):
+        """
+        Set the scale of the player character sprite.
+        :param scale: The new scale of the player character sprite.
+        :return: None
+        """
+        self.scale = scale
