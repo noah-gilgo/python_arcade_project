@@ -414,6 +414,12 @@ class BattleController:
                 self.enemy_is_attacking = False
                 self.end_enemy_attack()
 
+        # Decrements the timer that prevents the player from advancing the game state via the CONFIRM button.
+        if self.time_before_player_can_advance_to_next_state > 0.0:
+            self.time_before_player_can_advance_to_next_state -= delta_time
+            if self.time_before_player_can_advance_to_next_state <= 0.0:
+                self.player_can_advance_to_next_state = True
+
     def start_fight_bar_clock(self):
         """
         Starts the clock used to move the attack bars used during the FIGHT act.
