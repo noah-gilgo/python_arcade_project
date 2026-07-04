@@ -55,7 +55,10 @@ class Spell:
 
         self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection)
         self.affect_targets_with_spell(caster, targeted_characters, controller)
-        caster.set_animation_state(self.cast_animation_state)
+        if self.cast_animation_state in caster.animations_by_state:
+            caster.set_animation_state(self.cast_animation_state)
+        else:
+            caster.set_animation_state("battle_magic")
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
@@ -395,14 +398,19 @@ class SleepMist(Spell):
             is_pacifying_spell=True,
             is_aoe_spell=True,
             animation=SleepMistAnimation(),
-            time_before_battle_idle=1.4
+            time_before_battle_idle=2.0,
+            ready_animation_state="battle_magic_ready_sleepmist",
+            cast_animation_state="battle_magic_sleepmist"
         )
 
         self.sleepmist_sound = arcade.load_sound("assets/audio/magic/snd_ghostappear.ogg")
 
     def cast_spell(self, caster, targeted_characters, controller):
         self.sprites_and_effects_collection = controller.sprites_and_effects_collection
-        caster.set_animation_state(self.cast_animation_state)
+        if self.cast_animation_state in caster.animations_by_state:
+            caster.set_animation_state(self.cast_animation_state)
+        else:
+            caster.set_animation_state("battle_magic")
         pyglet.clock.schedule_once(
             lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 1.3)
         pyglet.clock.schedule_once(
@@ -412,3 +420,5 @@ class SleepMist(Spell):
         if self.time_before_battle_idle > 0.0:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"),
                                        self.time_before_battle_idle)
+            if caster.name == "Ralsei":
+                pyglet.clock.schedule_once(lambda dt: caster.set_scale(4.0), self.time_before_battle_idle)

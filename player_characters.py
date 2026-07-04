@@ -56,7 +56,7 @@ class Ralsei(PlayerCharacter):
             battle_ui_icon_color=Color(181, 230, 29, 255),
             fight_box_color=Color(0, 255, 0, 255),
             fight_crit_box_color=Color(181, 230, 29, 255),
-            spells=[HealPrayer(), FireShock()]
+            spells=[HealPrayer(), SleepMist(), FireShock()]
         )
 
         self.magic_user_acts = [RalseiRudinnAction1(self)]
@@ -73,7 +73,20 @@ class Ralsei(PlayerCharacter):
                     sprite_pack_path=self._sprite_pack_path + "/battle_magic_fireshock",
                     frame_duration=0.12,
                     loop_animation=False
-                )
+                ),
+
+                "battle_magic_ready_sleepmist": graphics_objects.SimpleLoopAnimation(
+                    sprite_pack_path=self._sprite_pack_path + "/battle_magic_ready_sleepmist",
+                    frame_duration=0.2,
+                    loop_animation=True
+                ),
+
+                "battle_magic_sleepmist": graphics_objects.SimpleLoopAnimation(
+                    sprite_pack_path=self._sprite_pack_path + "/battle_magic_sleepmist",
+                    frame_duration=0.12,
+                    loop_animation=False
+                ),
+
             }
         )
 

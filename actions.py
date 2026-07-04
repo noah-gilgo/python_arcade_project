@@ -175,7 +175,12 @@ class SpellAction(Action):
             self.actor.set_animation_state("battle_idle")
 
     def ready_act(self):
-        self.actor.set_animation_state(self.spell.ready_animation_state)
+        if self.spell.ready_animation_state in self.actor.animations_by_state:
+            self.actor.set_animation_state(self.spell.ready_animation_state)
+            if self.spell.ready_animation_state == "battle_magic_ready_sleepmist" and self.actor.name == "Ralsei":
+                self.actor.scale = 0.55
+        else:
+            self.actor.set_animation_state("battle_magic_ready")
 
         self.controller.change_player_icon("assets/textures/gui_graphics/action_icons/magic_icon.png")
 
