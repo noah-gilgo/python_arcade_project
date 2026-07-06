@@ -261,6 +261,29 @@ class BattleController:
         self.left_pressed = False
         self.right_pressed = False
 
+        # A variable tracking the amount of time that needs to pass before the player can advance to the next state.
+        # For example: when a player character casts a spell, it's animation needs to complete before the player can
+        # press the [Select] button and advance to the next spell/attack/action.
+        self.time_before_player_can_advance_to_next_state = 0.0
+        self.player_can_advance_to_next_state = True
+
+    def delay_player_from_advancing_to_next_state(self, time: float = 0.0):
+        """
+        Prevents the player from advancing to the next state in the state machine.
+        :param time: The amount of time that the Confirm button will be prevented from doing anything.
+        :return: None
+        """
+        self.time_before_player_can_advance_to_next_state = time
+        self.player_can_advance_to_next_state = False
+
+    def allow_player_to_advance_to_next_state_immediately(self):
+        """
+        Allows the player to advance to the next state in the state machine if they are currently not able to.
+        :return: None
+        """
+        self.time_before_player_can_advance_to_next_state = 0.0
+        self.player_can_advance_to_next_state = True
+
     def add_key_pressed(self, key):
         """
         If a key is pressed, track that it is pressed.
@@ -390,6 +413,12 @@ class BattleController:
             if self.enemy_attack_time > self.enemy_attack_duration:
                 self.enemy_is_attacking = False
                 self.end_enemy_attack()
+
+        # Decrements the timer that prevents the player from advancing the game state via the CONFIRM button.
+        if self.time_before_player_can_advance_to_next_state > 0.0:
+            self.time_before_player_can_advance_to_next_state -= delta_time
+            if self.time_before_player_can_advance_to_next_state <= 0.0:
+                self.player_can_advance_to_next_state = True
 
     def start_fight_bar_clock(self):
         """
@@ -1226,269 +1255,269 @@ class SelectCommand(Command):
     """ A command object representing the user selecting (usually pressing Z in the original game.) """
 
     def execute(self):
-        match self.controller.state:
-            case BattleState.PLAYER_COMMAND:
-                self.controller.menu_select_sound.play()
-                match self.controller.focus_stack.get_highest_member().focused_widget_index:
-                    case 0:  # user selects ATTACK button
-                        self.controller.state = BattleState.PLAYER_ATTACK_SELECT
-                        self.controller.open_enemy_select_menu()
-                        return
-                    case 1:  # user selects ACT/MAGIC button
-                        if self.controller.focus_stack.get_highest_member().get_focused_widget().name == "ACT":  # ACT button
-                            self.controller.state = BattleState.PLAYER_ACT_ENEMY_SELECT
+        if self.controller.player_can_advance_to_next_state:
+            match self.controller.state:
+                case BattleState.PLAYER_COMMAND:
+                    self.controller.menu_select_sound.play()
+                    match self.controller.focus_stack.get_highest_member().focused_widget_index:
+                        case 0:  # user selects ATTACK button
+                            self.controller.state = BattleState.PLAYER_ATTACK_SELECT
                             self.controller.open_enemy_select_menu()
                             return
-                        else:  # MAGIC button
-                            self.controller.state = BattleState.PLAYER_MAGIC_SELECT
-                            spell_list_full_layout = SpellSelect(
-                                self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character,
-                                self.controller
-                            )
-                            spell_list_interactive_layout = spell_list_full_layout.children[0]
-                            self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout,
+                        case 1:  # user selects ACT/MAGIC button
+                            if self.controller.focus_stack.get_highest_member().get_focused_widget().name == "ACT":  # ACT button
+                                self.controller.state = BattleState.PLAYER_ACT_ENEMY_SELECT
+                                self.controller.open_enemy_select_menu()
+                                return
+                            else:  # MAGIC button
+                                self.controller.state = BattleState.PLAYER_MAGIC_SELECT
+                                spell_list_full_layout = SpellSelect(
+                                    self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character,
+                                    self.controller
+                                )
+                                spell_list_interactive_layout = spell_list_full_layout.children[0]
+                                self.controller.focus_stack.push(spell_list_full_layout, spell_list_interactive_layout,
+                                                                 self.controller.state, 2, True)
+                                return
+                        case 2:  # user selects the ITEM button
+                            self.controller.state = BattleState.PLAYER_ITEM_SELECT
+                            item_list_full_layout = ItemSelect(self.controller.items)
+                            item_list_interactive_layout = item_list_full_layout.children[0]
+                            self.controller.focus_stack.push(item_list_full_layout, item_list_interactive_layout,
                                                              self.controller.state, 2, True)
+                            self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
+                                self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                            )
                             return
-                    case 2:  # user selects the ITEM button
-                        self.controller.state = BattleState.PLAYER_ITEM_SELECT
-                        item_list_full_layout = ItemSelect(self.controller.items)
-                        item_list_interactive_layout = item_list_full_layout.children[0]
-                        self.controller.focus_stack.push(item_list_full_layout, item_list_interactive_layout,
-                                                         self.controller.state, 2, True)
-                        self.controller.focus_stack.get_highest_member().full_ui_layout.update_item_data(
-                            self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                        )
-                        return
-                    case 3:  # user selects the SPARE button
-                        self.controller.state = BattleState.PLAYER_SPARE_SELECT
-                        self.controller.open_enemy_select_menu()
-                        return
-                    case 4:  # user selects the DEFEND button
-                        defending_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                        defend_action = DefendAction(
-                            actor = defending_player_character,
-                            targets=[],
+                        case 3:  # user selects the SPARE button
+                            self.controller.state = BattleState.PLAYER_SPARE_SELECT
+                            self.controller.open_enemy_select_menu()
+                            return
+                        case 4:  # user selects the DEFEND button
+                            defending_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                            defend_action = DefendAction(
+                                actor = defending_player_character,
+                                targets=[],
+                                controller=self.controller
+                            )
+                            self.controller.move_to_next_player_card(defend_action)
+                            return
+
+                case BattleState.PLAYER_ATTACK_SELECT:
+                    selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                    selected_target_enemy.unfocus()
+
+                    self.controller.focus_stack.pop(remove_widget=True)
+
+                    current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+
+                    self.controller.battle_player_character_cards.children[
+                        self.controller.current_player_index].change_icon(
+                        "assets/textures/gui_graphics/action_icons/fight_icon.png")
+
+                    fight_action = FightAction(
+                        actor=current_player_character,
+                        target=selected_target_enemy,
+                        controller=self.controller
+                    )
+
+                    self.controller.move_to_next_player_card(fight_action)
+                    return
+
+                case BattleState.PLAYER_ACT_ENEMY_SELECT:
+                    self.controller.state = BattleState.PLAYER_ACT_SELECT
+                    act_list_full_layout = ActSelect(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().enemy,
+                        self.controller)
+                    act_list_interactive_layout = act_list_full_layout.children[0]
+                    self.controller.focus_stack.push(act_list_full_layout, act_list_interactive_layout,
+                                                     self.controller.state, 2, True)
+                    self.controller.menu_select_sound.play()
+                    self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
+                        self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                    )
+                    return
+
+                case BattleState.PLAYER_ACT_SELECT:
+                    selected_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                    self.controller.focus_stack.pop(remove_widget=True)
+                    selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                    selected_target_enemy.unfocus()
+                    self.controller.focus_stack.pop(remove_widget=True)
+                    current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+
+                    act_action = ActAction(
+                        actor=current_player_character,
+                        target=selected_target_enemy,
+                        act=selected_act,
+                        controller=self.controller
+                    )
+
+                    self.controller.move_to_next_player_card(act_action)
+                    return
+
+                case BattleState.PLAYER_MAGIC_SELECT:
+                    is_friendly_spell = None
+                    if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell"):
+                        spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                        is_friendly_spell = spell_or_act.is_friendly_spell
+                    else:
+                        spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
+
+                    if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
+                        if isinstance(spell_or_act,
+                                      Spell) and spell_or_act.is_aoe_spell:  # If item affects all party members
+                            if spell_or_act.is_friendly_spell:
+                                targets = self.controller.players
+                            else:
+                                targets = self.controller.enemies
+                            self.controller.focus_stack.pop(remove_widget=True)
+                            current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                            spell_action = SpellAction(
+                                actor=current_player_character,
+                                targets=targets,
+                                spell=spell_or_act,
+                                controller=self.controller,
+                            )
+                            self.controller.move_to_next_player_card(spell_action)
+                            self.controller.add_tp_to_meter(-spell_or_act.tp_cost)
+                            self.controller.menu_select_sound.play()
+                            return
+                        self.controller.state = BattleState.PLAYER_MAGIC_CHARACTER_SELECT
+                        if is_friendly_spell is not None:
+                            if is_friendly_spell:
+                                self.controller.open_player_select_menu()
+                            else:
+                                self.controller.open_enemy_select_menu()
+                        self.controller.menu_select_sound.play()
+                    return
+
+                case BattleState.PLAYER_MAGIC_CHARACTER_SELECT:
+                    if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "enemy"):
+                        selected_target_character = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                    else:
+                        selected_target_character = self.controller.focus_stack.get_highest_member().get_focused_widget().player
+                    selected_target_character.unfocus()
+                    self.controller.focus_stack.pop(remove_widget=True)
+                    is_spell = hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell")
+                    if is_spell:
+                        selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
+                    else:
+                        selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
+                    self.controller.tp_meter.update_tp_meter(-selected_spell_or_act.tp_cost)
+                    self.controller.focus_stack.pop(remove_widget=True)
+                    current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+
+                    if is_spell:
+                        spell_or_act_action = SpellAction(
+                            actor=current_player_character,
+                            targets=[selected_target_character],
+                            spell=selected_spell_or_act,
                             controller=self.controller
                         )
-                        self.controller.move_to_next_player_card(defend_action)
-                        return
+                    else:
+                        spell_or_act_action = ActAction(
+                            actor=current_player_character,
+                            target=selected_target_character,
+                            act=selected_spell_or_act,
+                            controller=self.controller
+                        )
 
-            case BattleState.PLAYER_ATTACK_SELECT:
-                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
-                selected_target_enemy.unfocus()
+                    self.controller.move_to_next_player_card(spell_or_act_action)
+                    return
 
-                self.controller.focus_stack.pop(remove_widget=True)
-
-                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-
-                self.controller.battle_player_character_cards.children[
-                    self.controller.current_player_index].change_icon(
-                    "assets/textures/gui_graphics/action_icons/fight_icon.png")
-
-                fight_action = FightAction(
-                    actor=current_player_character,
-                    target=selected_target_enemy,
-                    controller=self.controller
-                )
-
-                self.controller.move_to_next_player_card(fight_action)
-                return
-
-            case BattleState.PLAYER_ACT_ENEMY_SELECT:
-                self.controller.state = BattleState.PLAYER_ACT_SELECT
-                act_list_full_layout = ActSelect(
-                    self.controller.focus_stack.get_highest_member().get_focused_widget().enemy,
-                    self.controller)
-                act_list_interactive_layout = act_list_full_layout.children[0]
-                self.controller.focus_stack.push(act_list_full_layout, act_list_interactive_layout,
-                                                 self.controller.state, 2, True)
-                self.controller.menu_select_sound.play()
-                self.controller.focus_stack.get_highest_member().full_ui_layout.update_act_data(
-                    self.controller.focus_stack.get_highest_member().get_focused_widget().act
-                )
-                return
-
-            case BattleState.PLAYER_ACT_SELECT:
-                selected_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
-                self.controller.focus_stack.pop(remove_widget=True)
-                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
-                selected_target_enemy.unfocus()
-                self.controller.focus_stack.pop(remove_widget=True)
-                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-
-                act_action = ActAction(
-                    actor=current_player_character,
-                    target=selected_target_enemy,
-                    act=selected_act,
-                    controller=self.controller
-                )
-
-                self.controller.move_to_next_player_card(act_action)
-                return
-
-            case BattleState.PLAYER_MAGIC_SELECT:
-                is_friendly_spell = None
-                if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell"):
-                    spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                    is_friendly_spell = spell_or_act.is_friendly_spell
-                else:
-                    spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
-
-                if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
-                    if isinstance(spell_or_act,
-                                  Spell) and spell_or_act.is_aoe_spell:  # If item affects all party members
-                        if spell_or_act.is_friendly_spell:
-                            targets = self.controller.players
-                        else:
-                            targets = self.controller.enemies
+                case BattleState.PLAYER_ITEM_SELECT:
+                    item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                    item_index = self.controller.focus_stack.get_highest_member().get_focused_widget_index()
+                    if item.tp_restored > 0 and item.hp_restored == 0:  # If item is TP item exclusively
                         self.controller.focus_stack.pop(remove_widget=True)
                         current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                        spell_action = SpellAction(
+                        item_action = ItemAction(
                             actor=current_player_character,
-                            targets=targets,
-                            spell=spell_or_act,
+                            targets=[],
                             controller=self.controller,
+                            item=item,
+                            item_index=item_index
                         )
-                        self.controller.move_to_next_player_card(spell_action)
-                        self.controller.add_tp_to_meter(-spell_or_act.tp_cost)
-                        self.controller.menu_select_sound.play()
+                        self.controller.move_to_next_player_card(item_action)
                         return
-                    self.controller.state = BattleState.PLAYER_MAGIC_CHARACTER_SELECT
-                    if is_friendly_spell is not None:
-                        if is_friendly_spell:
-                            self.controller.open_player_select_menu()
-                        else:
-                            self.controller.open_enemy_select_menu()
+                    if item.heals_all_party_members:  # If item affects all party members
+                        self.controller.focus_stack.pop(remove_widget=True)
+                        current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                        item_action = ItemAction(
+                            actor=current_player_character,
+                            targets=self.controller.players,
+                            controller=self.controller,
+                            item=item,
+                            item_index=item_index
+                        )
+                        self.controller.move_to_next_player_card(item_action)
+                        return
+                    self.controller.state = BattleState.PLAYER_ITEM_PLAYER_SELECT
+                    self.controller.open_player_select_menu()
                     self.controller.menu_select_sound.play()
-                return
+                    return
 
-            case BattleState.PLAYER_MAGIC_CHARACTER_SELECT:
-                if hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "enemy"):
-                    selected_target_character = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
-                else:
-                    selected_target_character = self.controller.focus_stack.get_highest_member().get_focused_widget().player
-                selected_target_character.unfocus()
-                self.controller.focus_stack.pop(remove_widget=True)
-                is_spell = hasattr(self.controller.focus_stack.get_highest_member().get_focused_widget(), "spell")
-                if is_spell:
-                    selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().spell
-                else:
-                    selected_spell_or_act = self.controller.focus_stack.get_highest_member().get_focused_widget().act
-                self.controller.tp_meter.update_tp_meter(-selected_spell_or_act.tp_cost)
-                self.controller.focus_stack.pop(remove_widget=True)
-                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-
-                if is_spell:
-                    spell_or_act_action = SpellAction(
-                        actor=current_player_character,
-                        targets=[selected_target_character],
-                        spell=selected_spell_or_act,
-                        controller=self.controller
-                    )
-                else:
-                    spell_or_act_action = ActAction(
-                        actor=current_player_character,
-                        target=selected_target_character,
-                        act=selected_spell_or_act,
-                        controller=self.controller
-                    )
-
-                self.controller.move_to_next_player_card(spell_or_act_action)
-                return
-
-            case BattleState.PLAYER_ITEM_SELECT:
-                item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                item_index = self.controller.focus_stack.get_highest_member().get_focused_widget_index()
-                if item.tp_restored > 0 and item.hp_restored == 0:  # If item is TP item exclusively
+                case BattleState.PLAYER_ITEM_PLAYER_SELECT:
+                    targeted_player_character = self.controller.focus_stack.get_highest_member().get_focused_widget().player
+                    targeted_player_character.unfocus()
                     self.controller.focus_stack.pop(remove_widget=True)
-                    current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
+                    item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
+                    item_index = self.controller.focus_stack.get_highest_member().get_focused_widget_index()
+                    self.controller.focus_stack.pop(remove_widget=True)
+                    player_using_item = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
                     item_action = ItemAction(
-                        actor=current_player_character,
-                        targets=[],
+                        actor=player_using_item,
+                        targets=[targeted_player_character],
                         controller=self.controller,
                         item=item,
                         item_index=item_index
                     )
                     self.controller.move_to_next_player_card(item_action)
-                    return
-                if item.heals_all_party_members:  # If item affects all party members
-                    # TODO: queue an ItemAction with the item
+                    self.controller.menu_select_sound.play()
+
+
+                case BattleState.PLAYER_SPARE_SELECT:
+                    # animate the player character, queue the act
+                    selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
+                    selected_target_enemy.unfocus()
+
                     self.controller.focus_stack.pop(remove_widget=True)
+
                     current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                    item_action = ItemAction(
+
+                    self.controller.battle_player_character_cards.children[
+                        self.controller.current_player_index].change_icon(
+                        "assets/textures/gui_graphics/action_icons/spare_icon.png")
+
+                    spare_action = SpareAction(
                         actor=current_player_character,
-                        targets=self.controller.players,
-                        controller=self.controller,
-                        item=item,
-                        item_index=item_index
+                        target=selected_target_enemy,
+                        controller=self.controller
                     )
-                    self.controller.move_to_next_player_card(item_action)
+
+                    self.controller.move_to_next_player_card(spare_action)
                     return
-                self.controller.state = BattleState.PLAYER_ITEM_PLAYER_SELECT
-                self.controller.open_player_select_menu()
-                self.controller.menu_select_sound.play()
-                return
 
-            case BattleState.PLAYER_ITEM_PLAYER_SELECT:
-                targeted_player_character = self.controller.focus_stack.get_highest_member().get_focused_widget().player
-                targeted_player_character.unfocus()
-                self.controller.focus_stack.pop(remove_widget=True)
-                item = self.controller.focus_stack.get_highest_member().get_focused_widget().item
-                item_index = self.controller.focus_stack.get_highest_member().get_focused_widget_index()
-                self.controller.focus_stack.pop(remove_widget=True)
-                player_using_item = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-                item_action = ItemAction(
-                    actor=player_using_item,
-                    targets=[targeted_player_character],
-                    controller=self.controller,
-                    item=item,
-                    item_index=item_index
-                )
-                self.controller.move_to_next_player_card(item_action)
-                self.controller.menu_select_sound.play()
+                case BattleState.PLAYER_ATTACKING:
+                    self.controller.attempt_to_hit_enemy()
 
+                case BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS:
+                    self.controller.execute_queued_player_action()
 
-            case BattleState.PLAYER_SPARE_SELECT:
-                # animate the player character, queue the act
-                selected_target_enemy = self.controller.focus_stack.get_highest_member().get_focused_widget().enemy
-                selected_target_enemy.unfocus()
+                case BattleState.DIALOGUE:
+                    if len(self.controller.scripted_dialogue) > 0:
+                        self.controller.spawn_next_dialog_from_dialog_exchange()
+                    else:
+                        self.controller.despawn_speech_bubbles()
+                        self.controller.start_enemy_attack()
 
-                self.controller.focus_stack.pop(remove_widget=True)
-
-                current_player_character = self.controller.focus_stack.get_highest_member().get_interactive_ui_layout().player_character
-
-                self.controller.battle_player_character_cards.children[
-                    self.controller.current_player_index].change_icon(
-                    "assets/textures/gui_graphics/action_icons/spare_icon.png")
-
-                spare_action = SpareAction(
-                    actor=current_player_character,
-                    target=selected_target_enemy,
-                    controller=self.controller
-                )
-
-                self.controller.move_to_next_player_card(spare_action)
-                return
-
-            case BattleState.PLAYER_ATTACKING:
-                self.controller.attempt_to_hit_enemy()
-
-            case BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS:
-                self.controller.execute_queued_player_action()
-
-            case BattleState.DIALOGUE:
-                if len(self.controller.scripted_dialogue) > 0:
-                    self.controller.spawn_next_dialog_from_dialog_exchange()
-                else:
-                    self.controller.despawn_speech_bubbles()
-                    self.controller.start_enemy_attack()
-
-            case BattleState.DEFEAT:
-                if not self.controller.game_over_animation.continue_options_loaded:
-                    self.controller.game_over_animation.load_next_dialog_in_text_box()
-                else:
-                    if not (self.controller.game_over_animation.continue_option_selected or self.controller.game_over_animation.give_up_option_selected):
-                        self.controller.game_over_animation.select_option()
+                case BattleState.DEFEAT:
+                    if not self.controller.game_over_animation.continue_options_loaded:
+                        self.controller.game_over_animation.load_next_dialog_in_text_box()
+                    else:
+                        if not (self.controller.game_over_animation.continue_option_selected or self.controller.game_over_animation.give_up_option_selected):
+                            self.controller.game_over_animation.select_option()
 
 
 class CancelCommand(Command):

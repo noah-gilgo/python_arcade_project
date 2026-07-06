@@ -22,7 +22,9 @@ class Spell:
                  base_health_change: int = 0, is_friendly_spell: bool = False, is_healing_spell: bool = False,
                  is_pacifying_spell: bool = False, is_aoe_spell: bool = False, animation: MultiSpriteAnimation = None,
                  magic_color: Color = arcade.color.WHITE, ready_animation_state: str = "battle_magic_ready",
-                 cast_animation_state: str = "battle_magic", time_before_battle_idle: float = 0.0):
+                 cast_animation_state: str = "battle_magic", time_before_animation_begins: float = None,
+                 time_before_target_affected_by_spell: float = None, time_before_battle_idle: float = None,
+                 time_before_player_can_advance_past_spell: float = None):
         self.name = name  # Name of the spell
         self.description = description  # Description of the spell
         self.tp_cost = tp_cost  # TP cost of the spell
@@ -37,7 +39,10 @@ class Spell:
 
         self.ready_animation_state = ready_animation_state  # The animation state given to the character when they've been told to cast the spell.
         self.cast_animation_state = cast_animation_state  # The animation state given to the character when they cast the spell.
+        self.time_before_animation_begins = time_before_animation_begins  # The amount of time between when the spell is cast and when the spell animation begins.
+        self.time_before_target_affected_by_spell = time_before_target_affected_by_spell # The amount of time between when the spell is cast and when the enemy is affected by it.
         self.time_before_battle_idle = time_before_battle_idle  # If provided, the amount of time that will pass before the casters animation state is returned to battle_idle.
+        self.time_before_player_can_advance_past_spell = time_before_player_can_advance_past_spell # If provided, the amount of time player input will be delayed while the spell is being cast
 
         self.sprites_and_effects_collection = None # Passed in during the cast spell call.
 
@@ -53,14 +58,21 @@ class Spell:
         """
         self.sprites_and_effects_collection = controller.sprites_and_effects_collection
 
-        self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection)
-        self.affect_targets_with_spell(caster, targeted_characters, controller)
         if self.cast_animation_state in caster.animations_by_state:
             caster.set_animation_state(self.cast_animation_state)
         else:
             caster.set_animation_state("battle_magic")
-        if self.time_before_battle_idle > 0.0:
+
+        if self.time_before_animation_begins is not None:
+            pyglet.clock.schedule_once(lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), self.time_before_animation_begins)
+        if self.time_before_target_affected_by_spell is not None:
+            pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), self.time_before_target_affected_by_spell)
+        if self.time_before_battle_idle is not None:
             pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
+
+        # Tell the battle controller to postpone the player advancing their queued actions until the spell is complete.
+        if self.time_before_player_can_advance_past_spell is not None:
+            controller.delay_player_from_advancing_to_next_state(self.time_before_player_can_advance_past_spell)
 
     def spell_damage_function(self, caster, target) -> float:
         """
@@ -230,7 +242,10 @@ class IceShock(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=IceShockAnimation(),
-            time_before_battle_idle=1.0
+            time_before_battle_idle=1.0,
+            time_before_animation_begins=0.5,
+            time_before_target_affected_by_spell=0.9,
+            time_before_player_can_advance_past_spell=2.5
         )
 
     def spell_damage_function(self, caster, target) -> float:
@@ -239,22 +254,6 @@ class IceShock(Spell):
         """
 
         return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
-
-    def cast_spell(self, caster, targeted_characters, controller):
-        """
-        Casts the spell.
-        :param caster: The PlayerCharacter casting the spell.
-        :param targeted_characters: The targeted characters that the spell is being cast upon.
-        :param controller: The battle controller.
-        :return: None
-        """
-
-        # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
-        caster.set_animation_state(self.cast_animation_state)
-        pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.9)
-        pyglet.clock.schedule_once(lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
-        if self.time_before_battle_idle > 0.0:
-            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
 
 class FireShock(Spell):
@@ -273,7 +272,10 @@ class FireShock(Spell):
             animation=FireShockAnimation(),
             time_before_battle_idle=1.8,
             ready_animation_state="battle_magic_ready_fireshock",
-            cast_animation_state="battle_magic_fireshock"
+            cast_animation_state="battle_magic_fireshock",
+            time_before_animation_begins=0.5,
+            time_before_target_affected_by_spell=0.9,
+            time_before_player_can_advance_past_spell=2.5
         )
 
         self.burn_sound = arcade.load_sound("assets/audio/battle/player_character/spells/snd_petrify.wav",
@@ -285,23 +287,6 @@ class FireShock(Spell):
         """
 
         return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
-
-    def cast_spell(self, caster, targeted_characters, controller):
-        """
-        Casts the spell.
-        :param caster: The PlayerCharacter casting the spell.
-        :param targeted_characters: The targeted characters that the spell is being cast upon.
-        :param controller: The battle controller.
-        :return: None
-        """
-        self.sprites_and_effects_collection = controller.sprites_and_effects_collection
-
-        # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
-        caster.set_animation_state(self.cast_animation_state)
-        pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.9)
-        pyglet.clock.schedule_once(lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
-        if self.time_before_battle_idle > 0.0:
-            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
     def affect_targets_with_spell(self, caster, targets, controller):
         super().affect_targets_with_spell(caster, targets, controller)
@@ -329,7 +314,10 @@ class HealPrayer(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=HealAnimation(target=None),
-            time_before_battle_idle=0.9
+            time_before_battle_idle=0.9,
+            time_before_animation_begins=0.5,
+            time_before_target_affected_by_spell=0.5,
+            time_before_player_can_advance_past_spell=1.5
         )
 
     def spell_healing_function(self, caster) -> float:
@@ -338,22 +326,6 @@ class HealPrayer(Spell):
         :return:
         """
         return 5 * caster.get_total_magic()
-
-    def cast_spell(self, caster, targeted_characters, controller):
-        """
-        Casts the spell.
-        :param caster: The PlayerCharacter casting the spell.
-        :param targeted_characters: The targeted characters that the spell is being cast upon.
-        :param controller: The battle controller.
-        :return: None
-        """
-
-        # self.animate_spell(targeted_characters, controller.sprites_and_effects_collection)
-        caster.set_animation_state(self.cast_animation_state)
-        pyglet.clock.schedule_once(lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 0.5)
-        pyglet.clock.schedule_once(lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
-        if self.time_before_battle_idle > 0.0:
-            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"), self.time_before_battle_idle)
 
 
 class RudeBuster(Spell):
@@ -369,18 +341,11 @@ class RudeBuster(Spell):
             is_pacifying_spell=False,
             is_aoe_spell=False,
             animation=RudeBusterAnimation(caster=None, target=None),
-            time_before_battle_idle=1.4
+            time_before_battle_idle=1.4,
+            time_before_animation_begins=0.8,
+            time_before_target_affected_by_spell=1.3,
+            time_before_player_can_advance_past_spell=2.4
         )
-
-    def cast_spell(self, caster, targeted_characters, controller):
-        caster.set_animation_state(self.cast_animation_state)
-        pyglet.clock.schedule_once(
-            lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 1.3)
-        pyglet.clock.schedule_once(
-            lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.8)
-        if self.time_before_battle_idle > 0.0:
-            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"),
-                                       self.time_before_battle_idle)
 
     def spell_damage_function(self, caster, target):
         return (caster.get_total_attack() * 11) + (caster.get_total_magic() * 5) - (target.defense * 3)
@@ -400,25 +365,15 @@ class SleepMist(Spell):
             animation=SleepMistAnimation(),
             time_before_battle_idle=2.0,
             ready_animation_state="battle_magic_ready_sleepmist",
-            cast_animation_state="battle_magic_sleepmist"
+            cast_animation_state="battle_magic_sleepmist",
+            time_before_animation_begins=0.5,
+            time_before_target_affected_by_spell=1.3,
+            time_before_player_can_advance_past_spell=2.5
         )
 
         self.sleepmist_sound = arcade.load_sound("assets/audio/magic/snd_ghostappear.ogg")
 
     def cast_spell(self, caster, targeted_characters, controller):
-        self.sprites_and_effects_collection = controller.sprites_and_effects_collection
-        if self.cast_animation_state in caster.animations_by_state:
-            caster.set_animation_state(self.cast_animation_state)
-        else:
-            caster.set_animation_state("battle_magic")
-        pyglet.clock.schedule_once(
-            lambda dt: self.affect_targets_with_spell(caster, targeted_characters, controller), 1.3)
-        pyglet.clock.schedule_once(
-            lambda dt: self.animate_spell(caster, targeted_characters, controller.sprites_and_effects_collection), 0.5)
-        pyglet.clock.schedule_once(
-            lambda dt: self.sleepmist_sound.play(), 0.7)
-        if self.time_before_battle_idle > 0.0:
-            pyglet.clock.schedule_once(lambda dt: caster.set_animation_state("battle_idle"),
-                                       self.time_before_battle_idle)
-            if caster.name == "Ralsei":
-                pyglet.clock.schedule_once(lambda dt: caster.set_scale(4.0), self.time_before_battle_idle)
+        super().cast_spell(caster, targeted_characters, controller)
+        if caster.name == "Ralsei":
+            pyglet.clock.schedule_once(lambda dt: caster.set_scale(4.0), self.time_before_battle_idle)
