@@ -3,7 +3,6 @@ import math
 import arcade
 from arcade import Sound, Sprite, Texture
 
-from dialogue_box import TextBoxDialog
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
@@ -196,7 +195,7 @@ class SpriteTextBox(Sprite):
             self.character_row_index += 1
         """
 
-    def load_dialog(self, text_box_dialog):
+    def load_dialog(self, text_box_dialog: SpriteTextBoxDialog):
         """
         Initiates the process that loads the provided text_box_dialog into the text box.
         :param text_box_dialog: The TextBoxDialog object representing the text to be loaded.

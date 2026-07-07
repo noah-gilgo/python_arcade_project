@@ -255,11 +255,11 @@ class GameView(arcade.View):
         self.sprites_and_effects_collection.effects.append(self.background_animation)
 
         # Initialize the GUI.
-        self.text_box = dialogue_box.TextBox()
+        self.text_box = dialogue_box.BattleDialogTextBox(self.sprites_and_effects_collection)
         self.battle_player_character_cards = battle_widgets.BattleHUDCharacterClamshellDisplay(self.player_characters)
         self.manager.add(self.battle_player_character_cards)
         #self.manager.add(self.tp_meter)
-        self.manager.add(self.text_box)
+        #self.manager.add(self.text_box)
 
         self.battle_controller = BattleController(
             ui_manager=self.manager,

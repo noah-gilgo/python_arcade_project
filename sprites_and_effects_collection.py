@@ -20,6 +20,7 @@ class SpritesAndEffectsCollection:
 
         self.background_sprites = SpriteList()  # Background sprites, like the animated background in battle.
         self.character_sprites = SpriteList()  # Character sprites, like for player characters/non player characters
+        self.gui_sprites_1 = SpriteList()  # Widget-esque sprites that are not actually widgets
         self.effects_sprites = SpriteList()  # Effects sprites, like the animations for attacking/spells
         self.effects_sprites_2 = SpriteList()
         self.effects_sprites_3 = SpriteList()
@@ -50,6 +51,7 @@ class SpritesAndEffectsCollection:
                 if self.is_drawing_character_sprites:
                     self.character_sprites.draw(pixelated=True)
                 if self.is_drawing_gui_sprites:
+                    self.gui_sprites_1.draw(pixelated=True)
                     self.manager.draw()
                 if self.is_drawing_effects_sprites:
                     self.effects_sprites.draw(pixelated=True)
