@@ -1096,6 +1096,11 @@ class BattleController:
             self.spawn_fight_bars(fighting_players, enemy_targets)
             return
         else:
+            # For every player that is not defending or downed, reset their animation state to battle_idle.
+            for player in self.players:
+                if not (player.is_player_downed() or player.is_player_defending()):
+                    player.set_animation_state("battle_idle")
+
             # Start the pre enemy attack dialog.
             self.start_pre_enemy_attack_dialog()
             return
@@ -1300,6 +1305,7 @@ class SelectCommand(Command):
     """ A command object representing the user selecting (usually pressing Z in the original game.) """
 
     def execute(self):
+        print(str(self.controller.state))
         if self.controller.player_can_advance_to_next_state:
             match self.controller.state:
                 case BattleState.PLAYER_COMMAND:
@@ -1411,7 +1417,7 @@ class SelectCommand(Command):
 
                     if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
                         if isinstance(spell_or_act,
-                                      Spell) and spell_or_act.is_aoe_spell:  # If item affects all party members
+                                      Spell) and spell_or_act.is_aoe_spell:  # If spell affects all party members
                             if spell_or_act.is_friendly_spell:
                                 targets = self.controller.players
                             else:
@@ -1434,6 +1440,8 @@ class SelectCommand(Command):
                                 self.controller.open_player_select_menu()
                             else:
                                 self.controller.open_enemy_select_menu()
+                        else:
+                            self.controller.open_enemy_select_menu()
                         self.controller.menu_select_sound.play()
                     return
 
