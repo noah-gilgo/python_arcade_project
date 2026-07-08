@@ -163,7 +163,7 @@ class SpellAction(Action):
 
         if len(targeted_characters) > 0 and len(player_or_enemies_list) > 0:
             self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(
-                text="* " + self.actor.name + " cast " + self.spell.name + "!",
+                text=self.actor.name + " cast " + self.spell.name + "!",
                 rate_of_text=0.03,
                 sprites_and_effects_collection=self.controller.sprites_and_effects_collection
             ))
@@ -258,7 +258,7 @@ class ItemAction(Action):
 
     def execute(self):
         self.actor.set_animation_state("battle_item")
-        item_text = "* " + self.actor.name + " used the " + self.item.name.upper() + "!"
+        item_text = self.actor.name + " used the " + self.item.name.upper() + "!"
         self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(text=item_text,
             sprites_and_effects_collection=self.controller.sprites_and_effects_collection))
         pyglet.clock.schedule_once(
@@ -318,7 +318,7 @@ class SpareAction(Action):
         if self.target not in self.controller.enemies:
             self.target = self.controller.enemies[0]
         self.actor.set_animation_state("battle_spare")
-        spare_message = "* " + self.actor.name + " spared " + self.target.name + "! "
+        spare_message = self.actor.name + " spared " + self.target.name + "! "
 
         if self.target.mercy < 100:
             # Add mercy to the targets mercy meter.
@@ -329,7 +329,7 @@ class SpareAction(Action):
                     lambda dt: self.target.set_animation_state("battle_spared"), 0.5)
 
             # Append a message telling the user that the enemy wasn't spared to the spare message.
-            spare_message += "\n    But it's name wasn't YELLOW..."
+            spare_message += "But it's name wasn't YELLOW..."
 
             # Animate the spare percent number bounce and the yellow fade in fade out animation on the spared enemy.
             fade_in_out_animation = FadeInFadeOutColorAnimation(

@@ -207,15 +207,6 @@ class SpriteTextBox(Sprite):
         self.character_width = text_box_dialog.character_width
         self.character_height = text_box_dialog.character_height
 
-        if text_box_dialog.include_starting_asterisk:
-            # Do the thing where a hyphen sprite is spawned to the left of the first line of dialog.
-            hyphen_sprite = self.get_character_sprite("*")
-            hyphen_sprite.center_x = self.left - hyphen_sprite.width
-            hyphen_sprite.center_y = self.top - (hyphen_sprite.height / 2.5)
-            self.letter_sprites.append(hyphen_sprite)
-            self.sprites_associated_with_text_box.append(hyphen_sprite)
-            self.sprites_and_effects_collection.gui_sprites_1.append(hyphen_sprite)
-
         self.text_length = len(self.text)
         self.current_character_index = 0
 
@@ -223,6 +214,15 @@ class SpriteTextBox(Sprite):
         gauge_letter_sprite = self.get_character_sprite("W")
         self.letter_width = int(gauge_letter_sprite.width)
         self.letter_height = int(gauge_letter_sprite.height)
+
+        if text_box_dialog.include_starting_asterisk:
+            # Do the thing where a hyphen sprite is spawned to the left of the first line of dialog.
+            hyphen_sprite = self.get_character_sprite("*")
+            hyphen_sprite.center_x = self.left - self.letter_width
+            hyphen_sprite.center_y = self.top - (self.letter_height / 2.5)
+            self.letter_sprites.append(hyphen_sprite)
+            self.sprites_associated_with_text_box.append(hyphen_sprite)
+            self.sprites_and_effects_collection.gui_sprites_1.append(hyphen_sprite)
 
         # Calculate the length of each row and the number of rows.
         self.max_number_of_characters_in_a_row = self.width // (self.letter_width + self.text_spacing)
