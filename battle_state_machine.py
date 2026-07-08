@@ -1197,6 +1197,7 @@ class BattleController:
             for enemy in self.enemies:
                 if enemy:
                     enemy.terminate_attack()
+                    enemy.speech_bubble_dialog_assigned_this_turn = None
 
         # Set all the defending players to not be defending.
         for player in self.players:
