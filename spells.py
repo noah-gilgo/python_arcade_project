@@ -24,7 +24,7 @@ class Spell:
                  magic_color: Color = arcade.color.WHITE, ready_animation_state: str = "battle_magic_ready",
                  cast_animation_state: str = "battle_magic", time_before_animation_begins: float = None,
                  time_before_target_affected_by_spell: float = None, time_before_battle_idle: float = None,
-                 time_before_player_can_advance_past_spell: float = None):
+                 time_before_player_can_advance_past_spell: float = 1.6):
         self.name = name  # Name of the spell
         self.description = description  # Description of the spell
         self.tp_cost = tp_cost  # TP cost of the spell

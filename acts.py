@@ -21,7 +21,7 @@ class RudinnConvince(SimpleAct):
     def __init__(self):
         super().__init__(
             name="Convince",
-            perform_act_text="* You told Rudinn to quit fighting.\n* It was utterly swayed.",
+            perform_act_text="You told Rudinn to quit fighting.\nIt was utterly swayed.",
             description="Politely persuade enemy",
             mercy_percentage=100
         )

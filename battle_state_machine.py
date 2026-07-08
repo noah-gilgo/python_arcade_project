@@ -1601,6 +1601,9 @@ class CancelCommand(Command):
                 self.backup_out_of_focus_stack()
             case BattleState.DIALOGUE:
                 self.controller.instantly_spawn_dialog_in_open_dialogs()
+            case BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS:
+                self.controller.instantly_spawn_dialog_in_open_dialogs()
+
     def backup_out_of_focus_stack(self):
         """
         Used to back out of loaded battle UI elements while updating self.controller.state and the focus stack.

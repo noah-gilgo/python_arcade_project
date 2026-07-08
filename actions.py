@@ -321,10 +321,14 @@ class SpareAction(Action):
 
     def execute(self):
         # Makes the provided actor attempt to spare the focused enemy.
+
+        # Prevents the user from advancing the dialog while the spare is being attempted.
+        self.controller.delay_player_from_advancing_to_next_state(1.6)
+
         if self.target not in self.controller.enemies:
             self.target = self.controller.enemies[0]
         self.actor.set_animation_state("battle_spare")
-        spare_message = self.actor.name + " spared " + self.target.name + "! "
+        spare_message = self.actor.name + " spared " + self.target.name + "!"
 
         if self.target.mercy < 100:
             # Add mercy to the targets mercy meter.
