@@ -42,7 +42,7 @@ class RudinnLecture(SimpleAct):
     def __init__(self, enemies_list: list):
         super().__init__(
             name="Lecture",
-            perform_act_text="* You lectured the enemies on the importance of kindness.\n* The enemies became TIRED...",
+            perform_act_text="You lectured the enemies on the importance of kindness.\nThe enemies became TIRED...",
             description="Passionately lecture opponents"
         )
 
@@ -72,7 +72,7 @@ class NoelleRudinnAction1(MagicUserAct):
             player=player,
             enemy_type=Rudinn,
             description="Traumatize playing card\nSPARE 50%",
-            perform_act_text="* Noelle cuts Rudinn card paper snowflakes! \n* They are mortified but impressed!",
+            perform_act_text="Noelle cuts Rudinn card paper snowflakes!\nThey are mortified but impressed!",
             mercy_percentage=50
         )
 
@@ -95,7 +95,7 @@ class RalseiRudinnAction1(MagicUserAct):
             player=player,
             enemy_type=Rudinn,
             description="Offer relief from duty\nSPARE 50%",
-            perform_act_text="* Ralsei promises that his castle town has suites suited for all suits.",
+            perform_act_text="Ralsei promises that his castle town has suites suited for all suits.",
             mercy_percentage=50
         )
 
@@ -118,7 +118,7 @@ class SusieRudinnAction1(MagicUserAct):
             player=player,
             enemy_type=Rudinn,
             description="Wisecrack,\nSPARE 50%",
-            perform_act_text="* Susie tries to make a joke about UNO and Xboxes.",
+            perform_act_text="Susie tries to make a joke about UNO and Xboxes.",
             mercy_percentage=30
         )
 

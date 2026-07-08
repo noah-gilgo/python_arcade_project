@@ -329,7 +329,7 @@ class SpareAction(Action):
                     lambda dt: self.target.set_animation_state("battle_spared"), 0.5)
 
             # Append a message telling the user that the enemy wasn't spared to the spare message.
-            spare_message += "But it's name wasn't YELLOW..."
+            spare_message += "\nBut it's name wasn't YELLOW..."
 
             # Animate the spare percent number bounce and the yellow fade in fade out animation on the spared enemy.
             fade_in_out_animation = FadeInFadeOutColorAnimation(

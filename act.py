@@ -1,4 +1,4 @@
-from dialogue_box import TextBoxDialog
+from dialogue_box import TextBoxDialog, BattleTextBoxDialog
 
 
 class Act:
@@ -59,7 +59,7 @@ class SimpleAct(Act):
 
         # Load the act dialogue into the dialogue box, if there is any.
         if self.perform_act_text:
-            dialogue_box.load_dialog(TextBoxDialog(text=self.perform_act_text))
+            dialogue_box.load_dialog(BattleTextBoxDialog(text=self.perform_act_text, sprites_and_effects_collection=actor.sprites_and_effects_collection))
 
         # If the mercy/tired percentages are greater than zero, have the target receive them.
         if self.mercy_percentage > 0.0:

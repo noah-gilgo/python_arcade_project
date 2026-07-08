@@ -119,6 +119,9 @@ class SpriteTextBox(Sprite):
         # Space texture
         self.space_texture = None
 
+        # Controls whether or not asterisks are spawned to the left of newlines
+        self.include_starting_asterisk = False
+
         # Used for debugging
         self.last_character_loaded = False
 
@@ -144,7 +147,26 @@ class SpriteTextBox(Sprite):
 
     def add_character_to_text_box(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
+
         character = self.text[self.current_character_index]
+        # If the character is a newline character, go to the next line.
+        if character == "\n":
+            self.character_row_index += 1
+            self.character_column_index = 0
+            self.current_character_index += 1
+            #self.current_character_index_in_current_word += 1
+
+            if self.include_starting_asterisk:
+                # Do the thing where a hyphen sprite is spawned to the left of the first line of dialog.
+                hyphen_sprite = self.get_character_sprite("*")
+                hyphen_sprite.center_x = self.left + 24 + int(-1.75 * (self.letter_width + self.text_spacing))
+                hyphen_sprite.center_y = self.top - 24 - int(self.character_row_index * (self.letter_height + self.line_spacing))
+                self.letter_sprites.append(hyphen_sprite)
+                self.sprites_associated_with_text_box.append(hyphen_sprite)
+                self.sprites_and_effects_collection.gui_sprites_1.append(hyphen_sprite)
+
+            return None
+
         character_sprite = self.get_character_sprite(character)
 
         character_x_coordinate = self.left + 24 + int(self.character_column_index * (self.letter_width + self.text_spacing))
@@ -207,6 +229,8 @@ class SpriteTextBox(Sprite):
         self.character_width = text_box_dialog.character_width
         self.character_height = text_box_dialog.character_height
 
+        self.include_starting_asterisk = text_box_dialog.include_starting_asterisk
+
         self.text_length = len(self.text)
         self.current_character_index = 0
 
@@ -218,8 +242,8 @@ class SpriteTextBox(Sprite):
         if text_box_dialog.include_starting_asterisk:
             # Do the thing where a hyphen sprite is spawned to the left of the first line of dialog.
             hyphen_sprite = self.get_character_sprite("*")
-            hyphen_sprite.center_x = self.left - self.letter_width
-            hyphen_sprite.center_y = self.top - (self.letter_height / 2.5)
+            hyphen_sprite.center_x = self.left + 24 + int(-1.75 * (self.letter_width + self.text_spacing))
+            hyphen_sprite.center_y = self.top - 24
             self.letter_sprites.append(hyphen_sprite)
             self.sprites_associated_with_text_box.append(hyphen_sprite)
             self.sprites_and_effects_collection.gui_sprites_1.append(hyphen_sprite)

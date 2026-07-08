@@ -186,6 +186,8 @@ class BattleDialogTextBox(SpriteSolidColor):
 
         self.sprites_and_effects_collection.gui_sprites_1.append(self)
 
+        self.horizontal_padding = 48
+
         self.portrait_horizontal_padding = 24
         self.portrait_width = 192
         self.portrait_height = 192
@@ -218,7 +220,7 @@ class BattleDialogTextBox(SpriteSolidColor):
             if isinstance(self.portrait, Sprite):
                 self.portrait.kill()
                 self.portrait = None
-            self.text_box.width = settings.WINDOW_WIDTH - (self.text_box_horizontal_padding * 2)
+            self.text_box.width = settings.WINDOW_WIDTH - ((self.text_box_horizontal_padding + self.horizontal_padding) * 2)
             self.text_box.center_x = settings.WINDOW_WIDTH / 2
 
         self.text_box.load_dialog(text_box_dialog)
