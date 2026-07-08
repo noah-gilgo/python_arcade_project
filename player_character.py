@@ -182,6 +182,13 @@ class PlayerCharacter(character.Character):
         """
         return self.is_defending
 
+    def is_player_downed(self):
+        """
+        Returns whether or not the player is downed.
+        :return: A bool representing whether or not the player is downed.
+        """
+        return self.hp <= 0
+
     def defend(self):
         """
         Sets the players state to a defending state.

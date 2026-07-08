@@ -6,7 +6,7 @@ class ConsumableItem(Item):
                  battle_description: str = "", id: int = None, hp_restored: int = 0, tp_restored: int = 0,
                  is_revive_item: bool = False, is_relative_healing_item: bool = False,
                  hp_percentage_restored: float = 1.0, heals_all_party_members: bool = False,
-                 is_consumable: bool = True):
+                 is_consumable: bool = True, time_before_player_can_advance_past_item: float = 1.4):
         super().__init__(name, description)
         self.id = id
         self.battle_description = battle_description
@@ -20,6 +20,7 @@ class ConsumableItem(Item):
             self.is_relative_healing_item = is_relative_healing_item  # If true, heals a percentage of max health
         self.hp_percentage_restored = hp_percentage_restored  # Percentage of max health healed with relative healing
         self.is_consumable = is_consumable  # If true, item will not be consumed when used in battle
+        self.time_before_player_can_advance_past_item = time_before_player_can_advance_past_item  # If provided, the amount of time player input will be delayed while the item is being consumed
 
 
 def initialize_default_consumable_items():

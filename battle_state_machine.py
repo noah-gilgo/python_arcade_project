@@ -23,7 +23,7 @@ from music_player import MusicPlayer
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
-from speech_bubble import SpeechBubbleDialog
+from speech_bubble import SpeechBubbleDialog, SpeechBubble
 from spells import Spell
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -279,6 +279,9 @@ class BattleController:
         self.time_before_player_can_advance_to_next_state = 0.0
         self.player_can_advance_to_next_state = True
 
+        # A variable tracking the current dialog being rendered on the screen.
+        self.current_dialog = None
+
     def delay_player_from_advancing_to_next_state(self, time: float = 0.0):
         """
         Prevents the player from advancing to the next state in the state machine.
@@ -431,6 +434,11 @@ class BattleController:
             self.time_before_player_can_advance_to_next_state -= delta_time
             if self.time_before_player_can_advance_to_next_state <= 0.0:
                 self.player_can_advance_to_next_state = True
+
+        # If the player is holding down the menu key while dialog is open, rapidly advance through it.
+        if self.c_pressed and self.state == BattleState.DIALOGUE:
+            self.spawn_next_dialog_from_dialog_exchange()
+            self.instantly_spawn_dialog_in_open_dialogs()
 
     def start_fight_bar_clock(self):
         """
@@ -1093,6 +1101,11 @@ class BattleController:
             self.spawn_fight_bars(fighting_players, enemy_targets)
             return
         else:
+            # For every player that is not defending or downed, reset their animation state to battle_idle.
+            for player in self.players:
+                if not (player.is_player_downed() or player.is_player_defending()):
+                    player.set_animation_state("battle_idle")
+
             # Start the pre enemy attack dialog.
             self.start_pre_enemy_attack_dialog()
             return
@@ -1126,8 +1139,8 @@ class BattleController:
         self.despawn_speech_bubbles()
 
         execute_next_dialog = self.current_dialog_exchange.execute_next_dialog()
-        print(str(execute_next_dialog))
-        print(str(self.state))
+        if isinstance(execute_next_dialog, SpeechBubble):
+            self.active_speech_bubbles.append(execute_next_dialog)
 
         if not execute_next_dialog:
             self.start_enemy_attack()
@@ -1194,6 +1207,7 @@ class BattleController:
             for enemy in self.enemies:
                 if enemy:
                     enemy.terminate_attack()
+                    enemy.speech_bubble_dialog_assigned_this_turn = None
 
         # Set all the defending players to not be defending.
         for player in self.players:
@@ -1256,6 +1270,31 @@ class BattleController:
                 else:
                     button.focused = False
                 button_index += 1
+
+    def attempt_to_advance_to_next_dialog(self):
+        """
+        Checks if all currently loaded dialog objects have finished rendering their dialog.
+
+        If so, the controller attempts to load the next dialog.
+        """
+        if len(self.active_speech_bubbles) > 0:
+            for speech_bubble in self.active_speech_bubbles:
+                if not speech_bubble.is_current_dialog_fully_shown():
+                    return
+            self.spawn_next_dialog_from_dialog_exchange()
+        else:
+            if self.battle_textbox.is_current_dialog_fully_shown():
+                self.spawn_next_dialog_from_dialog_exchange()
+
+    def instantly_spawn_dialog_in_open_dialogs(self):
+        """ Instantly spawns the dialog associated with the currently open dialog objects. """
+        if len(self.active_speech_bubbles) > 0:
+            for speech_bubble in self.active_speech_bubbles:
+                if not speech_bubble.is_current_dialog_fully_shown():
+                    speech_bubble.instantly_spawn_full_dialog()
+        else:
+            if not self.battle_textbox.is_current_dialog_fully_shown():
+                self.battle_textbox.instantly_spawn_full_dialog()
 
 class Command:
     """ The default command object. Represents the Command design pattern. """
@@ -1382,7 +1421,7 @@ class SelectCommand(Command):
 
                     if spell_or_act.tp_cost <= self.controller.tp_meter.get_tp_in_meter():
                         if isinstance(spell_or_act,
-                                      Spell) and spell_or_act.is_aoe_spell:  # If item affects all party members
+                                      Spell) and spell_or_act.is_aoe_spell:  # If spell affects all party members
                             if spell_or_act.is_friendly_spell:
                                 targets = self.controller.players
                             else:
@@ -1405,6 +1444,8 @@ class SelectCommand(Command):
                                 self.controller.open_player_select_menu()
                             else:
                                 self.controller.open_enemy_select_menu()
+                        else:
+                            self.controller.open_enemy_select_menu()
                         self.controller.menu_select_sound.play()
                     return
 
@@ -1522,11 +1563,7 @@ class SelectCommand(Command):
                     self.controller.execute_queued_player_action()
 
                 case BattleState.DIALOGUE:
-                    #if len(self.controller.scripted_dialogue) > 0:
-                    self.controller.spawn_next_dialog_from_dialog_exchange()
-                    #else:
-                    #    self.controller.despawn_speech_bubbles()
-                    #    self.controller.start_enemy_attack()
+                    self.controller.attempt_to_advance_to_next_dialog()
 
                 case BattleState.DEFEAT:
                     if not self.controller.game_over_animation.continue_options_loaded:
@@ -1574,6 +1611,10 @@ class CancelCommand(Command):
                 self.backup_out_of_focus_stack()
             case BattleState.PLAYER_ACT_SELECT:
                 self.backup_out_of_focus_stack()
+            case BattleState.DIALOGUE:
+                self.controller.instantly_spawn_dialog_in_open_dialogs()
+            case BattleState.EXECUTING_QUEUED_PLAYER_COMMANDS:
+                self.controller.instantly_spawn_dialog_in_open_dialogs()
 
     def backup_out_of_focus_stack(self):
         """

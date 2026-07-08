@@ -323,3 +323,12 @@ class SpeechBubble(Sprite):
             self.sprites_and_effects_collection.effects.remove(self)
         for sprite in self.sprites_associated_with_text_box:
             sprite.kill()
+
+    def is_current_dialog_fully_shown(self):
+        """ Returns a bool indicating whether the current dialog is fully shown. """
+        return self.current_character_index >= self.text_length
+
+    def instantly_spawn_full_dialog(self):
+        """ Instantly spawns the rest of the dialog that has not been shown on screen. """
+        while not self.is_current_dialog_fully_shown():
+            self.add_character_to_speech_bubble()

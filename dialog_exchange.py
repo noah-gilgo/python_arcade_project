@@ -33,10 +33,9 @@ class DialogExchange:
             dialog_instance = self.dialog_instances.pop(0)
 
             if isinstance(dialog_instance, SpeechBubbleDialog):
-                self.currently_active_speech_bubbles.append(
-                    SpeechBubble(dialog_instance, self.sprites_and_effects_collection)
-                )
-                return True
+                speech_bubble = SpeechBubble(dialog_instance, self.sprites_and_effects_collection)
+                self.currently_active_speech_bubbles.append(speech_bubble)
+                return speech_bubble
             elif isinstance(dialog_instance, BattleTextBoxDialog):
                 self.battle_textbox.load_dialog(dialog_instance)
                 return True
