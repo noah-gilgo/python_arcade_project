@@ -1,34 +1,29 @@
 import pyglet.clock
 from PIL import Image
+from arcade import Sprite, SpriteSolidColor
 from arcade.gui import UIWidget, UILabel, UIImage, Surface, UILayout, UIBoxLayout
 
 import settings
 import arcade
 
+from sprites_and_effects_collection import SpritesAndEffectsCollection
+from text_box import SpriteTextBox, SpriteTextBoxDialog
+from text_texture_dicts import DWDefaultTextureDict
 
-class TextBoxPortrait(UIImage):
+
+class TextBoxPortrait(Sprite):
     def __init__(self, texture_path: str = "", width=192, height=192):
         """
-        The widget for the textbox portrait that displays character portraits when they talk.
+        The sprite for the textbox portrait that displays character portraits when they talk.
         :param texture_path: The path to the image file of the character portrait.
-        :param dimensions: A tuple/list containing the x, y, width, and height dimensions of the portrait, respectively
         """
-
         if texture_path:
-            image = Image.open(texture_path)
-            texture = arcade.Texture(arcade.load_image(texture_path).resize(image.size, Image.Resampling.NEAREST))
-            self.visible = True
-        else:
-            texture = None
-            self.visible = False
-
-        super().__init__(
-            texture=texture,
-            width=192,
-            height=192,
-            x=24,
-            y=24
-        )
+            super().__init__(
+                path_or_texture=texture_path,
+                center_x=120,
+                center_y=120,
+                scale=4.0
+            )
 
         #self.with_border(color=arcade.color.RED)
 
@@ -39,14 +34,10 @@ class TextBoxPortrait(UIImage):
         :return:
         """
         if texture_path:
-            image = Image.open(texture_path)
-            texture = arcade.Texture(arcade.load_image(texture_path).resize(image.size, Image.Resampling.NEAREST))
-            self.texture = texture
+            self.texture=arcade.load_texture(texture_path)
             self.visible = True
             self.width = 192
-            #self.width = self.texture.width
         else:
-            #self.texture = None
             self.visible = False
 
 
@@ -146,131 +137,103 @@ class TextBoxDialog:
         """
         return self.text_sound_path
 
-
-class TextBox(UIBoxLayout):
-    def __init__(self, text_box_dialog: TextBoxDialog = None):
-        self.text_box_dialog = text_box_dialog  # The TextBoxDialog object containing the data to be loaded by the widget
-        self.text_box_text = TextBoxText()  # The part of the widget containing the text
-        self.text_box_portrait = TextBoxPortrait()  # The part of the widget containing the dialog portrait
-        self.current_character_in_text_box_index = 0
-        self.text_box_text.set_text("")
-
-        if text_box_dialog:
-            self.text_box_portrait.visible = self.text_box_dialog.has_portrait()
-            self.dialog_string = self.text_box_dialog.get_text()
-            if self.text_box_portrait.visible:
-                self.text_box_portrait.width = 192
-                self.text_box_text.width = settings.WINDOW_WIDTH - 216
-            else:
-                self.text_box_portrait.width = 1
-                self.text_box_text.width = settings.WINDOW_WIDTH - 88
-            self.text_sound = arcade.load_sound(self.text_box_dialog.get_text_sound_path(), False)
-            self.rate_of_text = self.text_box_dialog.get_rate_of_text()
-
+class BattleTextBoxDialog(SpriteTextBoxDialog):
+    def __init__(
+        self,
+        text: str = "",
+        font_size: float = 48.0,
+        character_width: int = 16,
+        character_height: int = 32,
+        text_spacing: int = 0,
+        line_spacing: int = 8,
+        rate_of_text: float = 0.036,
+        text_sound_path: str = "assets/audio/dialog/snd_text.wav",
+        font_name: str = "8bitoperator JVE",
+        portrait_texture_path: str = "",
+        sprites_and_effects_collection: SpritesAndEffectsCollection = None
+    ):
         super().__init__(
-            x=0,
-            y=0,
-            width=settings.WINDOW_WIDTH,
-            height=int(settings.WINDOW_HEIGHT / 4),
-            vertical=False,
-            align="center",
+            text=text,
+            font_size=font_size,
+            character_width=character_width,
+            character_height=character_height,
+            text_spacing=text_spacing,
+            line_spacing=line_spacing,
+            rate_of_text=rate_of_text,
+            text_sound_path=text_sound_path,
+            font_name=font_name,
+            font_texture_dict=sprites_and_effects_collection.dw_default_font_texture_dict,
+            include_starting_asterisk=True
         )
 
-        self.text_box_portrait_path = ""
-        self.text_box_portrait_texture = None
+        self.portrait_texture_path = portrait_texture_path
 
-        self.add(self.text_box_portrait)
-        self.add(self.text_box_text)
 
-        """
-        if self._text_box_portrait_path not in (None, ""):
-            self._text_box_portrait = TextBoxPortrait(self._text_box_portrait_path)
-            self.add(self._text_box_portrait)
-        """
+class BattleDialogTextBox(SpriteSolidColor):
+    def __init__(self, sprites_and_effects_collection: SpritesAndEffectsCollection):
+        self.portrait = None  # The sprite containing the portrait
+        self.text_box = SpriteTextBox(sprites_and_effects_collection=sprites_and_effects_collection)  # The text box where the text spawns.
 
-        self.with_background(color=arcade.uicolor.BLACK)
-        #self.with_border(color=arcade.color.LIGHT_BLUE)
+        self.sprites_and_effects_collection = sprites_and_effects_collection
 
-        # self.text_box_text.visible = False
-        self.do_layout()
+        super().__init__(
+            width=settings.WINDOW_WIDTH,
+            height=int(settings.WINDOW_HEIGHT / 4),
+            center_x=settings.WINDOW_WIDTH / 2,
+            center_y=settings.WINDOW_HEIGHT / 8,
+            color=arcade.color.BLACK
+        )
 
-    def load_dialog(self, text_box_dialog: TextBoxDialog):
+        self.sprites_and_effects_collection.gui_sprites_1.append(self)
+
+        self.horizontal_padding = 48
+
+        self.portrait_horizontal_padding = 24
+        self.portrait_width = 192
+        self.portrait_height = 192
+
+        self.text_box_vertical_padding = 16
+        self.text_box_horizontal_padding = 32
+
+        self.text_box.height = self.height - (self.text_box_vertical_padding * 2)
+        self.text_box.center_y = self.text_box.height / 2
+
+    def load_dialog(self, text_box_dialog: BattleTextBoxDialog):
         """
         Loads the data from a text box dialog into the parent TextBox widget.
-        :param text_box_dialog: the TextBoxDialog object to overwrite the current data of the TextBox
+        :param text_box_dialog: the SpriteTextBoxDialog object to overwrite the current data of the TextBox
         :return: None
         """
-        previous_text_box_dialog = self.text_box_dialog
-        self.text_box_dialog = text_box_dialog
-
-        self.dialog_string = text_box_dialog.get_text()
-        self.text_box_text.set_text("")
-        self.current_character_in_text_box_index = 0
-
-        if text_box_dialog.has_portrait():
-            self.text_box_portrait_path = text_box_dialog.get_portrait_texture_path()
-            self.text_box_portrait.set_texture(self.text_box_portrait_path)
-            self.text_box_portrait.visible = True
-            self.text_box_portrait.width = 192
-            self.text_box_text.width=settings.WINDOW_WIDTH - 300
-            if previous_text_box_dialog and not previous_text_box_dialog.has_portrait():
-                self.text_box_text.move(dx=192)
+        if self.text_box not in self.sprites_and_effects_collection.effects:
+            self.sprites_and_effects_collection.effects.append(self.text_box)
+        if text_box_dialog.portrait_texture_path:
+            self.portrait = Sprite(
+                path_or_texture=text_box_dialog.portrait_texture_path,
+                scale=4.0,
+                center_x=self.portrait_horizontal_padding + (self.portrait_width / 2),
+                center_y=self.center_y
+            )
+            self.sprites_and_effects_collection.gui_sprites_1.append(self.portrait)
+            self.text_box.width = settings.WINDOW_WIDTH - (((self.text_box_horizontal_padding + self.portrait_horizontal_padding) * 2) + self.portrait_width)
+            self.text_box.center_x = settings.WINDOW_WIDTH / 2 + ((((self.portrait_horizontal_padding + self.text_box_horizontal_padding) * 2) + self.portrait_width) / 2)
         else:
-            if previous_text_box_dialog and previous_text_box_dialog.has_portrait():
-                self.text_box_text.move(dx=-192)
-            self.text_box_portrait.visible = False
-            self.text_box_portrait.width = 1
-            self.text_box_text.width=settings.WINDOW_WIDTH - 144
+            if isinstance(self.portrait, Sprite):
+                self.portrait.kill()
+                self.portrait = None
+            self.text_box.width = settings.WINDOW_WIDTH - ((self.text_box_horizontal_padding + self.horizontal_padding) * 2)
+            self.text_box.center_x = settings.WINDOW_WIDTH / 2
 
-        self.do_layout()
-
-        if text_box_dialog.get_text_sound_path():
-            self.text_sound = arcade.load_sound(text_box_dialog.get_text_sound_path(), False)
-        else:
-            self.text_sound = None
-
-        self.text_box_dialog = text_box_dialog
-
-        self.rate_of_text = text_box_dialog.get_rate_of_text()
-
-        pyglet.clock.unschedule(self.add_character_to_text_box_text)
-        self.animate_character_dialog()
+        self.text_box.load_dialog(text_box_dialog)
 
     def clear_dialog(self):
         """
         Clears the dialog from the text box.
         :return: None
         """
-        self.load_dialog(
-            text_box_dialog=TextBoxDialog(
-                text="",
-            )
-        )
+        self.text_box.clear_dialog()
+        if self.text_box in self.sprites_and_effects_collection.effects:
+            self.sprites_and_effects_collection.effects.remove(self.text_box)
 
-    def add_character_to_text_box_text(self, dt):
-        """
-        Scheduled event that adds a character to the textbox text.
-        If the textbox text length already matches the index of the character to be added, the scheduled event is
-        unscheduled.
-        :return: None
-        """
-
-        if self.current_character_in_text_box_index < len(self.dialog_string):
-            self.text_box_text.text += self.dialog_string[self.current_character_in_text_box_index]
-            if self.text_sound:
-                self.text_sound.play()
-            self.current_character_in_text_box_index += 1
-        else:
-            self.current_character_in_text_box_index = 0
-            pyglet.clock.unschedule(self.add_character_to_text_box_text)
-
-    def animate_character_dialog(self):
-        pyglet.clock.schedule_interval(
-            self.add_character_to_text_box_text,
-            self.rate_of_text
-        )
-
-    def do_layout(self):
-        self.width = settings.WINDOW_WIDTH
-        self.height = int(settings.WINDOW_HEIGHT / 4)
-        self.with_background(color=arcade.uicolor.BLACK)
+        if isinstance(self.portrait, Sprite):
+            self.portrait.kill()
+            self.portrait = None

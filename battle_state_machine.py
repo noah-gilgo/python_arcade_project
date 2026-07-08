@@ -15,13 +15,15 @@ from actions import SpellAction, SpareAction, ActionsQueue, Action, DefendAction
 from animations.battle_animations import NumberBounceAnimation, HealAnimation, FightHitBar, CriticalHitSparkleAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation, ShakeAnimation, GameOverAnimation
 from battle_widgets import SpellSelect, EnemySelect, TPMeter, PlayerSelect, ActSelect, ItemSelect
-from dialogue_box import TextBoxDialog
+from dialog_exchange import DialogExchange
+from dialogue_box import BattleTextBoxDialog
 from focus_stack import FocusStack
 from items.consumable_items import ConsumableItem
 from music_player import MusicPlayer
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
+from speech_bubble import SpeechBubbleDialog
 from spells import Spell
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -53,7 +55,7 @@ class BattleState(Enum):
 class BattleController:
     def __init__(self, ui_manager: UIManager,
                  battle_player_character_cards: UILayout,
-                 battle_textbox: UIWidget,
+                 battle_textbox: Sprite,
                  players: list[player_character.PlayerCharacter],
                  enemies: list[non_player_character.NonPlayerCharacter],
                  sprites_and_effects_collection: SpritesAndEffectsCollection,
@@ -104,17 +106,18 @@ class BattleController:
         # Susie: "My weapon's like a hairbrush or something."
         # Gerson: "Geh-hahahahaha! Is that so? Is that SO???"
         # Susie: "Yep. Now shut up and give me that axe!"
-        self.scripted_dialogue = []
-        """
+        # self.scripted_dialogue = []
+
         self.scripted_dialogue = [
             DialogExchange(
                 battle_textbox=self.battle_textbox,
                 sprites_and_effects_collection=self.sprites_and_effects_collection,
                 dialog_instances=[
-                    TextBoxDialog(
+                    BattleTextBoxDialog(
                         text="So...this is scripted dialog.",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
                     SpeechBubbleDialog(
                         text="That would\nappear to be\nthe case, yes.",
@@ -122,10 +125,11 @@ class BattleController:
                         column_count=14,
                         actor=self.enemies[0]
                     ),
-                    TextBoxDialog(
+                    BattleTextBoxDialog(
                         text="How does scripted dialog work?",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_looking_at_the_camera_curiously.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
                     SpeechBubbleDialog(
                         text="You load instances of\nthe DialogExchange object\ninto self.scripted_dialog\nin the battle controller.",
@@ -145,15 +149,17 @@ class BattleController:
                         column_count=28,
                         actor=self.enemies[1]
                     ),
-                    TextBoxDialog(
+                    BattleTextBoxDialog(
                         text="Ah, that makes sense, I think..?",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
-                    TextBoxDialog(
+                    BattleTextBoxDialog(
                         text="And TextBoxDialog instances create text boxes like this one?",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_looking_at_the_camera_curiously.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
                     SpeechBubbleDialog(
                         text="That's correct!\nYour attunement to the\nmetaphysical properties\nof your universe is\ntruly on point.",
@@ -161,10 +167,16 @@ class BattleController:
                         column_count=23,
                         actor=self.enemies[2]
                     ),
+                    BattleTextBoxDialog(
+                        text="abcdefghijklmnopqrstuvwxyz",
+                        portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
+                    ),
                 ]
             )
         ]
-        """
+
 
         # The current dialog exchange being loaded by the fight.
         self.current_dialog_exchange = None
@@ -522,13 +534,13 @@ class BattleController:
 
             # Check if any enemies were defeated violently. Modify the win message accordingly.
             if self.enemies_defeated_violently == 0:
-                second_line_of_win_message = "* Got 0 EXP and " + str(self.dark_dollars_given_on_defeat) + " D$."
+                second_line_of_win_message = "Got 0 EXP and " + str(self.dark_dollars_given_on_defeat) + " D$."
             else:
-                second_line_of_win_message = "* You became stronger."
+                second_line_of_win_message = "You became stronger."
                 self.power_sound.play(speed=2.0)
 
-            win_message = "* You won!\n" + second_line_of_win_message
-            self.battle_textbox.load_dialog(TextBoxDialog(text=win_message))
+            win_message = "You won!\n" + second_line_of_win_message
+            self.battle_textbox.load_dialog(BattleTextBoxDialog(text=win_message, sprites_and_effects_collection=self.sprites_and_effects_collection))
 
     def check_if_battle_is_lost(self):
         """
@@ -1071,7 +1083,7 @@ class BattleController:
             return
         elif len(self.sorted_actions_queue["fight_actions"]) > 0:
             self.state = BattleState.PLAYER_ATTACKING
-            self.battle_textbox.load_dialog(TextBoxDialog(text=""))
+            self.battle_textbox.clear_dialog()
             fighting_players = []
             enemy_targets = []
             for fight_action in self.sorted_actions_queue["fight_actions"]:
@@ -1113,7 +1125,11 @@ class BattleController:
         """
         self.despawn_speech_bubbles()
 
-        if not self.current_dialog_exchange.execute_next_dialog():
+        execute_next_dialog = self.current_dialog_exchange.execute_next_dialog()
+        print(str(execute_next_dialog))
+        print(str(self.state))
+
+        if not execute_next_dialog:
             self.start_enemy_attack()
 
     def spawn_enemy_speech_bubbles(self):
@@ -1122,7 +1138,7 @@ class BattleController:
         :return: None
         """
         # Clear any text from the battle textbox.
-        self.battle_textbox.load_dialog(TextBoxDialog(text=""))
+        self.battle_textbox.clear_dialog()
 
         speech_bubble_counter = 0
 
@@ -1506,11 +1522,11 @@ class SelectCommand(Command):
                     self.controller.execute_queued_player_action()
 
                 case BattleState.DIALOGUE:
-                    if len(self.controller.scripted_dialogue) > 0:
-                        self.controller.spawn_next_dialog_from_dialog_exchange()
-                    else:
-                        self.controller.despawn_speech_bubbles()
-                        self.controller.start_enemy_attack()
+                    #if len(self.controller.scripted_dialogue) > 0:
+                    self.controller.spawn_next_dialog_from_dialog_exchange()
+                    #else:
+                    #    self.controller.despawn_speech_bubbles()
+                    #    self.controller.start_enemy_attack()
 
                 case BattleState.DEFEAT:
                     if not self.controller.game_over_animation.continue_options_loaded:

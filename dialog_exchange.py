@@ -1,4 +1,4 @@
-from dialogue_box import TextBoxDialog
+from dialogue_box import BattleTextBoxDialog
 from speech_bubble import SpeechBubbleDialog, SpeechBubble
 
 
@@ -7,7 +7,7 @@ class DialogExchange:
     Stores instances of SpeechBubbleDialog/TextBoxDialog objects to be called this turn during the dialog segment before
     the enemy attacks.
     """
-    def __init__(self, dialog_instances: list[SpeechBubbleDialog | TextBoxDialog | None],
+    def __init__(self, dialog_instances: list[SpeechBubbleDialog | BattleTextBoxDialog | None],
                  battle_textbox,
                  sprites_and_effects_collection):
         self.dialog_instances = dialog_instances
@@ -37,7 +37,7 @@ class DialogExchange:
                     SpeechBubble(dialog_instance, self.sprites_and_effects_collection)
                 )
                 return True
-            elif isinstance(dialog_instance, TextBoxDialog):
+            elif isinstance(dialog_instance, BattleTextBoxDialog):
                 self.battle_textbox.load_dialog(dialog_instance)
                 return True
             else:

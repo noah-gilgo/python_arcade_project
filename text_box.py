@@ -3,7 +3,6 @@ import math
 import arcade
 from arcade import Sound, Sprite, Texture
 
-from dialogue_box import TextBoxDialog
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
@@ -22,8 +21,8 @@ class SpriteTextBoxDialog:
             rate_of_text: float = 0.05,
             text_sound_path: str = "assets/audio/dialog/snd_text.wav",
             font_name: str = "8bitoperator JVE",
-            font_sprite_sheet_path: str = "assets/font/snd_font.ttf",
-            uses_font_sprite_sheet: bool = False,
+            font_texture_dict: dict = None,
+            include_starting_asterisk: bool = False
     ):
         """
         Initializes the basic dialog data
@@ -35,8 +34,7 @@ class SpriteTextBoxDialog:
         :param rate_of_text: The amount of time (in seconds) between each character being displayed.
         :param text_sound_path: The sound to be played every time that a letter of dialog is loaded.
         :param font_name: the font name of the text, if it is font-based.
-        :param font_sprite_sheet_path: the file path of the font sprite sheet, if it is spritesheet-based.
-        :param uses_font_sprite_sheet: controls whether the font is sprite sheet-derived
+        :param font_texture_dict: the texture dict, if the font is spritesheet-based.
         """
         self.text = text
         self.font_size = font_size
@@ -45,10 +43,10 @@ class SpriteTextBoxDialog:
         self.rate_of_text = rate_of_text
         self.text_sound_path = text_sound_path
         self.font_name = font_name
-        self.font_sprite_sheet_path = font_sprite_sheet_path
+        self.font_texture_dict = font_texture_dict
         self.character_width = character_width
         self.character_height = character_height
-        self.uses_font_sprite_sheet = uses_font_sprite_sheet
+        self.include_starting_asterisk = include_starting_asterisk
 
 class SpriteTextBox(Sprite):
     """
@@ -96,10 +94,9 @@ class SpriteTextBox(Sprite):
         self.text_font_size = 36
         self.text_font_sprite_sheet_path = ""
         self.text_sound = Sound("assets/audio/dialog/snd_text.wav")
-        self.font_sprite_sheet_path = ""
         self.character_width = 0
         self.character_height = 0
-        self.uses_font_sprite_sheet = False
+        self.font_texture_dict = None
 
         self.sprites_and_effects_collection = sprites_and_effects_collection
         self.sprites_associated_with_text_box = []
@@ -122,6 +119,9 @@ class SpriteTextBox(Sprite):
         # Space texture
         self.space_texture = None
 
+        # Controls whether or not asterisks are spawned to the left of newlines
+        self.include_starting_asterisk = False
+
         # Used for debugging
         self.last_character_loaded = False
 
@@ -130,34 +130,43 @@ class SpriteTextBox(Sprite):
         Gets the sprite for the character to be loaded.
         :return: None
         """
-        # TODO: allow the user to pull from a sprite sheet for a particular glyph set.
-
-        character_sprite = arcade.create_text_sprite(
-            text=character,
-            color=(255, 255, 255),
-            font_name=self.text_font_name,
-            font_size=self.text_font_size
-        )
+        if self.font_texture_dict is not None:
+            character_sprite=Sprite(
+                path_or_texture=self.font_texture_dict[character],
+                scale=2.0
+            )
+        else:
+            character_sprite = arcade.create_text_sprite(
+                text=character,
+                color=(255, 255, 255),
+                font_name=self.text_font_name,
+                font_size=self.text_font_size
+            )
 
         return character_sprite
 
     def add_character_to_text_box(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
-        # If the current character index = the length of the word, make the current character a space.
-        """
-        if self.current_character_index_in_current_word == len(self.words[self.current_word_index]):
-            
-            if not self.space_texture:
-                self.space_texture = Texture.create_empty(
-                    name="space",
-                    size=(self.letter_width, self.letter_height)
-                )
-            character_sprite = Sprite(path_or_texture=self.space_texture)
-            
-            character = " "
-        else:
-        """
+
         character = self.text[self.current_character_index]
+        # If the character is a newline character, go to the next line.
+        if character == "\n":
+            self.character_row_index += 1
+            self.character_column_index = 0
+            self.current_character_index += 1
+            #self.current_character_index_in_current_word += 1
+
+            if self.include_starting_asterisk:
+                # Do the thing where a hyphen sprite is spawned to the left of the first line of dialog.
+                hyphen_sprite = self.get_character_sprite("*")
+                hyphen_sprite.center_x = self.left + 24 + int(-1.75 * (self.letter_width + self.text_spacing))
+                hyphen_sprite.center_y = self.top - 24 - int(self.character_row_index * (self.letter_height + self.line_spacing))
+                self.letter_sprites.append(hyphen_sprite)
+                self.sprites_associated_with_text_box.append(hyphen_sprite)
+                self.sprites_and_effects_collection.gui_sprites_1.append(hyphen_sprite)
+
+            return None
+
         character_sprite = self.get_character_sprite(character)
 
         character_x_coordinate = self.left + 24 + int(self.character_column_index * (self.letter_width + self.text_spacing))
@@ -188,29 +197,16 @@ class SpriteTextBox(Sprite):
 
         return character_sprite
 
-        """
-        if self.character_column_index < self.column_count:
-            self.character_column_index += 1
-        else:
-            self.character_column_index = 0
-            self.character_row_index += 1
-        """
-
-    def load_dialog(self, text_box_dialog):
+    def load_dialog(self, text_box_dialog: SpriteTextBoxDialog):
         """
         Initiates the process that loads the provided text_box_dialog into the text box.
         :param text_box_dialog: The TextBoxDialog object representing the text to be loaded.
         :return:
         """
+        self.clear_dialog()
+
         # Used for debugging
         self.last_character_loaded = False
-
-        # Kill the sprites from the previous dialog loading instance, if there was one.
-        for sprite in self.letter_sprites:
-            sprite.kill()
-
-        self.letter_sprites.clear()
-        self.sprites_associated_with_text_box = [self.sprites_associated_with_text_box[0]]
 
         # Reset the indexes
         self.character_row_index = 0
@@ -229,10 +225,11 @@ class SpriteTextBox(Sprite):
         else:
             self.text_sound = None
         self.text_font_name = text_box_dialog.font_name
-        self.font_sprite_sheet_path = text_box_dialog.font_sprite_sheet_path
+        self.font_texture_dict = text_box_dialog.font_texture_dict
         self.character_width = text_box_dialog.character_width
         self.character_height = text_box_dialog.character_height
-        self.uses_font_sprite_sheet = text_box_dialog.uses_font_sprite_sheet
+
+        self.include_starting_asterisk = text_box_dialog.include_starting_asterisk
 
         self.text_length = len(self.text)
         self.current_character_index = 0
@@ -241,6 +238,15 @@ class SpriteTextBox(Sprite):
         gauge_letter_sprite = self.get_character_sprite("W")
         self.letter_width = int(gauge_letter_sprite.width)
         self.letter_height = int(gauge_letter_sprite.height)
+
+        if text_box_dialog.include_starting_asterisk:
+            # Do the thing where a hyphen sprite is spawned to the left of the first line of dialog.
+            hyphen_sprite = self.get_character_sprite("*")
+            hyphen_sprite.center_x = self.left + 24 + int(-1.75 * (self.letter_width + self.text_spacing))
+            hyphen_sprite.center_y = self.top - 24
+            self.letter_sprites.append(hyphen_sprite)
+            self.sprites_associated_with_text_box.append(hyphen_sprite)
+            self.sprites_and_effects_collection.gui_sprites_1.append(hyphen_sprite)
 
         # Calculate the length of each row and the number of rows.
         self.max_number_of_characters_in_a_row = self.width // (self.letter_width + self.text_spacing)
@@ -252,7 +258,14 @@ class SpriteTextBox(Sprite):
         Clears the text box from the text box.
         :return: None
         """
-        self.load_dialog(SpriteTextBoxDialog(text=""))
+        # self.load_dialog(SpriteTextBoxDialog(text=""))
+
+        # Kill the sprites from the previous dialog loading instance, if there was one.
+        for sprite in self.letter_sprites:
+            sprite.kill()
+
+        self.letter_sprites.clear()
+        self.sprites_associated_with_text_box = [self.sprites_associated_with_text_box[0]]
 
     def update_animation(self, delta_time):
         if self.current_character_index < self.text_length:

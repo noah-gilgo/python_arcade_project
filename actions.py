@@ -12,7 +12,7 @@ import sprites_and_effects_collection
 from act import Act, SimpleAct
 from animations.battle_animations import NumberBounceAnimation, EnemySparedAnimation, TPGainAnimation
 from animations.common_animations import FadeInFadeOutColorAnimation
-from dialogue_box import TextBoxDialog
+from dialogue_box import TextBoxDialog, BattleTextBoxDialog
 from items.consumable_items import ConsumableItem
 from spells import Spell
 
@@ -162,9 +162,10 @@ class SpellAction(Action):
             targeted_characters.append(self.targets[0])
 
         if len(targeted_characters) > 0 and len(player_or_enemies_list) > 0:
-            self.controller.battle_textbox.load_dialog(TextBoxDialog(
-                text="* " + self.actor.name + " cast " + self.spell.name + "!",
-                rate_of_text=0.03
+            self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(
+                text=self.actor.name + " cast " + self.spell.name + "!",
+                rate_of_text=0.03,
+                sprites_and_effects_collection=self.controller.sprites_and_effects_collection
             ))
             self.spell.cast_spell(
                 caster=self.actor,
@@ -256,10 +257,10 @@ class ItemAction(Action):
         self.item_index = item_index
 
     def execute(self):
-        pass
         self.actor.set_animation_state("battle_item")
-        item_text = "* " + self.actor.name + " used the " + self.item.name.upper() + "!"
-        self.controller.battle_textbox.load_dialog(TextBoxDialog(text=item_text))
+        item_text = self.actor.name + " used the " + self.item.name.upper() + "!"
+        self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(text=item_text,
+            sprites_and_effects_collection=self.controller.sprites_and_effects_collection))
         pyglet.clock.schedule_once(
             lambda dt: self.controller.use_consumable_item_on_targets(self.item, self.actor, self.targets), 0.5)
 
@@ -317,7 +318,7 @@ class SpareAction(Action):
         if self.target not in self.controller.enemies:
             self.target = self.controller.enemies[0]
         self.actor.set_animation_state("battle_spare")
-        spare_message = "* " + self.actor.name + " spared " + self.target.name + "! "
+        spare_message = self.actor.name + " spared " + self.target.name + "! "
 
         if self.target.mercy < 100:
             # Add mercy to the targets mercy meter.
@@ -328,7 +329,7 @@ class SpareAction(Action):
                     lambda dt: self.target.set_animation_state("battle_spared"), 0.5)
 
             # Append a message telling the user that the enemy wasn't spared to the spare message.
-            spare_message += "\n    But it's name wasn't YELLOW..."
+            spare_message += "\nBut it's name wasn't YELLOW..."
 
             # Animate the spare percent number bounce and the yellow fade in fade out animation on the spared enemy.
             fade_in_out_animation = FadeInFadeOutColorAnimation(
@@ -374,9 +375,10 @@ class SpareAction(Action):
             # Remove the enemy from the battle.
             self.controller.enemies.remove(self.target)
 
-        self.controller.battle_textbox.load_dialog(TextBoxDialog(
+        self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(
             text=spare_message,
-            rate_of_text=0.03
+            rate_of_text=0.03,
+            sprites_and_effects_collection=self.controller.sprites_and_effects_collection
         ))
 
         pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)
