@@ -23,7 +23,7 @@ from music_player import MusicPlayer
 from player_character import PlayerCharacter
 from bullet_board import BulletBoard
 from soul import Soul
-from speech_bubble import SpeechBubbleDialog
+from speech_bubble import SpeechBubbleDialog, SpeechBubble
 from spells import Spell
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 
@@ -278,6 +278,9 @@ class BattleController:
         # press the [Select] button and advance to the next spell/attack/action.
         self.time_before_player_can_advance_to_next_state = 0.0
         self.player_can_advance_to_next_state = True
+
+        # A variable tracking the current dialog being rendered on the screen.
+        self.current_dialog = None
 
     def delay_player_from_advancing_to_next_state(self, time: float = 0.0):
         """
@@ -1126,8 +1129,8 @@ class BattleController:
         self.despawn_speech_bubbles()
 
         execute_next_dialog = self.current_dialog_exchange.execute_next_dialog()
-        print(str(execute_next_dialog))
-        print(str(self.state))
+        if isinstance(execute_next_dialog, SpeechBubble):
+            self.active_speech_bubbles.append(execute_next_dialog)
 
         if not execute_next_dialog:
             self.start_enemy_attack()
@@ -1522,12 +1525,14 @@ class SelectCommand(Command):
                     self.controller.execute_queued_player_action()
 
                 case BattleState.DIALOGUE:
-                    #if len(self.controller.scripted_dialogue) > 0:
-                    if self.controller.battle_textbox.is_current_dialog_fully_shown():
+                    if len(self.controller.active_speech_bubbles) > 0:
+                        for speech_bubble in self.controller.active_speech_bubbles:
+                            if not speech_bubble.is_current_dialog_fully_shown():
+                                return
                         self.controller.spawn_next_dialog_from_dialog_exchange()
-                    #else:
-                    #    self.controller.despawn_speech_bubbles()
-                    #    self.controller.start_enemy_attack()
+                    else:
+                        if self.controller.battle_textbox.is_current_dialog_fully_shown():
+                            self.controller.spawn_next_dialog_from_dialog_exchange()
 
                 case BattleState.DEFEAT:
                     if not self.controller.game_over_animation.continue_options_loaded:
@@ -1576,8 +1581,13 @@ class CancelCommand(Command):
             case BattleState.PLAYER_ACT_SELECT:
                 self.backup_out_of_focus_stack()
             case BattleState.DIALOGUE:
-                if not self.controller.battle_textbox.is_current_dialog_fully_shown():
-                    self.controller.battle_textbox.instantly_spawn_full_dialog()
+                if len(self.controller.active_speech_bubbles) > 0:
+                    for speech_bubble in self.controller.active_speech_bubbles:
+                        if not speech_bubble.is_current_dialog_fully_shown():
+                            speech_bubble.instantly_spawn_full_dialog()
+                else:
+                    if not self.controller.battle_textbox.is_current_dialog_fully_shown():
+                        self.controller.battle_textbox.instantly_spawn_full_dialog()
 
     def backup_out_of_focus_stack(self):
         """
