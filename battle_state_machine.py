@@ -163,6 +163,11 @@ class BattleController:
                         column_count=23,
                         actor=self.enemies[2]
                     ),
+                    BattleTextBoxDialog(
+                        text="abcdefghijklmnopqrstuvwxyz",
+                        portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                    ),
                 ]
             )
         ]

@@ -21,8 +21,7 @@ class SpriteTextBoxDialog:
             rate_of_text: float = 0.05,
             text_sound_path: str = "assets/audio/dialog/snd_text.wav",
             font_name: str = "8bitoperator JVE",
-            font_sprite_sheet_path: str = "assets/font/snd_font.ttf",
-            uses_font_sprite_sheet: bool = False,
+            font_texture_dict: dict = None
     ):
         """
         Initializes the basic dialog data
@@ -34,8 +33,7 @@ class SpriteTextBoxDialog:
         :param rate_of_text: The amount of time (in seconds) between each character being displayed.
         :param text_sound_path: The sound to be played every time that a letter of dialog is loaded.
         :param font_name: the font name of the text, if it is font-based.
-        :param font_sprite_sheet_path: the file path of the font sprite sheet, if it is spritesheet-based.
-        :param uses_font_sprite_sheet: controls whether the font is sprite sheet-derived
+        :param font_texture_dict: the texture dict, if the font is spritesheet-based.
         """
         self.text = text
         self.font_size = font_size
@@ -44,10 +42,9 @@ class SpriteTextBoxDialog:
         self.rate_of_text = rate_of_text
         self.text_sound_path = text_sound_path
         self.font_name = font_name
-        self.font_sprite_sheet_path = font_sprite_sheet_path
+        self.font_texture_dict = font_texture_dict
         self.character_width = character_width
         self.character_height = character_height
-        self.uses_font_sprite_sheet = uses_font_sprite_sheet
 
 class SpriteTextBox(Sprite):
     """
@@ -95,10 +92,9 @@ class SpriteTextBox(Sprite):
         self.text_font_size = 36
         self.text_font_sprite_sheet_path = ""
         self.text_sound = Sound("assets/audio/dialog/snd_text.wav")
-        self.font_sprite_sheet_path = ""
         self.character_width = 0
         self.character_height = 0
-        self.uses_font_sprite_sheet = False
+        self.font_texture_dict = None
 
         self.sprites_and_effects_collection = sprites_and_effects_collection
         self.sprites_associated_with_text_box = []
@@ -129,33 +125,23 @@ class SpriteTextBox(Sprite):
         Gets the sprite for the character to be loaded.
         :return: None
         """
-        # TODO: allow the user to pull from a sprite sheet for a particular glyph set.
-
-        character_sprite = arcade.create_text_sprite(
-            text=character,
-            color=(255, 255, 255),
-            font_name=self.text_font_name,
-            font_size=self.text_font_size
-        )
+        if self.font_texture_dict is not None:
+            character_sprite=Sprite(
+                path_or_texture=self.font_texture_dict[character],
+                scale=2.0
+            )
+        else:
+            character_sprite = arcade.create_text_sprite(
+                text=character,
+                color=(255, 255, 255),
+                font_name=self.text_font_name,
+                font_size=self.text_font_size
+            )
 
         return character_sprite
 
     def add_character_to_text_box(self):
         """ Adds an individual letter from the supplied text to the speech bubble. """
-        # If the current character index = the length of the word, make the current character a space.
-        """
-        if self.current_character_index_in_current_word == len(self.words[self.current_word_index]):
-            
-            if not self.space_texture:
-                self.space_texture = Texture.create_empty(
-                    name="space",
-                    size=(self.letter_width, self.letter_height)
-                )
-            character_sprite = Sprite(path_or_texture=self.space_texture)
-            
-            character = " "
-        else:
-        """
         character = self.text[self.current_character_index]
         character_sprite = self.get_character_sprite(character)
 
@@ -186,14 +172,6 @@ class SpriteTextBox(Sprite):
             self.character_column_index += 1
 
         return character_sprite
-
-        """
-        if self.character_column_index < self.column_count:
-            self.character_column_index += 1
-        else:
-            self.character_column_index = 0
-            self.character_row_index += 1
-        """
 
     def load_dialog(self, text_box_dialog: SpriteTextBoxDialog):
         """
@@ -228,10 +206,9 @@ class SpriteTextBox(Sprite):
         else:
             self.text_sound = None
         self.text_font_name = text_box_dialog.font_name
-        self.font_sprite_sheet_path = text_box_dialog.font_sprite_sheet_path
+        self.font_texture_dict = text_box_dialog.font_texture_dict
         self.character_width = text_box_dialog.character_width
         self.character_height = text_box_dialog.character_height
-        self.uses_font_sprite_sheet = text_box_dialog.uses_font_sprite_sheet
 
         self.text_length = len(self.text)
         self.current_character_index = 0

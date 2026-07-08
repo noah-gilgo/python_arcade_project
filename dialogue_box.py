@@ -8,6 +8,7 @@ import arcade
 
 from sprites_and_effects_collection import SpritesAndEffectsCollection
 from text_box import SpriteTextBox, SpriteTextBoxDialog
+from text_texture_dicts import DWDefaultTextureDict
 
 
 class TextBoxPortrait(Sprite):
@@ -145,11 +146,10 @@ class BattleTextBoxDialog(SpriteTextBoxDialog):
         character_height: int = 32,
         text_spacing: int = 1,
         line_spacing: int = 8,
-        rate_of_text: float = 0.05,
+        rate_of_text: float = 0.03,
         text_sound_path: str = "assets/audio/dialog/snd_text.wav",
         font_name: str = "8bitoperator JVE",
-        font_sprite_sheet_path: str = "assets/font/snd_font.ttf",
-        uses_font_sprite_sheet: bool = False,
+        font_texture_dict: dict = DWDefaultTextureDict(),
         portrait_texture_path: str = "",
     ):
         super().__init__(
@@ -162,8 +162,7 @@ class BattleTextBoxDialog(SpriteTextBoxDialog):
             rate_of_text=rate_of_text,
             text_sound_path=text_sound_path,
             font_name=font_name,
-            font_sprite_sheet_path=font_sprite_sheet_path,
-            uses_font_sprite_sheet=uses_font_sprite_sheet
+            font_texture_dict=font_texture_dict,
         )
 
         self.portrait_texture_path = portrait_texture_path
