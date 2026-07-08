@@ -1310,7 +1310,6 @@ class SelectCommand(Command):
     """ A command object representing the user selecting (usually pressing Z in the original game.) """
 
     def execute(self):
-        print(str(self.controller.state))
         if self.controller.player_can_advance_to_next_state:
             match self.controller.state:
                 case BattleState.PLAYER_COMMAND:
