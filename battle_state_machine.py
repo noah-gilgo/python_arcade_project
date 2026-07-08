@@ -1261,6 +1261,31 @@ class BattleController:
                     button.focused = False
                 button_index += 1
 
+    def attempt_to_advance_to_next_dialog(self):
+        """
+        Checks if all currently loaded dialog objects have finished rendering their dialog.
+
+        If so, the controller attempts to load the next dialog.
+        """
+        if len(self.active_speech_bubbles) > 0:
+            for speech_bubble in self.active_speech_bubbles:
+                if not speech_bubble.is_current_dialog_fully_shown():
+                    return
+            self.spawn_next_dialog_from_dialog_exchange()
+        else:
+            if self.battle_textbox.is_current_dialog_fully_shown():
+                self.spawn_next_dialog_from_dialog_exchange()
+
+    def instantly_spawn_dialog_in_open_dialogs(self):
+        """ Instantly spawns the dialog associated with the currently open dialog objects. """
+        if len(self.active_speech_bubbles) > 0:
+            for speech_bubble in self.active_speech_bubbles:
+                if not speech_bubble.is_current_dialog_fully_shown():
+                    speech_bubble.instantly_spawn_full_dialog()
+        else:
+            if not self.battle_textbox.is_current_dialog_fully_shown():
+                self.battle_textbox.instantly_spawn_full_dialog()
+
 class Command:
     """ The default command object. Represents the Command design pattern. """
 
@@ -1526,14 +1551,7 @@ class SelectCommand(Command):
                     self.controller.execute_queued_player_action()
 
                 case BattleState.DIALOGUE:
-                    if len(self.controller.active_speech_bubbles) > 0:
-                        for speech_bubble in self.controller.active_speech_bubbles:
-                            if not speech_bubble.is_current_dialog_fully_shown():
-                                return
-                        self.controller.spawn_next_dialog_from_dialog_exchange()
-                    else:
-                        if self.controller.battle_textbox.is_current_dialog_fully_shown():
-                            self.controller.spawn_next_dialog_from_dialog_exchange()
+                    self.controller.attempt_to_advance_to_next_dialog()
 
                 case BattleState.DEFEAT:
                     if not self.controller.game_over_animation.continue_options_loaded:
@@ -1582,14 +1600,7 @@ class CancelCommand(Command):
             case BattleState.PLAYER_ACT_SELECT:
                 self.backup_out_of_focus_stack()
             case BattleState.DIALOGUE:
-                if len(self.controller.active_speech_bubbles) > 0:
-                    for speech_bubble in self.controller.active_speech_bubbles:
-                        if not speech_bubble.is_current_dialog_fully_shown():
-                            speech_bubble.instantly_spawn_full_dialog()
-                else:
-                    if not self.controller.battle_textbox.is_current_dialog_fully_shown():
-                        self.controller.battle_textbox.instantly_spawn_full_dialog()
-
+                self.controller.instantly_spawn_dialog_in_open_dialogs()
     def backup_out_of_focus_stack(self):
         """
         Used to back out of loaded battle UI elements while updating self.controller.state and the focus stack.

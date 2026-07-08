@@ -208,6 +208,8 @@ class ActAction(Action):
             target=self.target,
             dialogue_box=self.controller.battle_textbox,
         )
+        if self.act.time_before_player_can_advance_past_act > 0.0:
+            self.controller.delay_player_from_advancing_to_next_state(self.act.time_before_player_can_advance_past_act)
 
     def ready_act(self):
         # Performs code meant to be executed after selecting an act.
@@ -263,6 +265,10 @@ class ItemAction(Action):
             sprites_and_effects_collection=self.controller.sprites_and_effects_collection))
         pyglet.clock.schedule_once(
             lambda dt: self.controller.use_consumable_item_on_targets(self.item, self.actor, self.targets), 0.5)
+        if hasattr(self.item, "time_before_player_can_advance_past_item"):
+            if self.item.time_before_player_can_advance_past_item > 0.0:
+                self.controller.delay_player_from_advancing_to_next_state(
+                    self.item.time_before_player_can_advance_past_item)
 
     def ready_act(self):
         if self.item.tp_restored > 0 and self.item.hp_restored == 0:  # If item is TP item exclusively
