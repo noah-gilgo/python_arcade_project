@@ -435,6 +435,11 @@ class BattleController:
             if self.time_before_player_can_advance_to_next_state <= 0.0:
                 self.player_can_advance_to_next_state = True
 
+        # If the player is holding down the menu key while dialog is open, rapidly advance through it.
+        if self.c_pressed and self.state == BattleState.DIALOGUE:
+            self.spawn_next_dialog_from_dialog_exchange()
+            self.instantly_spawn_dialog_in_open_dialogs()
+
     def start_fight_bar_clock(self):
         """
         Starts the clock used to move the attack bars used during the FIGHT act.
