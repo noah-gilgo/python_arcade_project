@@ -164,7 +164,8 @@ class SpellAction(Action):
         if len(targeted_characters) > 0 and len(player_or_enemies_list) > 0:
             self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(
                 text="* " + self.actor.name + " cast " + self.spell.name + "!",
-                rate_of_text=0.03
+                rate_of_text=0.03,
+                sprites_and_effects_collection=self.controller.sprites_and_effects_collection
             ))
             self.spell.cast_spell(
                 caster=self.actor,
@@ -256,10 +257,10 @@ class ItemAction(Action):
         self.item_index = item_index
 
     def execute(self):
-        pass
         self.actor.set_animation_state("battle_item")
         item_text = "* " + self.actor.name + " used the " + self.item.name.upper() + "!"
-        self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(text=item_text))
+        self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(text=item_text,
+            sprites_and_effects_collection=self.controller.sprites_and_effects_collection))
         pyglet.clock.schedule_once(
             lambda dt: self.controller.use_consumable_item_on_targets(self.item, self.actor, self.targets), 0.5)
 
@@ -376,7 +377,8 @@ class SpareAction(Action):
 
         self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(
             text=spare_message,
-            rate_of_text=0.03
+            rate_of_text=0.03,
+            sprites_and_effects_collection=self.controller.sprites_and_effects_collection
         ))
 
         pyglet.clock.schedule_once(lambda dt: self.actor.set_animation_state("battle_idle"), 0.7)

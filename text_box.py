@@ -21,7 +21,8 @@ class SpriteTextBoxDialog:
             rate_of_text: float = 0.05,
             text_sound_path: str = "assets/audio/dialog/snd_text.wav",
             font_name: str = "8bitoperator JVE",
-            font_texture_dict: dict = None
+            font_texture_dict: dict = None,
+            include_starting_asterisk: bool = False
     ):
         """
         Initializes the basic dialog data
@@ -45,6 +46,7 @@ class SpriteTextBoxDialog:
         self.font_texture_dict = font_texture_dict
         self.character_width = character_width
         self.character_height = character_height
+        self.include_starting_asterisk = include_starting_asterisk
 
 class SpriteTextBox(Sprite):
     """
@@ -179,15 +181,19 @@ class SpriteTextBox(Sprite):
         :param text_box_dialog: The TextBoxDialog object representing the text to be loaded.
         :return:
         """
+        self.clear_dialog()
+
+        if text_box_dialog.include_starting_asterisk:
+            # Do the thing where a hyphen sprite is spawned to the left of the first line of dialog.
+            hyphen_sprite = self.get_character_sprite("*")
+            hyphen_sprite.center_x = self.left - hyphen_sprite.width
+            hyphen_sprite.center_y = self.top - (hyphen_sprite.height / 2.5)
+            self.letter_sprites.append(hyphen_sprite)
+            self.sprites_associated_with_text_box.append(hyphen_sprite)
+            self.sprites_and_effects_collection.gui_sprites_1.append(hyphen_sprite)
+
         # Used for debugging
         self.last_character_loaded = False
-
-        # Kill the sprites from the previous dialog loading instance, if there was one.
-        for sprite in self.letter_sprites:
-            sprite.kill()
-
-        self.letter_sprites.clear()
-        self.sprites_associated_with_text_box = [self.sprites_associated_with_text_box[0]]
 
         # Reset the indexes
         self.character_row_index = 0
@@ -228,7 +234,14 @@ class SpriteTextBox(Sprite):
         Clears the text box from the text box.
         :return: None
         """
-        self.load_dialog(SpriteTextBoxDialog(text=""))
+        # self.load_dialog(SpriteTextBoxDialog(text=""))
+
+        # Kill the sprites from the previous dialog loading instance, if there was one.
+        for sprite in self.letter_sprites:
+            sprite.kill()
+
+        self.letter_sprites.clear()
+        self.sprites_associated_with_text_box = [self.sprites_associated_with_text_box[0]]
 
     def update_animation(self, delta_time):
         if self.current_character_index < self.text_length:

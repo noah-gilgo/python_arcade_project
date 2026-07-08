@@ -116,7 +116,8 @@ class BattleController:
                     BattleTextBoxDialog(
                         text="So...this is scripted dialog.",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
                     SpeechBubbleDialog(
                         text="That would\nappear to be\nthe case, yes.",
@@ -127,7 +128,8 @@ class BattleController:
                     BattleTextBoxDialog(
                         text="How does scripted dialog work?",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_looking_at_the_camera_curiously.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
                     SpeechBubbleDialog(
                         text="You load instances of\nthe DialogExchange object\ninto self.scripted_dialog\nin the battle controller.",
@@ -150,12 +152,14 @@ class BattleController:
                     BattleTextBoxDialog(
                         text="Ah, that makes sense, I think..?",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
                     BattleTextBoxDialog(
                         text="And TextBoxDialog instances create text boxes like this one?",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_looking_at_the_camera_curiously.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
                     SpeechBubbleDialog(
                         text="That's correct!\nYour attunement to the\nmetaphysical properties\nof your universe is\ntruly on point.",
@@ -166,7 +170,8 @@ class BattleController:
                     BattleTextBoxDialog(
                         text="abcdefghijklmnopqrstuvwxyz",
                         portrait_texture_path="assets/sprites/player_characters/susie/dialog_portraits/susie_surveilling_the_current_situation.png",
-                        text_sound_path="assets/audio/dialog/snd_txtsus.wav"
+                        text_sound_path="assets/audio/dialog/snd_txtsus.wav",
+                        sprites_and_effects_collection=self.sprites_and_effects_collection
                     ),
                 ]
             )

@@ -2,7 +2,7 @@ import arcade
 from arcade import Camera2D, SpriteList
 from arcade.gui import UIManager
 
-from text_texture_dicts import BattleMessageTextureDict, BattleMessageImageDict
+from text_texture_dicts import BattleMessageTextureDict, BattleMessageImageDict, DWDefaultTextureDict
 
 
 class SpritesAndEffectsCollection:
@@ -41,6 +41,7 @@ class SpritesAndEffectsCollection:
         # Glyph sprite dictionaries
         self.battle_message_texture_dict = BattleMessageTextureDict()
         self.battle_message_image_dict = BattleMessageImageDict()
+        self.dw_default_font_texture_dict = DWDefaultTextureDict()
 
     def draw(self):
         """ Calls the draw function on all the sprite lists contained in this object. """

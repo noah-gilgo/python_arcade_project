@@ -144,13 +144,13 @@ class BattleTextBoxDialog(SpriteTextBoxDialog):
         font_size: float = 48.0,
         character_width: int = 16,
         character_height: int = 32,
-        text_spacing: int = 1,
+        text_spacing: int = 0,
         line_spacing: int = 8,
-        rate_of_text: float = 0.03,
+        rate_of_text: float = 0.036,
         text_sound_path: str = "assets/audio/dialog/snd_text.wav",
         font_name: str = "8bitoperator JVE",
-        font_texture_dict: dict = DWDefaultTextureDict(),
         portrait_texture_path: str = "",
+        sprites_and_effects_collection: SpritesAndEffectsCollection = None
     ):
         super().__init__(
             text=text,
@@ -162,7 +162,8 @@ class BattleTextBoxDialog(SpriteTextBoxDialog):
             rate_of_text=rate_of_text,
             text_sound_path=text_sound_path,
             font_name=font_name,
-            font_texture_dict=font_texture_dict,
+            font_texture_dict=sprites_and_effects_collection.dw_default_font_texture_dict,
+            include_starting_asterisk=True
         )
 
         self.portrait_texture_path = portrait_texture_path
@@ -190,17 +191,10 @@ class BattleDialogTextBox(SpriteSolidColor):
         self.portrait_height = 192
 
         self.text_box_vertical_padding = 16
-        self.text_box_horizontal_padding = 16
+        self.text_box_horizontal_padding = 32
 
         self.text_box.height = self.height - (self.text_box_vertical_padding * 2)
         self.text_box.center_y = self.text_box.height / 2
-
-    """
-    def do_layout(self):
-        self.width = settings.WINDOW_WIDTH
-        self.height = int(settings.WINDOW_HEIGHT / 4)
-        # self.with_background(color=arcade.uicolor.BLACK)
-    """
 
     def load_dialog(self, text_box_dialog: BattleTextBoxDialog):
         """
@@ -241,28 +235,3 @@ class BattleDialogTextBox(SpriteSolidColor):
         if isinstance(self.portrait, Sprite):
             self.portrait.kill()
             self.portrait = None
-
-    """
-    def add_character_to_text_box_text(self, dt):
-        
-        #Scheduled event that adds a character to the textbox text.
-        #If the textbox text length already matches the index of the character to be added, the scheduled event is
-        #unscheduled.
-        #:return: None
-        
-
-        if self.current_character_in_text_box_index < len(self.dialog_string):
-            self.text_box_text.text += self.dialog_string[self.current_character_in_text_box_index]
-            if self.text_sound:
-                self.text_sound.play()
-            self.current_character_in_text_box_index += 1
-        else:
-            self.current_character_in_text_box_index = 0
-            pyglet.clock.unschedule(self.add_character_to_text_box_text)
-
-    def animate_character_dialog(self):
-        pyglet.clock.schedule_interval(
-            self.add_character_to_text_box_text,
-            self.rate_of_text
-        )
-    """
