@@ -1523,7 +1523,8 @@ class SelectCommand(Command):
 
                 case BattleState.DIALOGUE:
                     #if len(self.controller.scripted_dialogue) > 0:
-                    self.controller.spawn_next_dialog_from_dialog_exchange()
+                    if self.controller.battle_textbox.is_current_dialog_fully_shown():
+                        self.controller.spawn_next_dialog_from_dialog_exchange()
                     #else:
                     #    self.controller.despawn_speech_bubbles()
                     #    self.controller.start_enemy_attack()
@@ -1574,6 +1575,9 @@ class CancelCommand(Command):
                 self.backup_out_of_focus_stack()
             case BattleState.PLAYER_ACT_SELECT:
                 self.backup_out_of_focus_stack()
+            case BattleState.DIALOGUE:
+                if not self.controller.battle_textbox.is_current_dialog_fully_shown():
+                    self.controller.battle_textbox.instantly_spawn_full_dialog()
 
     def backup_out_of_focus_stack(self):
         """

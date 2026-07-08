@@ -237,3 +237,11 @@ class BattleDialogTextBox(SpriteSolidColor):
         if isinstance(self.portrait, Sprite):
             self.portrait.kill()
             self.portrait = None
+
+    def is_current_dialog_fully_shown(self):
+        """ Returns a bool indicating whether the current dialog is fully shown. """
+        return self.text_box.is_current_dialog_fully_shown()
+
+    def instantly_spawn_full_dialog(self):
+        """ Instantly spawns the rest of the dialog that has not been shown on screen. """
+        self.text_box.instantly_spawn_full_dialog()

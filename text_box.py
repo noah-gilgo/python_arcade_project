@@ -122,9 +122,6 @@ class SpriteTextBox(Sprite):
         # Controls whether or not asterisks are spawned to the left of newlines
         self.include_starting_asterisk = False
 
-        # Used for debugging
-        self.last_character_loaded = False
-
     def get_character_sprite(self, character: str) -> Sprite:
         """
         Gets the sprite for the character to be loaded.
@@ -205,9 +202,6 @@ class SpriteTextBox(Sprite):
         """
         self.clear_dialog()
 
-        # Used for debugging
-        self.last_character_loaded = False
-
         # Reset the indexes
         self.character_row_index = 0
         self.character_column_index = 0
@@ -276,9 +270,15 @@ class SpriteTextBox(Sprite):
                 self.add_character_to_text_box()
                 if self.text_sound:
                     self.text_sound.play()
-        else:
-            if not self.last_character_loaded:
-                self.last_character_loaded = True
+
+    def is_current_dialog_fully_shown(self):
+        """ Returns a bool indicating whether the current dialog is fully shown. """
+        return self.current_character_index >= self.text_length
+
+    def instantly_spawn_full_dialog(self):
+        """ Instantly spawns the rest of the dialog that has not been shown on screen. """
+        while not self.is_current_dialog_fully_shown():
+            self.add_character_to_text_box()
 
     def despawn_text_box(self):
         """
