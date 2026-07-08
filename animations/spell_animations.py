@@ -641,6 +641,8 @@ class RudeBusterAnimation(MultiSpriteAnimation):
 
             self.rude_buster_impact_animation = None
 
+            self.parent_spell = None
+
     def update_animation(self, delta_time):
         self.time += delta_time
         self.time_since_last_beam_spawn += delta_time
@@ -668,11 +670,12 @@ class RudeBusterAnimation(MultiSpriteAnimation):
             # If Rude Buster has impacted the target
             if self.spell_traveling_to_target:
                 self.spell_traveling_to_target = False
+                self.parent_spell.affect_targets_with_spell()
                 self.rude_buster_hit_sound.play()
                 self.rude_buster_impact_animation = RudeBusterImpactAnimation(
                     beam_textures=self.rude_buster_beam_textures,
                     center_x=self.target.center_x,
-                    center_y=self.target.center_y,
+                    center_y=self.target.center_y
                 )
                 for sprite in self.rude_buster_impact_animation.get_sprites():
                     self.sprites_and_effects_collection.effects_sprites.append(sprite)
