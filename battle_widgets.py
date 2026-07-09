@@ -657,9 +657,9 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
         self.background_rectangle_sprite = SpriteSolidColor(
             color=arcade.color.BLACK,
             width=settings.WINDOW_WIDTH,
-            height=self.height / 2,
+            height=self.height / 2 - 7,
             center_x=self.center_x,
-            center_y=self.center_y - (self.height / 4) + 7
+            center_y=self.center_y + 3
         )
         self.background_rectangle_top_edge = SpriteSolidColor(
             color=Color(51, 32, 51, 255),
