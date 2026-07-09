@@ -215,67 +215,6 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.give_up_option_sprite.set_texture(0)
         self.give_up_option_sprite.alpha = 0
 
-        """
-        continue_option_sprite_texture = arcade.create_text_sprite(
-            text="CONTINUE",
-            font_name="8bitoperator JVE",
-            font_size=48,
-            color=(255, 255, 255, 255)
-        ).texture
-        
-
-        continue_option_sprite_highlight_texture = arcade.create_text_sprite(
-            text="CONTINUE",
-            font_name="8bitoperator JVE",
-            font_size=48,
-            color=(255, 255, 0, 255)
-        ).texture
-
-        self.continue_option_sprite = arcade.create_text_sprite(
-            text="CONTINUE",
-            font_name="8bitoperator JVE",
-            font_size=48,
-            color=(255, 255, 255, 255)
-        )
-        self.continue_option_sprite.center_x = int(settings.WINDOW_WIDTH * .35)
-        self.continue_option_sprite.center_y = int(settings.WINDOW_HEIGHT * .2)
-
-        #self.continue_option_sprite.append_texture(continue_option_sprite_texture)
-        self.continue_option_sprite.append_texture(continue_option_sprite_highlight_texture)
-        self.continue_option_sprite.set_texture(0)
-        self.continue_option_sprite.alpha = 0
-
-        
-        give_up_option_sprite_texture = arcade.create_text_sprite(
-            text="GIVE UP",
-            font_name="8bitoperator JVE",
-            font_size=48,
-            color=(255, 255, 255, 255)
-        ).texture
-        
-
-        give_up_option_sprite_highlight_texture = arcade.create_text_sprite(
-            text="GIVE UP",
-            font_name="8bitoperator JVE",
-            font_size=48,
-            color=(255, 255, 0, 255)
-        ).texture
-
-        self.give_up_option_sprite = arcade.create_text_sprite(
-            text="GIVE UP",
-            font_name="8bitoperator JVE",
-            font_size=48,
-            color=(255, 255, 255, 255)
-        )
-        self.give_up_option_sprite.center_x = int(settings.WINDOW_WIDTH * .65)
-        self.give_up_option_sprite.center_y = int(settings.WINDOW_HEIGHT * .2)
-
-        #self.give_up_option_sprite.append_texture(give_up_option_sprite_texture)
-        self.give_up_option_sprite.append_texture(give_up_option_sprite_highlight_texture)
-        self.give_up_option_sprite.set_texture(0)
-        self.give_up_option_sprite.alpha = 0
-        """
-
         self.game_over_title_sprite = Sprite(
             path_or_texture="assets/sprites/game_over_title.png",
             center_x=settings.WINDOW_CENTER_X,

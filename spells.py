@@ -441,3 +441,4 @@ class SleepMist(Spell):
         super().cast_spell(caster, targets, controller)
         if caster.name == "Ralsei":
             pyglet.clock.schedule_once(lambda dt: caster.set_scale(4.0), self.time_before_battle_idle)
+        pyglet.clock.schedule_once(lambda dt: self.sleepmist_sound.play(), self.time_before_animation_begins)
