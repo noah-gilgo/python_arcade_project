@@ -169,7 +169,7 @@ class SpellAction(Action):
             ))
             self.spell.cast_spell(
                 caster=self.actor,
-                targeted_characters=targeted_characters,
+                targets=targeted_characters,
                 controller=self.controller
             )
         else:
