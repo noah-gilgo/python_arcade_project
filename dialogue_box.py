@@ -144,7 +144,7 @@ class BattleTextBoxDialog(SpriteTextBoxDialog):
         font_size: float = 48.0,
         character_width: int = 16,
         character_height: int = 32,
-        text_spacing: int = 0,
+        text_spacing: int = -2,
         line_spacing: int = 8,
         rate_of_text: float = 0.036,
         text_sound_path: str = "assets/audio/dialog/snd_text.wav",

@@ -163,7 +163,7 @@ class SpellAction(Action):
 
         if len(targeted_characters) > 0 and len(player_or_enemies_list) > 0:
             self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(
-                text=self.actor.name + " cast " + self.spell.name + "!",
+                text=self.actor.name + " cast " + self.spell.name.upper() + "!",
                 rate_of_text=0.03,
                 sprites_and_effects_collection=self.controller.sprites_and_effects_collection
             ))
