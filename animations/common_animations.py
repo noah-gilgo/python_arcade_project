@@ -343,7 +343,7 @@ class GameOverAnimation(MultiSpriteAnimation):
         self.him_textboxes_not_despawned = True
 
     def update_animation(self, delta_time):
-        super().update_animation(delta_time)
+        self.time += delta_time
 
         if 0 < self.time < 0.8:  # Non-battle soul sprite is made visible
             if self.soul_not_made_visible:
