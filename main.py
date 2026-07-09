@@ -20,8 +20,8 @@ import items.armor_items
 from bullet_board import BulletBoard
 from items import armor_items
 from items.armor_items import PrincessRbn, TennaTie, ShadowMantle, Jevilstail, WhiteRibbon, WaferGuard, RoyalPin, \
-    MysticBand
-from items.weapon_items import JingleBlade, JusticeAxe, ScarfMark, SnowRing
+    MysticBand, SolArmor, StarShield
+from items.weapon_items import JingleBlade, JusticeAxe, ScarfMark, SnowRing, PlanetBuster
 from soul import Soul
 from spells import Spell, IceShock
 from sprites_and_effects_collection import SpritesAndEffectsCollection
@@ -164,9 +164,9 @@ class GameView(arcade.View):
         self.player_one.center_x = self._holy_arc[0][0]
         self.player_one.center_y = self._holy_arc[0][1]
 
-        self.player_one.equip_weapon(JingleBlade())
-        self.player_one.equip_armor_to_slot_1(PrincessRbn())
-        self.player_one.equip_armor_to_slot_2(TennaTie())
+        self.player_one.equip_weapon(PlanetBuster())
+        self.player_one.equip_armor_to_slot_1(SolArmor())
+        self.player_one.equip_armor_to_slot_2(StarShield())
         self.player_characters.append(self.player_one)
 
         self._animation_states = self.player_one.get_valid_animation_states()
@@ -179,7 +179,7 @@ class GameView(arcade.View):
         
         self.player_two.equip_weapon(JusticeAxe())
         self.player_two.equip_armor_to_slot_1(ShadowMantle())
-        self.player_two.equip_armor_to_slot_2(MysticBand())
+        self.player_two.equip_armor_to_slot_2(Jevilstail())
         self.player_characters.append(self.player_two)
 
 
@@ -189,7 +189,7 @@ class GameView(arcade.View):
         self.player_three.center_y = self._holy_arc[2][1]
 
         self.player_three.equip_weapon(ScarfMark())
-        self.player_three.equip_armor_to_slot_1(Jevilstail())
+        self.player_three.equip_armor_to_slot_1(MysticBand())
         self.player_three.equip_armor_to_slot_2(WaferGuard())
         self.player_characters.append(self.player_three)
 

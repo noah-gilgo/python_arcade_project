@@ -110,6 +110,29 @@ class PrincessRbn(ArmorItem):
             defense_points=4
         )
 
+
+class SolArmor(ArmorItem):
+    def __init__(self):
+        super().__init__(
+            id=10,
+            name="SolArmor",
+            description="W-Wow! This armor glows with the light of the sun. When enemies strike it, it gives off nuclear sparks.",
+            defense_points=12,
+            element_id=8 # Fire/Ice
+        )
+
+
+class StarShield(ArmorItem):
+    def __init__(self):
+        super().__init__(
+            id=11,
+            name="StarShield",
+            description="""W-Wow! This shield contains incredible power. Astral sparks fleck off of it when struck, 
+            lighting up the darkness like the night sky. It's sure to light up your adventure, too!""",
+            defense_points=8,
+            element_id=5 # Dark/Star
+        )
+
 def initialize_default_armor_items():
     """ Initializes some basic armors. """
     return [

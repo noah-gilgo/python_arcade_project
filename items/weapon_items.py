@@ -95,3 +95,16 @@ class SnowRing(Ring):
             name="SnowRing",
             description="A ring with the emblem of the snowflake"
         )
+
+
+class PlanetBuster(Sword):
+    def __init__(self):
+        super().__init__(
+            id=5,
+            name="PlanetBuster",
+            description="""The most powerful weapon in existence. A sword so strong, it has the power to destroy 
+            planets. Galaxies, universes can be felled with a single blow from such a weapon. Just holding it causes 
+            your hands to tingle. It gives you an incredible surge of power when used in battle.""",
+            attack_points=24,
+            defense_points=2
+        )
