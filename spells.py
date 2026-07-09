@@ -292,10 +292,10 @@ class FireShock(Spell):
 
         return (max(caster.magic - 10, 1) * 30) + 90 + random.randint(1, 10)
 
-    def affect_targets_with_spell(self, caster, targets, controller):
-        super().affect_targets_with_spell(caster, targets, controller)
+    def affect_targets_with_spell(self):
+        super().affect_targets_with_spell()
         # Spawn burn animation
-        for target in targets:
+        for target in self.targets:
             if target.hp < 0:
                 self.burn_sound.play(speed=0.5)  # the speed modifier doesn't do anything for some reason
                 burn_animation = BurnAnimation(target)
