@@ -420,6 +420,10 @@ class PlayerCharacter(character.Character):
                         damage_dealt_color = arcade.color.RED
                         self.set_animation_state("battle_downed")
                         self.hp = min(int(-self.max_hp / 2), -80)
+                        shake_animation = ShakeAnimation(
+                            sprite=self
+                        )
+                        self.sprites_and_effects_collection.effects.append(shake_animation)
                 else:
                     damage_dealt_text = str(int(-hp_change))
                     if not self.is_defending:
