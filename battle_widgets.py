@@ -5,7 +5,7 @@ import arcade
 import pyglet.clock
 from PIL import Image, ImageChops
 from PIL.Image import Resampling
-from arcade import LBWH, Rect
+from arcade import LBWH, Rect, SpriteSolidColor
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
     UIKeyPressEvent, UIKeyEvent, Surface, UIAnchorLayout
 from arcade.gui.widgets import FocusMode, UISpace, UILayout
@@ -20,6 +20,7 @@ from acts import CheckAct
 from graphics_methods import ease_out, make_texture_solid_color
 from items.consumable_items import ConsumableItem
 from spells import Spell
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
 class BattleHUDButton(UITextureButton):
@@ -618,7 +619,8 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
     """
     The part of the screen that renders the character data clamshells.
     """
-    def __init__(self, player_characters: list[player_character]):
+    def __init__(self, player_characters: list[player_character], sprites_and_effects_collection: SpritesAndEffectsCollection):
+        self.sprites_and_effects_collection = sprites_and_effects_collection
 
         self._horizontal_spacing = 0
         self._clamshell_width = BattleHUDCharacterClamshell(player_characters[0]).width
@@ -651,10 +653,41 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
             self.add(clamshell)
             is_clamshell_focused = False
 
+        # The black rectangle behind the character cards and their associated borders
+        self.background_rectangle_sprite = SpriteSolidColor(
+            color=arcade.color.BLACK,
+            width=settings.WINDOW_WIDTH,
+            height=self.height / 2,
+            center_x=self.center_x,
+            center_y=self.center_y - (self.height / 4) + 7
+        )
+        self.background_rectangle_top_edge = SpriteSolidColor(
+            color=Color(51, 32, 51, 255),
+            width=settings.WINDOW_WIDTH,
+            height=4,
+            center_x=self.center_x,
+            center_y=self.background_rectangle_sprite.top
+        )
+        self.background_rectangle_bottom_edge = SpriteSolidColor(
+            color=Color(51, 32, 51, 255),
+            width=settings.WINDOW_WIDTH,
+            height=5,
+            center_x=self.center_x,
+            center_y=self.background_rectangle_sprite.bottom
+        )
+
+        for sprite in self.background_rectangle_sprite, self.background_rectangle_top_edge:
+            self.sprites_and_effects_collection.gui_sprites_1.append(sprite)
+        self.sprites_and_effects_collection.effects_sprites.append(self.background_rectangle_bottom_edge)
+
     def do_layout(self):
         self.center_x = int(settings.WINDOW_WIDTH / 2)
         self.y = int(settings.WINDOW_HEIGHT / 5.1)
         super().do_layout()
+        self.background_rectangle_sprite.center_y = self.center_y + 3
+        self.background_rectangle_sprite.height = self.height / 2 - 7
+        self.background_rectangle_top_edge.center_y = self.background_rectangle_sprite.top
+        self.background_rectangle_bottom_edge.center_y = self.background_rectangle_sprite.bottom
 
 
 class SpellListOption(UILabel):
