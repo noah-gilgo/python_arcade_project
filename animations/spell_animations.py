@@ -542,14 +542,14 @@ class RudeBusterImpactAnimation(MultiSpriteAnimation):
     """
     def __init__(self, beam_textures: list[Texture], center_x: float = 0.0, center_y: float = 0.0, spread_multiplier: float = 1.0):
         sprites=[
-            RudeBusterBeam(beam_textures, center_x + 50, center_y - 50, 4.0 * spread_multiplier, 45.0),
-            RudeBusterBeam(beam_textures, center_x + 50, center_y - 50, 4.0 * spread_multiplier, 45.0),
-            RudeBusterBeam(beam_textures, center_x - 50, center_y - 50, 4.0 * spread_multiplier, 135.0),
-            RudeBusterBeam(beam_textures, center_x - 50, center_y - 50, 4.0 * spread_multiplier, 135.0),
-            RudeBusterBeam(beam_textures, center_x - 50, center_y + 50, 4.0 * spread_multiplier, 225.0),
-            RudeBusterBeam(beam_textures, center_x - 50, center_y + 50, 4.0 * spread_multiplier, 225.0),
-            RudeBusterBeam(beam_textures, center_x + 50, center_y + 50, 4.0 * spread_multiplier, 315.0),
-            RudeBusterBeam(beam_textures, center_x + 50, center_y + 50, 4.0 * spread_multiplier, 315.0)
+            RudeBusterBeam(beam_textures, center_x + 50, center_y - 50, 4.0, 45.0),
+            RudeBusterBeam(beam_textures, center_x + 50, center_y - 50, 4.0, 45.0),
+            RudeBusterBeam(beam_textures, center_x - 50, center_y - 50, 4.0, 135.0),
+            RudeBusterBeam(beam_textures, center_x - 50, center_y - 50, 4.0, 135.0),
+            RudeBusterBeam(beam_textures, center_x - 50, center_y + 50, 4.0, 225.0),
+            RudeBusterBeam(beam_textures, center_x - 50, center_y + 50, 4.0, 225.0),
+            RudeBusterBeam(beam_textures, center_x + 50, center_y + 50, 4.0, 315.0),
+            RudeBusterBeam(beam_textures, center_x + 50, center_y + 50, 4.0, 315.0)
         ]
 
         super().__init__(sprites)
@@ -689,15 +689,14 @@ class RudeBusterAnimation(MultiSpriteAnimation):
         else:
             # If Rude Buster has impacted the target
             if self.spell_traveling_to_target:
-                self.frames_between_confirm_and_impact = math.floor(self.frames_between_confirm_and_impact)
                 self.spell_traveling_to_target = False
-                if self.frames_between_confirm_and_impact >= len(self.parent_spell.damage_addition_amount_list):
-                    spread_multiplier = 1.0
-                else:
-                    spread_multiplier = 1.0 + ((len(self.parent_spell.damage_addition_amount_list) - self.frames_between_confirm_and_impact) / 20)
-
+                spread_multiplier = 1.0
                 if not self.confirm_not_pressed:
+                    self.frames_between_confirm_and_impact = math.floor(self.frames_between_confirm_and_impact)
                     self.parent_spell.frames_between_confirm_and_impact = self.frames_between_confirm_and_impact
+                    if self.frames_between_confirm_and_impact < len(self.parent_spell.damage_addition_amount_list):
+                        spread_multiplier += ((len(self.parent_spell.damage_addition_amount_list) - self.frames_between_confirm_and_impact) / 15)
+
                 self.parent_spell.affect_targets_with_spell()
                 self.rude_buster_hit_sound.play()
                 # Plays the sound a second time over the first time, giving the illusion that it's louder
@@ -713,6 +712,8 @@ class RudeBusterAnimation(MultiSpriteAnimation):
                     self.sprites_and_effects_collection.effects_sprites.append(sprite)
 
                 self.sprites_and_effects_collection.effects.append(self.rude_buster_impact_animation)
+                self.parent_spell.frames_between_confirm_and_impact = 999
+                self.frames_between_confirm_and_impact = 0
             else:
                 self.rude_buster_impact_animation.update_animation(delta_time)
 
