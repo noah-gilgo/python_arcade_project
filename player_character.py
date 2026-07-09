@@ -204,7 +204,7 @@ class PlayerCharacter(character.Character):
         :return: None
         """
         self.is_defending = False
-        if self.animations_by_state["battle_defend"]:
+        if self.animations_by_state["battle_idle"] and self.hp > 0:
             self.set_animation_state("battle_idle")
 
     def equip_weapon(self, weapon: WeaponItem | None):
@@ -442,9 +442,7 @@ class PlayerCharacter(character.Character):
                 else:
                     if self.hp > 0:
                         if previous_hp < 0:
-                            damage_dealt_text = "UP"
                             self.set_animation_state("battle_idle")
-                            self.hp = int(self.max_hp / 5)
                     else:
                         damage_dealt_text = str(int(hp_change))
 
@@ -456,3 +454,17 @@ class PlayerCharacter(character.Character):
         )
         self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
         self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
+
+    def revive(self):
+        """ Revives the player character at 20% max HP. This should only be called at the beginning of each player turn. """
+        self.set_animation_state("battle_idle")
+        self.hp = int(self.max_hp / 5)
+        damage_dealt_animation = NumberBounceAnimation(
+            text="UP",
+            color=arcade.color.NEON_GREEN,
+            target=self,
+            sprites_and_effects_collection=self.sprites_and_effects_collection
+        )
+        self.sprites_and_effects_collection.effects_sprites.append(damage_dealt_animation.sprite)
+        self.sprites_and_effects_collection.effects.append(damage_dealt_animation)
+        self.player_heal_sound.play()

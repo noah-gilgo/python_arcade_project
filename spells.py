@@ -98,7 +98,6 @@ class Spell:
     def affect_targets_with_spell(self):
         """ Perform the calculations required after a spell is cast on a character. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
-        # TODO: Move all of the spell functions to the battle controller instead of using all these parameters, maybe
         if len(self.targets) == 0:
             return
 

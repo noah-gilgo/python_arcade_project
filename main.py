@@ -179,7 +179,7 @@ class GameView(arcade.View):
         
         self.player_two.equip_weapon(JusticeAxe())
         self.player_two.equip_armor_to_slot_1(ShadowMantle())
-        self.player_two.equip_armor_to_slot_2(Jevilstail())
+        self.player_two.equip_armor_to_slot_2(MysticBand())
         self.player_characters.append(self.player_two)
 
 
@@ -189,7 +189,7 @@ class GameView(arcade.View):
         self.player_three.center_y = self._holy_arc[2][1]
 
         self.player_three.equip_weapon(ScarfMark())
-        self.player_three.equip_armor_to_slot_1(MysticBand())
+        self.player_three.equip_armor_to_slot_1(Jevilstail())
         self.player_three.equip_armor_to_slot_2(WaferGuard())
         self.player_characters.append(self.player_three)
 
