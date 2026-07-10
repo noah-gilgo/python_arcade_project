@@ -387,8 +387,12 @@ class PlayerCharacter(character.Character):
         :param controller: The BattleController controlling the fight.
         :return: None
         """
+        print("yes")
         damage_dealt = self.calculate_received_damage(damage_dealt, element_id)
         self.modify_hp(-damage_dealt)
+        for player_character_card in controller.battle_player_character_cards.children:
+            if player_character_card.player_character is self:
+                player_character_card.briefly_change_icon_to_hurt_icon()
 
         if controller.check_if_battle_is_lost():
             controller.game_over()

@@ -339,8 +339,8 @@ class Rudinn(NonPlayerCharacter):
         )
 
         self.bullet_board = bullet_board
-        self.battle_description = ("* RUDINN - ATK: " + str(self.attack) + " DEF: " + str(self.defense) +
-                                   "\n* Said to be someone's best friend, but maybe not. \n    Shine on, you lazy diamond!")
+        self.battle_description = ("RUDINN - ATK: " + str(self.attack) + " DEF: " + str(self.defense) +
+                                   "\nSaid to be someone's best friend, but maybe not.\nShine on, you lazy diamond!")
 
 
     def execute_attack(self, enemies: list[NonPlayerCharacter]):

@@ -391,15 +391,11 @@ class BattleHUDCharacterIcon(UIImage):
         :return:
         """
         self.texture = self.character.normal_icon_texture
+        self.trigger_render()
 
-    def change_to_hurt_icon(self):
-        """
-        Temporarily changes the icon to the character's hurt icon.
-        :return: None
-        """
-        if self.texture == self.character.normal_icon_texture:
-            self.texture = self.character.hurt_icon_texture
-            pyglet.clock.schedule_once(self.set_texture_to_normal, 1.0)
+    def do_render(self, surface):
+        surface.clear()
+        super().do_render(surface)
 
 
 class BattleHUDCharacterName(UILabel):
@@ -517,6 +513,8 @@ class BattleHUDCharacterClamshell(UILayout):
         self.hud_movement_time = 0.0
         self.hud_movement_total_duration = 0.2
 
+        # Since UIImages are dumb I'm including an empty solid
+
     def on_update(self, dt):
         if self.hud_moving:
             self.move_character_hud_vertically_slightly(dt)
@@ -612,7 +610,16 @@ class BattleHUDCharacterClamshell(UILayout):
             icon_texture_path = self.character_icon_path
             icon_texture = arcade.load_texture(icon_texture_path)
 
-        self.children[1].children[0].children[0].texture = icon_texture
+        image = self.children[1].children[0].children[0]
+
+        image.texture = icon_texture
+
+    def briefly_change_icon_to_hurt_icon(self):
+        """ Briefly change the player's icon to the hurt icon like what happens when they get hurt. """
+        image = self.children[1].children[0].children[0]
+
+        image.texture = self.player_character.hurt_icon_texture
+        pyglet.clock.schedule_once(lambda dt: self.change_icon(), 1.0)
 
 
 class BattleHUDCharacterClamshellDisplay(UIBoxLayout):

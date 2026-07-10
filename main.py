@@ -45,6 +45,7 @@ class GameView(arcade.View):
         self.player_two = None
         self.player_three = None
         self.player_four = None
+        self.player_five = None
 
         self.player_characters = []
 
@@ -164,14 +165,14 @@ class GameView(arcade.View):
         self.player_one.center_x = self._holy_arc[0][0]
         self.player_one.center_y = self._holy_arc[0][1]
 
-        self.player_one.equip_weapon(PlanetBuster())
-        self.player_one.equip_armor_to_slot_1(SolArmor())
-        self.player_one.equip_armor_to_slot_2(StarShield())
+        self.player_one.equip_weapon(JingleBlade())
+        self.player_one.equip_armor_to_slot_1(PrincessRbn())
+        self.player_one.equip_armor_to_slot_2(TennaTie())
         self.player_characters.append(self.player_one)
 
         self._animation_states = self.player_one.get_valid_animation_states()
 
-
+        """
         self.player_two = player_characters.Susie()
         self.player_two.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
         self.player_two.center_x = self._holy_arc[1][0]
@@ -181,7 +182,17 @@ class GameView(arcade.View):
         self.player_two.equip_armor_to_slot_1(ShadowMantle())
         self.player_two.equip_armor_to_slot_2(Jevilstail())
         self.player_characters.append(self.player_two)
+        """
 
+        self.player_five = player_characters.December()
+        self.player_five.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
+        self.player_five.center_x = self._holy_arc[1][0]
+        self.player_five.center_y = self._holy_arc[1][1]
+
+        self.player_five.equip_weapon(PlanetBuster())
+        self.player_five.equip_armor_to_slot_1(SolArmor())
+        self.player_five.equip_armor_to_slot_2(StarShield())
+        self.player_characters.append(self.player_five)
 
         self.player_three = player_characters.Ralsei()
         self.player_three.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
@@ -321,6 +332,8 @@ def main():
 
     # Show GameView on screen
     window.show_view(game)
+
+    print(arcade.__version__)
 
     # Start the arcade game loop
     arcade.run()
