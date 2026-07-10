@@ -339,7 +339,7 @@ class SpareAction(Action):
         super().execute()
 
         # Prevents the user from advancing the dialog while the spare is being attempted.
-        self.controller.delay_player_from_advancing_to_next_state(1.6)
+        self.controller.delay_player_from_advancing_to_next_state(0.5)
 
         if self.target not in self.controller.enemies:
             self.target = self.controller.enemies[0]

@@ -6,7 +6,7 @@ class Act:
     An abstract Act method. The parent class that all types of acts should inherit from.
     """
     def __init__(self, name: str = "Placeholder Act Name", description: str = "Performs an act",
-                 perform_act_text: str = "", tp_cost: float = 0.0, time_before_player_can_advance_past_act: float = 2.0):
+                 perform_act_text: str = "", tp_cost: float = 0.0, time_before_player_can_advance_past_act: float = 0.5):
         self.name = name  # The name of the act in the ACT menu.
         self.description = description  # The description of the act displayed in the ACT menu when hovered over.
         self.perform_act_text = perform_act_text  # Dialog box text when the act is performed
