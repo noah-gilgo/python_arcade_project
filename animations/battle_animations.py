@@ -494,6 +494,7 @@ class FightHitBar(SingleSpriteAnimation):
         self.bar_is_moving = True
         self.bar_is_not_removed = True
         self.load_bullet_board_called = False
+        self.character_icon_not_reset_to_default = True
 
     def update_animation(self, delta_time: float):
         """ Updates the bar animation. """
@@ -520,6 +521,7 @@ class FightHitBar(SingleSpriteAnimation):
             if self.bar_is_not_removed:
                 self.actor.attack_enemy(enemy=self.target, controller=self.controller, attack_damage_multiplier=0.0)
                 self.controller.fight_hit_markers.remove(self)
+                self.controller.change_specific_player_icon(player_character=self.actor)
                 self.bar_is_not_removed = False
             pyglet.clock.schedule_once(lambda dt: self.terminate_animation(), 1.0)
 
@@ -565,6 +567,8 @@ class FightHitBar(SingleSpriteAnimation):
     def register_hit(self):
         self.hit_registered = True
         self.bar_is_moving = False
+
+        self.controller.change_specific_player_icon(player_character=self.actor)
 
     def register_critical_hit(self):
         self.sprite.set_texture(1)

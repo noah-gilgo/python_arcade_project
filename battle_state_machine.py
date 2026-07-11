@@ -1229,6 +1229,12 @@ class BattleController:
         """ Changes the icon of the current player to the icon at the given path. """
         self.battle_player_character_cards.children[self.current_player_index].change_icon(icon_path)
 
+    def change_specific_player_icon(self, player_character, icon_path: str = ""):
+        """ Changes the icon of the specified player to the icon at the given path. """
+        for player_character_card in self.battle_player_character_cards.children:
+            if player_character_card.player_character is player_character:
+                player_character_card.change_icon(icon_path)
+
     def change_all_player_icons_to_default(self):
         """ Changes the icon of all players to their default icon. """
         for battle_player_character_card in self.battle_player_character_cards.children:

@@ -98,7 +98,6 @@ class Spell:
     def affect_targets_with_spell(self):
         """ Perform the calculations required after a spell is cast on a character. """
         # TODO: Maybe add percentages to elemental pairs to control how much damage is resisted/amplified?
-        # TODO: Move all of the spell functions to the battle controller instead of using all these parameters, maybe
         if len(self.targets) == 0:
             return
 
@@ -441,3 +440,4 @@ class SleepMist(Spell):
         super().cast_spell(caster, targets, controller)
         if caster.name == "Ralsei":
             pyglet.clock.schedule_once(lambda dt: caster.set_scale(4.0), self.time_before_battle_idle)
+        pyglet.clock.schedule_once(lambda dt: self.sleepmist_sound.play(), self.time_before_animation_begins)

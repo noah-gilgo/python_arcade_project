@@ -379,7 +379,11 @@ class Soul(arcade.Sprite):
                     self.controller.reset_player_animation_states_before_next_turn()
                     for player in self.controller.players:
                         if player.hp < 0:
-                            player.modify_hp(ceil(player.max_hp / 3))
+                            hp_healed = ceil(player.max_hp / 6)
+                            if player.hp + hp_healed >= 0:
+                                player.revive()
+                            else:
+                                player.modify_hp(hp_healed)
 
             else: # The default movement for the soul.
                 if self.soul_movement_enabled:

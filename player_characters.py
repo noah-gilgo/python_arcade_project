@@ -123,3 +123,24 @@ class Noelle(PlayerCharacter):
         )
 
         self.magic_user_acts = [NoelleRudinnAction1(self)]
+
+
+class December(PlayerCharacter):
+    def __init__(self):
+        super().__init__(
+            sprite_folder_name="december",
+            name="Dess",
+            max_hp=120,
+            attack=14,
+            defense=2,
+            magic=1,
+            battle_ui_color=Color(255, 0, 0, 255),
+            battle_ui_icon_color=Color(255, 64, 64, 255),
+            fight_box_color=Color(255, 0, 0, 255),
+            fight_crit_box_color=Color(255, 64, 64, 255),
+            spells=[FireShock()]
+        )
+
+        self.magic_user_acts = [NoelleRudinnAction1(self)]
+
+        self.animations_by_state["battle_idle"].set_frame_duration(0.25)

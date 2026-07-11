@@ -43,7 +43,9 @@ class Action:
 
     def execute(self):
         # Stub for the execute method used by child classes.
-        pass
+
+        # Changes the player's icon back to default
+        self.change_player_icon("")
 
     def ready_act(self):
         # Performs code meant to be executed after selecting an act.
@@ -52,6 +54,12 @@ class Action:
     def cancel_act(self):
         # Performs code meant to be executed after canceling an act.
         pass
+
+    def change_player_icon(self, icon_path: str = ""):
+        """ Changes the icon of the current player to the icon at the given path. """
+        for player_character_card in self.controller.battle_player_character_cards.children:
+            if player_character_card.player_character is self.actor:
+                player_character_card.change_icon(icon_path)
 
 
 class ActionsQueue:
@@ -142,6 +150,8 @@ class SpellAction(Action):
     def execute(self):
         # Casts the spell.
 
+        super().execute()
+
         if self.spell.is_friendly_spell:
             player_or_enemies_list = self.controller.players
         else:
@@ -163,7 +173,7 @@ class SpellAction(Action):
 
         if len(targeted_characters) > 0 and len(player_or_enemies_list) > 0:
             self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(
-                text=self.actor.name + " cast " + self.spell.name + "!",
+                text=self.actor.name + " cast " + self.spell.name.upper() + "!",
                 rate_of_text=0.03,
                 sprites_and_effects_collection=self.controller.sprites_and_effects_collection
             ))
@@ -203,6 +213,8 @@ class ActAction(Action):
 
     def execute(self):
         # Stub for the execute method used by child classes.
+        super().execute()
+
         self.act.perform_act(
             actor=self.actor,
             target=self.target,
@@ -259,6 +271,8 @@ class ItemAction(Action):
         self.item_index = item_index
 
     def execute(self):
+        super().execute()
+
         self.actor.set_animation_state("battle_item")
         item_text = self.actor.name + " used the " + self.item.name.upper() + "!"
         self.controller.battle_textbox.load_dialog(BattleTextBoxDialog(text=item_text,
@@ -322,8 +336,10 @@ class SpareAction(Action):
     def execute(self):
         # Makes the provided actor attempt to spare the focused enemy.
 
+        super().execute()
+
         # Prevents the user from advancing the dialog while the spare is being attempted.
-        self.controller.delay_player_from_advancing_to_next_state(1.6)
+        self.controller.delay_player_from_advancing_to_next_state(0.5)
 
         if self.target not in self.controller.enemies:
             self.target = self.controller.enemies[0]

@@ -5,7 +5,7 @@ import arcade
 import pyglet.clock
 from PIL import Image, ImageChops
 from PIL.Image import Resampling
-from arcade import LBWH, Rect
+from arcade import LBWH, Rect, SpriteSolidColor
 from arcade.gui import UITextureButton, UIBoxLayout, UIWidget, UILabel, UIImage, bind, Property, UIGridLayout, \
     UIKeyPressEvent, UIKeyEvent, Surface, UIAnchorLayout
 from arcade.gui.widgets import FocusMode, UISpace, UILayout
@@ -20,6 +20,7 @@ from acts import CheckAct
 from graphics_methods import ease_out, make_texture_solid_color
 from items.consumable_items import ConsumableItem
 from spells import Spell
+from sprites_and_effects_collection import SpritesAndEffectsCollection
 
 
 class BattleHUDButton(UITextureButton):
@@ -390,15 +391,11 @@ class BattleHUDCharacterIcon(UIImage):
         :return:
         """
         self.texture = self.character.normal_icon_texture
+        self.trigger_render()
 
-    def change_to_hurt_icon(self):
-        """
-        Temporarily changes the icon to the character's hurt icon.
-        :return: None
-        """
-        if self.texture == self.character.normal_icon_texture:
-            self.texture = self.character.hurt_icon_texture
-            pyglet.clock.schedule_once(self.set_texture_to_normal, 1.0)
+    def do_render(self, surface):
+        surface.clear()
+        super().do_render(surface)
 
 
 class BattleHUDCharacterName(UILabel):
@@ -516,6 +513,8 @@ class BattleHUDCharacterClamshell(UILayout):
         self.hud_movement_time = 0.0
         self.hud_movement_total_duration = 0.2
 
+        # Since UIImages are dumb I'm including an empty solid
+
     def on_update(self, dt):
         if self.hud_moving:
             self.move_character_hud_vertically_slightly(dt)
@@ -611,14 +610,24 @@ class BattleHUDCharacterClamshell(UILayout):
             icon_texture_path = self.character_icon_path
             icon_texture = arcade.load_texture(icon_texture_path)
 
-        self.children[1].children[0].children[0].texture = icon_texture
+        image = self.children[1].children[0].children[0]
+
+        image.texture = icon_texture
+
+    def briefly_change_icon_to_hurt_icon(self):
+        """ Briefly change the player's icon to the hurt icon like what happens when they get hurt. """
+        image = self.children[1].children[0].children[0]
+
+        image.texture = self.player_character.hurt_icon_texture
+        pyglet.clock.schedule_once(lambda dt: self.change_icon(), 1.0)
 
 
 class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
     """
     The part of the screen that renders the character data clamshells.
     """
-    def __init__(self, player_characters: list[player_character]):
+    def __init__(self, player_characters: list[player_character], sprites_and_effects_collection: SpritesAndEffectsCollection):
+        self.sprites_and_effects_collection = sprites_and_effects_collection
 
         self._horizontal_spacing = 0
         self._clamshell_width = BattleHUDCharacterClamshell(player_characters[0]).width
@@ -651,10 +660,41 @@ class BattleHUDCharacterClamshellDisplay(UIBoxLayout):
             self.add(clamshell)
             is_clamshell_focused = False
 
+        # The black rectangle behind the character cards and their associated borders
+        self.background_rectangle_sprite = SpriteSolidColor(
+            color=arcade.color.BLACK,
+            width=settings.WINDOW_WIDTH,
+            height=self.height / 2 - 7,
+            center_x=self.center_x,
+            center_y=self.center_y + 3
+        )
+        self.background_rectangle_top_edge = SpriteSolidColor(
+            color=Color(51, 32, 51, 255),
+            width=settings.WINDOW_WIDTH,
+            height=4,
+            center_x=self.center_x,
+            center_y=self.background_rectangle_sprite.top
+        )
+        self.background_rectangle_bottom_edge = SpriteSolidColor(
+            color=Color(51, 32, 51, 255),
+            width=settings.WINDOW_WIDTH,
+            height=5,
+            center_x=self.center_x,
+            center_y=self.background_rectangle_sprite.bottom
+        )
+
+        for sprite in self.background_rectangle_sprite, self.background_rectangle_top_edge:
+            self.sprites_and_effects_collection.gui_sprites_1.append(sprite)
+        self.sprites_and_effects_collection.effects_sprites.append(self.background_rectangle_bottom_edge)
+
     def do_layout(self):
         self.center_x = int(settings.WINDOW_WIDTH / 2)
         self.y = int(settings.WINDOW_HEIGHT / 5.1)
         super().do_layout()
+        self.background_rectangle_sprite.center_y = self.center_y + 3
+        self.background_rectangle_sprite.height = self.height / 2 - 7
+        self.background_rectangle_top_edge.center_y = self.background_rectangle_sprite.top
+        self.background_rectangle_bottom_edge.center_y = self.background_rectangle_sprite.bottom
 
 
 class SpellListOption(UILabel):
