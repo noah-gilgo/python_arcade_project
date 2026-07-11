@@ -172,7 +172,7 @@ class GameView(arcade.View):
 
         self._animation_states = self.player_one.get_valid_animation_states()
 
-        """
+
         self.player_two = player_characters.Susie()
         self.player_two.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
         self.player_two.center_x = self._holy_arc[1][0]
@@ -182,17 +182,7 @@ class GameView(arcade.View):
         self.player_two.equip_armor_to_slot_1(ShadowMantle())
         self.player_two.equip_armor_to_slot_2(Jevilstail())
         self.player_characters.append(self.player_two)
-        """
 
-        self.player_five = player_characters.December()
-        self.player_five.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
-        self.player_five.center_x = self._holy_arc[1][0]
-        self.player_five.center_y = self._holy_arc[1][1]
-
-        self.player_five.equip_weapon(PlanetBuster())
-        self.player_five.equip_armor_to_slot_1(SolArmor())
-        self.player_five.equip_armor_to_slot_2(StarShield())
-        self.player_characters.append(self.player_five)
 
         self.player_three = player_characters.Ralsei()
         self.player_three.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
@@ -217,7 +207,17 @@ class GameView(arcade.View):
 
         self.player_four.get_valid_animation_states()
         """
+        """
+        self.player_five = player_characters.December()
+        self.player_five.set_sprites_and_effects_collection(self.sprites_and_effects_collection)
+        self.player_five.center_x = self._holy_arc[1][0]
+        self.player_five.center_y = self._holy_arc[1][1]
 
+        self.player_five.equip_weapon(PlanetBuster())
+        self.player_five.equip_armor_to_slot_1(SolArmor())
+        self.player_five.equip_armor_to_slot_2(StarShield())
+        self.player_characters.append(self.player_five)
+        """
 
         # Create and append the enemies to the SpriteList.
         self.enemy_one = non_player_character.Rudinn(
